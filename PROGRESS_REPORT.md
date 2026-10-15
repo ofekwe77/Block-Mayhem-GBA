@@ -19,7 +19,7 @@ No percentages are claimed; see each task's evidence column.
 | WORLD — World production parity (PART 14-19, 49) | 9 | 2 | 0 | 7 | 0 | 0 | 0 |
 | BOSS — Boss framework and encounters (PART 20, 51) | 13 | 2 | 1 | 10 | 0 | 0 | 0 |
 | RUN — Chaos Run roguelite (PART 21, 60) | 7 | 0 | 0 | 3 | 4 | 0 | 0 |
-| MODE — Modes (PART 22) | 7 | 2 | 0 | 3 | 2 | 0 | 0 |
+| MODE — Modes (PART 22) | 7 | 1 | 0 | 3 | 3 | 0 | 0 |
 | VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62) | 12 | 2 | 0 | 10 | 0 | 0 | 0 |
 | AUD — Audio (PART 25, 53) | 6 | 2 | 0 | 4 | 0 | 0 | 0 |
 | UI — User interface (PART 26) | 14 | 5 | 1 | 7 | 1 | 0 | 0 |
@@ -28,7 +28,7 @@ No percentages are claimed; see each task's evidence column.
 | HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 2 | 0 | 1 | 0 | 0 | 0 |
 | STORY / SECRET (PART 35, 36) | 4 | 3 | 1 | 0 | 0 | 0 | 0 |
 | DOC — Documentation and release (PART 41, 42, 59, 63) | 9 | 1 | 2 | 6 | 0 | 0 | 0 |
-| **All** | **190** | 36 | 8 | 96 | 50 | 0 | 0 |
+| **All** | **190** | 35 | 8 | 96 | 51 | 0 | 0 |
 <!-- TASKS:END -->
 
 ## Summary by area

@@ -46,6 +46,16 @@ namespace bm
             c = a.run->make_config(c.diff);
             break;
 
+        case game_mode::boss_rush:
+        {
+            const int world = a.flow.boss_rush_worlds[a.flow.boss_rush_index < a.flow.boss_rush_count ?
+                                                       a.flow.boss_rush_index : 0];
+            c = make_stage_config(stage(world ? world : 1, 5), c.diff, c.seed);
+            c.mode = game_mode::boss_rush;
+            c.start_score = a.flow.boss_rush_score;
+            break;
+        }
+
         default:
             break;
         }
@@ -251,6 +261,31 @@ namespace bm
             }
             break;
         }
+        case game_mode::boss_rush:
+            if(a.flow.boss_rush_state == 0)
+            {
+                a.flow.boss_rush_frames += s.stats().frames;
+                if(s.state() == session_state::won)
+                {
+                    ++sv.stats.bosses_defeated;
+                    a.flow.boss_rush_score = s.score();
+                    ++a.flow.boss_rush_index;
+                    if(a.flow.boss_rush_index >= a.flow.boss_rush_count)
+                    {
+                        record = end_boss_rush(a, true);
+                    }
+                }
+                else if(a.flow.boss_rush_lives > 0)
+                {
+                    --a.flow.boss_rush_lives;      // recovery: retry the same boss
+                }
+                else
+                {
+                    record = end_boss_rush(a, false);
+                }
+            }
+            break;
+
         case game_mode::chaos_run:
             if(a.run->phase() == run_phase::encounter)
             {
@@ -289,6 +324,59 @@ namespace bm
         sv.stats.play_seconds += st.frames / 60;
         sv.stats.cross_combos += st.cross_combos;
         sv.stats.abilities_used += st.abilities_used;
+        a.flow.new_record = record;
+        return record;
+    }
+
+    int boss_rush_available(const save_data& sv)
+    {
+        int n = 0;
+        for(int w = 1; w <= 6; ++w)
+        {
+            n += sv.stages[stage_number(w, 5)].cleared ? 1 : 0;
+        }
+        return sv.boss_rush_unlocked ? n : 0;
+    }
+
+    bool begin_boss_rush(app& a)
+    {
+        flow_state& f = a.flow;
+        f.boss_rush_count = 0;
+        for(int w = 1; w <= 6; ++w)
+        {
+            if(a.save.stages[stage_number(w, 5)].cleared)
+            {
+                f.boss_rush_worlds[f.boss_rush_count++] = uint8_t(w);
+            }
+        }
+        f.mode = game_mode::boss_rush;
+        f.boss_rush_index = 0;
+        f.boss_rush_lives = uint8_t(boss_rush_lives);
+        f.boss_rush_state = 0;
+        f.boss_rush_score = 0;
+        f.boss_rush_frames = 0;
+        f.world = f.boss_rush_count ? f.boss_rush_worlds[0] : 1;
+        return f.boss_rush_count > 0;
+    }
+
+    bool end_boss_rush(app& a, bool complete)
+    {
+        flow_state& f = a.flow;
+        save_data& sv = a.save;
+        f.boss_rush_state = complete ? 1 : 2;
+        bool record = false;
+        if(f.boss_rush_score > sv.boss_rush_best_score)
+        {
+            record = sv.boss_rush_best_score != 0 || complete;
+            sv.boss_rush_best_score = f.boss_rush_score;
+        }
+        // Best time only for a full six-boss rush (shorter rushes are not comparable).
+        if(complete && f.boss_rush_count == 6 &&
+           (! sv.boss_rush_best_frames || f.boss_rush_frames < sv.boss_rush_best_frames))
+        {
+            record = true;
+            sv.boss_rush_best_frames = f.boss_rush_frames;
+        }
         a.flow.new_record = record;
         return record;
     }

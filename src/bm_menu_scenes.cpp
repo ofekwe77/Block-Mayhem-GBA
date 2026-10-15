@@ -129,6 +129,8 @@ namespace bm
                                false, "" };
         _entries[_count++] = { "DUAL BOARD", "TWO BOARDS, ONE HEAT METER", game_mode::dual_relay, scene_id::gameplay,
                                false, "" };
+        _entries[_count++] = { "BOSS RUSH", "EVERY DEFEATED BOSS IN A ROW", game_mode::boss_rush, scene_id::boss_rush,
+                               boss_rush_available(a.save) == 0, "DEFEAT THE WORLD 3 BOSS TO UNLOCK" };
         (void) a;
         if(_index >= _count)
         {
@@ -190,6 +192,10 @@ namespace bm
             {
                 begin_chaos_run(a.flow.seed);
             }
+            if(e.mode == game_mode::boss_rush)
+            {
+                begin_boss_rush(a);
+            }
             return e.target;
         }
         else if(_input.back())
@@ -210,6 +216,40 @@ namespace bm
         const bool won = a.flow.outcome == session_outcome::won;
         const bool adventure = s.config().mode == game_mode::adventure;
         const bool run = s.config().mode == game_mode::chaos_run;
+        if(s.config().mode == game_mode::boss_rush)
+        {
+            const flow_state& f = a.flow;
+            _title.show_big(120, 10, won ? "BOSS DOWN!" : "DEFEATED", won ? big_color::gold : big_color::blood, align::center);
+            int line = 0;
+            auto row = [this, &line](const bn::string_view& text, text_color c)
+            {
+                if(line < 9)
+                {
+                    _lines[line].show(120, 40 + line * 12, text, c, align::center);
+                    ++line;
+                }
+            };
+            row(s.config().boss ? s.config().boss->name : "", text_color::red);
+            bn::string<40> sc = "RUSH SCORE ";
+            sc.append(bn::to_string<12>(won ? s.score() : f.boss_rush_score));
+            row(sc, text_color::yellow);
+            bn::string<40> pr = "BOSSES ";
+            pr.append(bn::to_string<4>(f.boss_rush_index));
+            pr.append("/");
+            pr.append(bn::to_string<4>(f.boss_rush_count));
+            row(pr, text_color::white);
+            if(! won && f.boss_rush_state == 0)
+            {
+                bn::string<40> lv = "RECOVERY USED - ";
+                lv.append(bn::to_string<4>(f.boss_rush_lives));
+                lv.append(" LEFT");
+                row(lv, text_color::orange);
+            }
+            _hint.show(120, 150, f.boss_rush_state == 0 ? (won ? "A: NEXT BOSS" : "A: TRY AGAIN") : "A: RESULTS",
+                       text_color::gray, align::center);
+            audio::play_music(won ? audio::music_id::victory : audio::music_id::game_over, won);
+            return;
+        }
         if(run)
         {
             const chaos_run& r = *a.run;
@@ -339,6 +379,15 @@ namespace bm
         app& a = the_app();
         const bool adventure = a.flow.mode == game_mode::adventure;
         const bool won = a.flow.outcome == session_outcome::won;
+        if(a.flow.mode == game_mode::boss_rush)
+        {
+            if((a.flow.autoplay && _frame > 90) || _input.ok() || _input.start())
+            {
+                audio::sfx(audio::sfx_id::menu_ok);
+                return scene_id::boss_rush;
+            }
+            return bn::nullopt;
+        }
         if(a.flow.mode == game_mode::chaos_run)
         {
             if((a.flow.autoplay && _frame > 90) || _input.ok() || _input.start())

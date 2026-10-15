@@ -33,6 +33,27 @@ namespace bm
         void _refresh();
     };
 
+    // BOSS RUSH: the card before every fight, and the final summary once the rush is over.
+    class boss_rush_scene : public scene
+    {
+    public:
+        boss_rush_scene();
+        [[nodiscard]] bn::optional<scene_id> update() override;
+
+    private:
+        backdrop _backdrop;
+        menu_input _input;
+        label _title;
+        label _lines[6];
+        label _hint;
+        bn::optional<bn::sprite_ptr> _nodes[6];
+        bn::optional<bn::sprite_ptr> _cursor;
+        bool _confirm = false;
+        int _frame = 0;
+
+        void _show_hint();
+    };
+
     class stage_select_scene : public scene
     {
     public:

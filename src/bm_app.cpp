@@ -190,6 +190,9 @@ namespace bm
         t.run_cleared = uint32_t(run->cleared());
         t.run_score = run->score();
         t.run_upgrades = uint32_t(run->build().upgrades_owned());
+        t.rush_index = flow.boss_rush_index;
+        t.rush_state = flow.boss_rush_state;
+        t.rush_frames = flow.boss_rush_frames;
         const int v = s.validate();
         if(v && ! t.error_code)
         {

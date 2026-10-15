@@ -30,8 +30,11 @@ namespace bm
         game_mode mode = game_mode::classic;
         uint8_t world = 1;              // adventure: 1..6
         uint8_t stage = 1;              // adventure: 1..5
-        uint8_t boss_rush_index = 0;    // 0..5
+        uint8_t boss_rush_index = 0;    // fight index in the sequence
         uint8_t boss_rush_lives = 2;    // recovery opportunities
+        uint8_t boss_rush_worlds[6] = {};   // worlds whose boss joins the rush, in order
+        uint8_t boss_rush_count = 0;
+        uint8_t boss_rush_state = 0;    // 0 fighting, 1 complete, 2 over
         uint32_t boss_rush_score = 0;
         uint32_t boss_rush_frames = 0;
         uint32_t seed = 1;

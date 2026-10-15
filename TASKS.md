@@ -202,7 +202,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | MODE-04 | IMPLEMENTED | - | DUAL BOARD RELAY endless mode in menu | 22.5 | DUAL-* | src/bm_flow.cpp | needs emulator test |
 | MODE-05 | IMPLEMENTED | EMU | ADVENTURE mode flow (map, card, stage, results, next stage) | 22.3 | ADV-* | src/bm_adventure_scenes.cpp, src/main.cpp | adventure.txt PASS |
 | MODE-06 | TESTED | EMU | CHAOS RUN mode flow | 22.4 | RUN-* | src/bm_run_scenes.cpp, src/main.cpp | tests/emu/chaos_run.txt PASS |
-| MODE-07 | NOT STARTED | - | BOSS RUSH (unlock, sequence, lives, total time) | 22.6 | BOSS-* | | |
+| MODE-07 | TESTED | EMU | BOSS RUSH (unlock after the World 3 boss, defeated bosses in sequence, 2 recoveries, total time + score, records) | 22.6 | BOSS-* | src/bm_flow.cpp, src/bm_adventure_scenes.cpp | tests/emu/boss_rush.txt PASS (6/6 bosses, rush_state complete) |
 
 ## VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62)
 

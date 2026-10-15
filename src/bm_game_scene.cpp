@@ -21,7 +21,12 @@ namespace bm
         // World theme of the current session (Adventure stage world, Chaos Run act world, else World 1).
         int session_world(const app& a)
         {
-            if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
+            if(a.flow.mode == game_mode::boss_rush)
+            {
+                return a.flow.boss_rush_worlds[a.flow.boss_rush_index < a.flow.boss_rush_count ?
+                                               a.flow.boss_rush_index : 0];
+            }
+            if(a.flow.mode == game_mode::adventure)
             {
                 return a.flow.world;
             }
@@ -44,7 +49,8 @@ namespace bm
             }
             if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
             {
-                const stage_def& st = stage(a.flow.world, a.flow.mode == game_mode::boss_rush ? 5 : a.flow.stage);
+                const stage_def& st = a.flow.mode == game_mode::boss_rush ? stage(session_world(a), 5)
+                                                                           : stage(a.flow.world, a.flow.stage);
                 if(st.boss)
                 {
                     return boss(st.boss).dual ? layout_kind::dual_boss : layout_kind::boss;
@@ -1090,6 +1096,12 @@ namespace bm
                     record_run_end(_app);
                     _app.write_save();
                     return scene_id::run_summary;
+                }
+                if(_app.flow.mode == game_mode::boss_rush)
+                {
+                    end_boss_rush(_app, false);
+                    _app.write_save();
+                    return scene_id::boss_rush;
                 }
                 return scene_id::main_menu;
             }

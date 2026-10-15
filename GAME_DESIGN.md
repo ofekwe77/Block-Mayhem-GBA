@@ -56,7 +56,10 @@ Phase changes are a visible, non-interactive transition with all timers frozen.
 - **Classic** — no specials, heat, abilities or hazards; speed-up and high scores.
 - **Chaos Arcade** — endless score attack with specials, heat, Overheat and three abilities.
 - **Dual Board Relay** — two 8x16 boards, SELECT switches, one equipped ability.
-- Boss Rush — in development.
+- **Boss Rush** — unlocked by the World 3 boss. Every boss already defeated in Adventure, in world
+  order, with the score carried between fights. Two recoveries: a lost fight is retried until they
+  run out. Total time and score are shown; the best score and the best full six-boss time are saved.
+  Quitting a fight or giving up on the card ends the rush.
 
 ## Chaos Run (PART 21, 60)
 A run is three acts; each act is three generated encounters and a boss (12 fights). The run seed

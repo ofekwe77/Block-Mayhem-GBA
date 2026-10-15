@@ -1,0 +1,53 @@
+# BOSS RUSH on the real ROM: diagnostic unlock, card, all six bosses in sequence, totals.
+# Scene ids: 7 gameplay, 8 results, 20 boss_rush. Boss HP is cut to 1 after each intro to keep the run short.
+frames 30
+cmd 5
+cmd 2 5 99 1
+wait scene == 20 120
+frames 20
+shot rush_card
+expect rush_state == 0
+wait scene == 7 400
+frames 260
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 1
+wait scene == 20 400
+frames 10
+shot rush_card2
+wait scene == 7 400
+frames 260
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 2
+wait scene == 20 400
+wait scene == 7 400
+frames 260
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 3
+wait scene == 20 400
+wait scene == 7 400
+frames 260
+shot rush_fight4
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 4
+wait scene == 20 400
+wait scene == 7 400
+frames 260
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 5
+wait scene == 20 400
+wait scene == 7 400
+frames 260
+cmd 8 1
+wait scene == 8 9000
+expect rush_index == 6
+wait scene == 20 400
+frames 20
+shot rush_summary
+expect rush_state == 1
+print rush_index rush_state rush_frames score error_code cpu_max
+expect error_code == 0

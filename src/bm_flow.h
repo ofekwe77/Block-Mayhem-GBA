@@ -26,6 +26,13 @@ namespace bm
     // CHAOS RUN ended (victory, defeat or abandoned): best score / act, completions. Returns true on a new best.
     bool record_run_end(app& a);
 
+    // BOSS RUSH: every boss already defeated in Adventure, in world order (PART 22.6).
+    constexpr int boss_rush_lives = 2;
+    [[nodiscard]] int boss_rush_available(const save_data& sv);    // number of bosses that would join
+    bool begin_boss_rush(app& a);
+    // Ends the rush (complete or given up) and stores best score / time. Returns true on a new record.
+    bool end_boss_rush(app& a, bool complete);
+
     // Stage rank (1 C .. 5 S+) from transparent criteria.
     [[nodiscard]] int stage_rank(const session& s);
 

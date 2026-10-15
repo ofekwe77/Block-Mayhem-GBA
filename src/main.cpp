@@ -4,6 +4,7 @@
 #include "bm_adventure_scenes.h"
 #include "bm_app.h"
 #include "bm_audio.h"
+#include "bm_flow.h"
 #include "bm_game_scene.h"
 #include "bm_menu_scenes.h"
 #include "bm_run_scenes.h"
@@ -36,6 +37,8 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::upgrade_scene());
         case bm::scene_id::run_summary:
             return bn::unique_ptr<bm::scene>(new bm::run_summary_scene());
+        case bm::scene_id::boss_rush:
+            return bn::unique_ptr<bm::scene>(new bm::boss_rush_scene());
         case bm::scene_id::title:
         default:
             return bn::unique_ptr<bm::scene>(new bm::title_scene());
@@ -71,6 +74,10 @@ namespace
                 bm::begin_chaos_run(a.flow.seed);
                 return bm::scene_id::run_map;
             }
+            if(a.flow.mode == bm::game_mode::boss_rush)
+            {
+                return bm::begin_boss_rush(a) ? bm::scene_id::boss_rush : bm::scene_id::main_menu;
+            }
             return bm::scene_id::gameplay;
 
         case BM_TI_CMD_START_STAGE:
@@ -85,6 +92,7 @@ namespace
         case BM_TI_CMD_UNLOCK_ALL:
             // Diagnostic save image with every world reachable (in memory only, never written by this command).
             a.save.worlds_unlocked = 6;
+            a.save.boss_rush_unlocked = 1;
             for(bm::stage_record& r : a.save.stages)
             {
                 r.cleared = 1;

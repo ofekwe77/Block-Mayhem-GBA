@@ -29,7 +29,8 @@ namespace bm
         sound_test,
         mode_setup,
         diagnostic,
-        run_map
+        run_map,
+        boss_rush
     };
 
     class scene

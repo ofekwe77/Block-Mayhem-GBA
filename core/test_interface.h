@@ -53,7 +53,7 @@
     X(stages_cleared)   \
     X(achievements)     /* unlocked achievement count */ \
     X(autoplay)         /* 1 while the diagnostic autoplay bot drives input */ \
-    X(error_code)       /* non-zero if the ROM detected an internal error */     X(run_phase)        /* bm::run_phase of the Chaos Run */     X(run_index)        /* current Chaos Run encounter 0..11 */     X(run_cleared)      /* Chaos Run encounters cleared */     X(run_score)            X(run_upgrades)     /* distinct upgrades owned in the current run */ \
+    X(error_code)       /* non-zero if the ROM detected an internal error */     X(run_phase)        /* bm::run_phase of the Chaos Run */     X(run_index)        /* current Chaos Run encounter 0..11 */     X(run_cleared)      /* Chaos Run encounters cleared */     X(run_score)            X(run_upgrades)     /* distinct upgrades owned in the current run */     X(rush_index)       /* Boss Rush: bosses defeated so far */     X(rush_state)       /* Boss Rush: 0 fighting, 1 complete, 2 over */     X(rush_frames)      /* Boss Rush: total fight time */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0)             \
     X(arg1)             \

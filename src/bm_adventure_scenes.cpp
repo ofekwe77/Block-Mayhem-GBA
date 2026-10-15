@@ -159,6 +159,190 @@ namespace bm
         return bn::nullopt;
     }
 
+    // ------------------------------------------------------------------ boss rush
+
+    namespace
+    {
+        bn::string<16> rush_clock(uint32_t frames)
+        {
+            const uint32_t secs = frames / 60;
+            bn::string<16> t = bn::to_string<8>(secs / 60);
+            t.append(":");
+            if(secs % 60 < 10)
+            {
+                t.append("0");
+            }
+            t.append(bn::to_string<4>(secs % 60));
+            return t;
+        }
+    }
+
+    boss_rush_scene::boss_rush_scene() :
+        _backdrop(backdrop_id::menu, 3)
+    {
+        app& a = the_app();
+        const flow_state& f = a.flow;
+        const bool over = f.boss_rush_state != 0;
+        const int total = f.boss_rush_count;
+        int line = 0;
+        auto row = [this, &line](const bn::string_view& text, text_color c)
+        {
+            if(line < 6)
+            {
+                _lines[line].show(120, 58 + line * 12, text, c, align::center);
+                ++line;
+            }
+        };
+        if(over)
+        {
+            const bool complete = f.boss_rush_state == 1;
+            _title.show_big(120, 8, complete ? "RUSH COMPLETE" : "RUSH OVER", complete ? big_color::gold : big_color::blood,
+                            align::center);
+            bn::string<40> t = "BOSSES DEFEATED ";
+            t.append(bn::to_string<4>(f.boss_rush_index));
+            t.append("/");
+            t.append(bn::to_string<4>(total));
+            row(t, text_color::white);
+            bn::string<40> sc = "TOTAL SCORE ";
+            sc.append(bn::to_string<12>(f.boss_rush_score));
+            row(sc, text_color::yellow);
+            bn::string<40> tm = "TOTAL TIME ";
+            tm.append(rush_clock(f.boss_rush_frames));
+            row(tm, text_color::white);
+            if(a.save.boss_rush_best_frames)
+            {
+                bn::string<40> best = "BEST FULL RUSH ";
+                best.append(rush_clock(a.save.boss_rush_best_frames));
+                row(best, text_color::cyan);
+            }
+            if(a.flow.new_record)
+            {
+                row("NEW RECORD!", text_color::green);
+            }
+            audio::play_music(complete ? audio::music_id::victory : audio::music_id::game_over, complete);
+        }
+        else
+        {
+            const int world = f.boss_rush_worlds[f.boss_rush_index];
+            const boss_def& b = boss(stage(world, 5).boss);
+            _title.show_big(120, 8, "BOSS RUSH", big_color::blood, align::center);
+            bn::string<40> fight = "FIGHT ";
+            fight.append(bn::to_string<4>(f.boss_rush_index + 1));
+            fight.append(" OF ");
+            fight.append(bn::to_string<4>(total));
+            row(fight, text_color::white);
+            row(b.name, text_color::red);
+            row(b.title, text_color::orange);
+            bn::string<40> lives = "RECOVERIES ";
+            for(int i = 0; i < f.boss_rush_lives; ++i)
+            {
+                lives.append("♥");
+            }
+            if(! f.boss_rush_lives)
+            {
+                lives.append("NONE");
+            }
+            row(lives, f.boss_rush_lives ? text_color::green : text_color::gray);
+            bn::string<40> st = "SCORE ";
+            st.append(bn::to_string<12>(f.boss_rush_score));
+            st.append("   TIME ");
+            st.append(rush_clock(f.boss_rush_frames));
+            row(st, text_color::yellow);
+            audio::play_music(audio::music_id::boss);
+        }
+        // Sequence: one node per boss (star = defeated).
+        for(int i = 0; i < total; ++i)
+        {
+            const int x = 120 - (total - 1) * 13 + i * 26;
+            const int frame = i < f.boss_rush_index ? 0 : int(objective_kind::boss_defeat);
+            _nodes[i] = bn::sprite_items::spr_goals.create_sprite(x - 120, 38 - 80, frame);
+            if(i == f.boss_rush_index && ! over)
+            {
+                _cursor = bn::sprite_items::spr_cursor.create_sprite(x - 120, 38 - 80, 0);
+            }
+        }
+        _show_hint();
+    }
+
+    void boss_rush_scene::_show_hint()
+    {
+        const app& a = the_app();
+        if(a.flow.boss_rush_state != 0)
+        {
+            _hint.show(120, 150, "A: RUSH AGAIN    B: MENU", text_color::gray, align::center);
+        }
+        else if(_confirm)
+        {
+            _hint.show(120, 150, "GIVE UP THE RUSH?  A: YES  B: NO", text_color::red, align::center);
+        }
+        else
+        {
+            _hint.show(120, 150, "A: FIGHT    B: GIVE UP", text_color::gray, align::center);
+        }
+    }
+
+    bn::optional<scene_id> boss_rush_scene::update()
+    {
+        ++_frame;
+        _input.update();
+        _backdrop.update();
+        app& a = the_app();
+        if(_cursor)
+        {
+            _cursor->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), (_frame >> 4) & 1);
+        }
+        const bool over = a.flow.boss_rush_state != 0;
+        if(a.flow.autoplay && _frame > 60)
+        {
+            return over ? scene_id::main_menu : scene_id::gameplay;
+        }
+        if(over)
+        {
+            if(_input.ok() || _input.start())
+            {
+                audio::sfx(audio::sfx_id::menu_ok);
+                begin_boss_rush(a);
+                return scene_id::boss_rush;
+            }
+            if(_input.back())
+            {
+                audio::sfx(audio::sfx_id::menu_back);
+                return scene_id::main_menu;
+            }
+            return bn::nullopt;
+        }
+        if(_confirm)
+        {
+            if(_input.ok())
+            {
+                audio::sfx(audio::sfx_id::menu_back);
+                end_boss_rush(a, false);
+                a.write_save();
+                return scene_id::boss_rush;
+            }
+            if(_input.back())
+            {
+                _confirm = false;
+                _show_hint();
+            }
+            return bn::nullopt;
+        }
+        if(_input.ok() || _input.start())
+        {
+            audio::sfx(audio::sfx_id::menu_ok);
+            a.flow.mode = game_mode::boss_rush;
+            a.flow.seed = a.frame * 2654435761u + a.flow.boss_rush_index;
+            return scene_id::gameplay;
+        }
+        if(_input.back())
+        {
+            _confirm = true;
+            audio::sfx(audio::sfx_id::denied);
+            _show_hint();
+        }
+        return bn::nullopt;
+    }
+
     // ------------------------------------------------------------------ stage select / stage card
 
     stage_select_scene::stage_select_scene() :

@@ -45,9 +45,10 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 | adventure.txt — world map, stage card, stage 1-1, all six bosses, phase changes, defeat sequence | PASS |
 | worlds.txt — first stage of every world + dual stage 4-3, music RMS per world | PASS (RMS 4244..6041) |
 | chaos_run.txt — run map, encounters under autoplay, results, upgrade choice, act 1 boss, act 2 map | PASS (4 cleared, 4 upgrades, error_code 0) |
+| boss_rush.txt — diagnostic unlock, rush card, all six bosses in sequence (HP cut after each intro), summary | PASS (6/6, complete, error_code 0) |
 
 Screenshots from the latest runs: `screenshots/tmp/`.
 
 ## Not yet tested
 See TASKS.md entries without `TESTED` status (save persistence across restarts, stress/performance
-runs, Boss Rush, options / records / achievements screens).
+runs, options / records / achievements screens).
