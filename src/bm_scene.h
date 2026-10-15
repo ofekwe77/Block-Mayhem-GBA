@@ -28,7 +28,8 @@ namespace bm
         ending,
         sound_test,
         mode_setup,
-        diagnostic
+        diagnostic,
+        run_map
     };
 
     class scene

@@ -153,7 +153,7 @@ namespace bm
         _boss_action = pending_action();
         if(_config.boss)
         {
-            _boss_max_hp = _config.boss->hp;
+            _boss_max_hp = maxi(1, int(_config.boss->hp) * clampi(_config.boss_hp_percent, 25, 200) / 100);
             _boss_hp = _boss_max_hp;
             _boss_countdown = _config.boss->phases[0].interval +
                               (_config.diff == difficulty::beginner ? 2 : (_config.diff == difficulty::expert ? -1 : 0));

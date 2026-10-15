@@ -18,7 +18,7 @@
 
 namespace bm
 {
-    struct run_state;
+    class chaos_run;
 
     enum class session_outcome : uint8_t
     {
@@ -53,7 +53,7 @@ namespace bm
         flow_state flow;
         session* game = nullptr;        // allocated once (EWRAM)
         bot autoplayer;
-        run_state* run = nullptr;       // Chaos Run state (allocated once)
+        chaos_run* run = nullptr;       // Chaos Run state (allocated once)
 
         bm_test_interface* test = nullptr;
         int save_status = 0;

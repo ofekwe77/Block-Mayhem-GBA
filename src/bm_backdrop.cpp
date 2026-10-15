@@ -151,6 +151,24 @@ namespace bm
         }
     }
 
+    void backdrop::set_dim(bn::fixed amount)
+    {
+        for(layer& l : _layers)
+        {
+            if(l.palette)
+            {
+                l.palette->set_fade(bn::color(1, 1, 4), amount);
+            }
+        }
+        for(ambient& a : _ambient)
+        {
+            if(a.sprite)
+            {
+                a.sprite->set_visible(amount < bn::fixed(0.5));
+            }
+        }
+    }
+
     void backdrop::excite(int frames, int level)
     {
         if(frames > _excite_frames)

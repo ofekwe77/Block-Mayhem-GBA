@@ -23,6 +23,9 @@ namespace bm
     // Applies the finished session to the save (records, unlocks, statistics). Returns true if a record was set.
     bool record_session(app& a);
 
+    // CHAOS RUN ended (victory, defeat or abandoned): best score / act, completions. Returns true on a new best.
+    bool record_run_end(app& a);
+
     // Stage rank (1 C .. 5 S+) from transparent criteria.
     [[nodiscard]] int stage_rank(const session& s);
 

@@ -25,8 +25,10 @@ Optional filter: `.\build.ps1 tests bomb`.
 | heat.* | Overheat consumes meter, caps gain at 50, failure garbage, pause stops timer |
 | abilities.* | denial without heat, exact deduction, cooldown in locked pieces, timeout without cost, vent |
 | bots.* | 5 strategies x 3 seeds: no invalid state in 2-minute games |
+| stages.* | all 30 Adventure stages x 3 bots x 4 seeds: every stage won, 0 invalid states, 0 timeouts, hazards and boss attacks fire (`tests/build/stage_report.md`) |
+| run.* | 31-upgrade pool well formed; maxed build respects every cap through the real session rules; same seed = same run; 300 seeded runs: offers always eligible and distinct, no repeated encounters or bosses, post-boss rare card; every encounter template at every act and every run boss won by bots; 6 full bot runs (`tests/build/run_report.md`) |
 
-Latest run (2026-10-15): **61 passed, 0 failed.**
+Latest run (2026-10-15): **68 passed, 0 failed.**
 
 Every simulated frame also calls `session::validate()` (board/heat/cooldown/boss invariants).
 
@@ -39,10 +41,13 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 
 | Scenario | Result (2026-10-15) |
 |----------|---------------------|
-| smoke.txt — boot, title music, menu, Classic input, pause, Arcade autoplay 1200 frames | PASS (20 rows, chain 3, error_code 0, title audio RMS 3956) |
+| smoke.txt — boot, title music, menu, Classic input, pause, Arcade autoplay | PASS (error_code 0) |
+| adventure.txt — world map, stage card, stage 1-1, all six bosses, phase changes, defeat sequence | PASS |
+| worlds.txt — first stage of every world + dual stage 4-3, music RMS per world | PASS (RMS 4244..6041) |
+| chaos_run.txt — run map, encounters under autoplay, results, upgrade choice, act 1 boss, act 2 map | PASS (4 cleared, 4 upgrades, error_code 0) |
 
-Screenshots from the latest run: `screenshots/tmp/` (title, menu, classic, pause, arcade).
+Screenshots from the latest runs: `screenshots/tmp/`.
 
 ## Not yet tested
-See TASKS.md entries without `TESTED` status (stages, bosses, Chaos Run, save persistence across restarts,
-stress/performance runs).
+See TASKS.md entries without `TESTED` status (save persistence across restarts, stress/performance
+runs, Boss Rush, options / records / achievements screens).

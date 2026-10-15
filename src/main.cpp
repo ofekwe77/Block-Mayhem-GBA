@@ -6,6 +6,7 @@
 #include "bm_audio.h"
 #include "bm_game_scene.h"
 #include "bm_menu_scenes.h"
+#include "bm_run_scenes.h"
 
 #include "bn_bg_palettes.h"
 #include "bn_color.h"
@@ -29,6 +30,12 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::world_map_scene());
         case bm::scene_id::stage_card:
             return bn::unique_ptr<bm::scene>(new bm::stage_select_scene());
+        case bm::scene_id::run_map:
+            return bn::unique_ptr<bm::scene>(new bm::run_map_scene());
+        case bm::scene_id::upgrade_select:
+            return bn::unique_ptr<bm::scene>(new bm::upgrade_scene());
+        case bm::scene_id::run_summary:
+            return bn::unique_ptr<bm::scene>(new bm::run_summary_scene());
         case bm::scene_id::title:
         default:
             return bn::unique_ptr<bm::scene>(new bm::title_scene());
@@ -59,6 +66,11 @@ namespace
             a.flow.seed = a.pending_args[1] ? a.pending_args[1] : 1;
             a.flow.autoplay = a.pending_args[2] != 0;
             a.autoplayer.reset(bm::bot_strategy::resource_aware, a.flow.seed);
+            if(a.flow.mode == bm::game_mode::chaos_run)
+            {
+                bm::begin_chaos_run(a.flow.seed);
+                return bm::scene_id::run_map;
+            }
             return bm::scene_id::gameplay;
 
         case BM_TI_CMD_START_STAGE:

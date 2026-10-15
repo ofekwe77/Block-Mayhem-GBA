@@ -39,6 +39,8 @@ namespace bm
         void excite(int frames, int level);
         void set_camera(const bn::camera_ptr& camera);
         void set_visible(bool visible);
+        // Darkens the scenery behind menus so text stays readable (0 = full brightness).
+        void set_dim(bn::fixed amount);
 
     private:
         struct layer

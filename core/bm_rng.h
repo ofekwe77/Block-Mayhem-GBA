@@ -58,7 +58,7 @@ namespace bm
         constexpr int below(int limit)
         {
             const uint32_t l = uint32_t(limit);
-            const uint32_t threshold = uint32_t(-l) % l;
+            const uint32_t threshold = (0u - l) % l;
             while(true)
             {
                 const uint32_t r = next();

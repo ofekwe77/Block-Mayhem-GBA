@@ -9,7 +9,8 @@ tap START
 frames 40
 expect scene == 4
 shot menu
-# Menu order: ADVENTURE, CLASSIC, CHAOS ARCADE, DUAL BOARD -> select CLASSIC.
+# Menu order: ADVENTURE, CHAOS RUN, CLASSIC, CHAOS ARCADE, DUAL BOARD -> select CLASSIC.
+tap DOWN
 tap DOWN
 tap A
 frames 60

@@ -130,6 +130,8 @@ def main():
     sprites.generate(GFX, write_bmp, write_json)
     backgrounds.generate(GFX, INC, write_bmp, write_json)
     bosses.generate(GFX, write_bmp, write_json)
+    import upgrade_icons  # noqa: E402
+    upgrade_icons.generate(GFX, write_bmp, write_json)
     print("graphics generated (%d board tiles)" % n)
 
 

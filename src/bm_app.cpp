@@ -1,5 +1,7 @@
 #include "bm_app.h"
 
+#include "bm_run.h"
+
 #include "bn_core.h"
 #include "bn_keypad.h"
 #include "bn_memory.h"
@@ -53,6 +55,7 @@ namespace bm
         test_interface.version = BM_TI_VERSION;
         test = &test_interface;
         game = new session();
+        run = new chaos_run();
     }
 
     void app::load_save()
@@ -182,6 +185,11 @@ namespace bm
             unlocked += (save.achievements >> i) & 1;
         }
         t.achievements = uint32_t(unlocked);
+        t.run_phase = uint32_t(run->phase());
+        t.run_index = uint32_t(run->index());
+        t.run_cleared = uint32_t(run->cleared());
+        t.run_score = run->score();
+        t.run_upgrades = uint32_t(run->build().upgrades_owned());
         const int v = s.validate();
         if(v && ! t.error_code)
         {

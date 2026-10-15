@@ -1,0 +1,32 @@
+# CHAOS RUN end to end on the real ROM: run map, encounters under autoplay,
+# encounter results, upgrade selection, act progression and the run summary.
+# Scene ids: 7 gameplay, 8 results, 12 upgrade_select, 13 run_summary, 19 run_map.
+frames 30
+cmd 2 3 4242 1
+wait scene == 19 120
+frames 20
+shot run_map
+expect run_phase == 1
+expect run_index == 0
+wait scene == 7 200
+frames 300
+shot run_encounter
+wait scene == 8 40000
+frames 20
+shot run_results
+expect run_cleared >= 1
+wait scene == 12 400
+frames 10
+shot run_upgrades
+wait scene == 19 400
+frames 20
+shot run_map_2
+expect run_index == 1
+expect run_upgrades == 1
+# Play on through the rest of act 1 (three more encounters including the boss).
+wait run_index >= 4 150000
+wait scene == 19 2000
+frames 20
+shot run_map_act2
+print run_phase run_index run_cleared run_score run_upgrades error_code cpu_max cpu_avg
+expect error_code == 0

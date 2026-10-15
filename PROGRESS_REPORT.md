@@ -15,20 +15,20 @@ No percentages are claimed; see each task's evidence column.
 | ABIL — Active abilities (PART 10, 11) | 14 | 2 | 0 | 9 | 3 | 0 | 0 |
 | CTRL — Controls and input (PART 11, 32) | 4 | 0 | 0 | 3 | 1 | 0 | 0 |
 | DUAL — Dual Board Relay (PART 12) | 7 | 0 | 1 | 6 | 0 | 0 | 0 |
-| ADV — Adventure mode and stages (PART 13-19, 50) | 12 | 11 | 0 | 1 | 0 | 0 | 0 |
-| WORLD — World production parity (PART 14-19, 49) | 9 | 7 | 0 | 2 | 0 | 0 | 0 |
-| BOSS — Boss framework and encounters (PART 20, 51) | 13 | 9 | 0 | 4 | 0 | 0 | 0 |
-| RUN — Chaos Run roguelite (PART 21, 60) | 7 | 7 | 0 | 0 | 0 | 0 | 0 |
-| MODE — Modes (PART 22) | 7 | 4 | 0 | 2 | 1 | 0 | 0 |
+| ADV — Adventure mode and stages (PART 13-19, 50) | 12 | 1 | 1 | 5 | 5 | 0 | 0 |
+| WORLD — World production parity (PART 14-19, 49) | 9 | 2 | 0 | 7 | 0 | 0 | 0 |
+| BOSS — Boss framework and encounters (PART 20, 51) | 13 | 2 | 1 | 10 | 0 | 0 | 0 |
+| RUN — Chaos Run roguelite (PART 21, 60) | 7 | 0 | 0 | 3 | 4 | 0 | 0 |
+| MODE — Modes (PART 22) | 7 | 2 | 0 | 3 | 2 | 0 | 0 |
 | VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62) | 12 | 2 | 0 | 10 | 0 | 0 | 0 |
 | AUD — Audio (PART 25, 53) | 6 | 2 | 0 | 4 | 0 | 0 | 0 |
-| UI — User interface (PART 26) | 14 | 6 | 2 | 5 | 1 | 0 | 0 |
-| PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 6 | 0 | 3 | 0 | 0 | 0 |
+| UI — User interface (PART 26) | 14 | 5 | 1 | 7 | 1 | 0 | 0 |
+| PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 5 | 0 | 4 | 0 | 0 | 0 |
 | BAL / SIM — Balance and simulation (PART 30, 31, 54) | 8 | 5 | 0 | 2 | 1 | 0 | 0 |
 | HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 2 | 0 | 1 | 0 | 0 | 0 |
-| STORY / SECRET (PART 35, 36) | 4 | 4 | 0 | 0 | 0 | 0 | 0 |
+| STORY / SECRET (PART 35, 36) | 4 | 3 | 1 | 0 | 0 | 0 | 0 |
 | DOC — Documentation and release (PART 41, 42, 59, 63) | 9 | 1 | 2 | 6 | 0 | 0 | 0 |
-| **All** | **190** | 70 | 6 | 74 | 40 | 0 | 0 |
+| **All** | **190** | 36 | 8 | 96 | 50 | 0 | 0 |
 <!-- TASKS:END -->
 
 ## Summary by area

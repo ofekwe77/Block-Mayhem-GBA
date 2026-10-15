@@ -2,6 +2,7 @@
 
 #include "bm_audio.h"
 #include "bm_flow.h"
+#include "bm_run.h"
 
 #include "bn_bg_palettes.h"
 #include "bn_color.h"
@@ -17,11 +18,29 @@ namespace bm
 {
     namespace
     {
+        // World theme of the current session (Adventure stage world, Chaos Run act world, else World 1).
+        int session_world(const app& a)
+        {
+            if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
+            {
+                return a.flow.world;
+            }
+            if(a.flow.mode == game_mode::chaos_run)
+            {
+                return a.run->encounter().def.world;
+            }
+            return 1;
+        }
+
         layout_kind layout_for(const app& a)
         {
             if(a.flow.mode == game_mode::dual_relay)
             {
                 return layout_kind::dual;
+            }
+            if(a.flow.mode == game_mode::chaos_run)
+            {
+                return a.run->encounter().def.boss ? layout_kind::boss : layout_kind::single;
             }
             if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
             {
@@ -45,9 +64,9 @@ namespace bm
             {
                 return s.config().boss_id == 6 ? audio::music_id::final_boss : audio::music_id::boss;
             }
-            if(s.config().mode == game_mode::adventure)
+            if(s.config().mode == game_mode::adventure || s.config().mode == game_mode::chaos_run)
             {
-                return audio::music_id(int(audio::music_id::world1) + a.flow.world - 1);
+                return audio::music_id(int(audio::music_id::world1) + session_world(a) - 1);
             }
             return audio::music_id::world1;
         }
@@ -139,11 +158,7 @@ namespace bm
 
         backdrop_id backdrop_for(const app& a)
         {
-            if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
-            {
-                return backdrop_id(int(backdrop_id::world1) + (a.flow.world - 1));
-            }
-            return backdrop_id::world1;
+            return backdrop_id(int(backdrop_id::world1) + (session_world(a) - 1));
         }
 
         constexpr const char* chain_names[9] = {
@@ -184,8 +199,7 @@ namespace bm
     void game_scene::_start_session()
     {
         _s.start(make_session_config(_app));
-        _view.set_world_tint(_app.flow.mode == game_mode::adventure || _app.flow.mode == game_mode::boss_rush ?
-                             _app.flow.world : 1);
+        _view.set_world_tint(session_world(_app));
         if(_app.flow.autoplay)
         {
             _app.autoplayer.reset(bot_strategy::resource_aware, _app.flow.seed);
@@ -332,7 +346,7 @@ namespace bm
 
             case event_type::cell_destroyed:
                 _cell_center(b, e.a, e.b, sx, sy);
-                _fx.particle(particle_kind::debris, sx, sy, bn::fixed(int(sx * 13) % 7 - 3) / 4, -bn::fixed(5) / 4,
+                _fx.particle(particle_kind::debris, sx, sy, bn::fixed(sx * 13 % 7 - 3) / 4, -bn::fixed(5) / 4,
                              22, bn::fixed(1) / 8);
                 break;
 
@@ -1069,6 +1083,14 @@ namespace bm
                 _paused = false;
                 _app.flow.outcome = session_outcome::quit;
                 audio::sfx(audio::sfx_id::menu_back);
+                if(_app.flow.mode == game_mode::chaos_run)
+                {
+                    // Quitting an encounter abandons the run (no free retries).
+                    _app.run->abandon();
+                    record_run_end(_app);
+                    _app.write_save();
+                    return scene_id::run_summary;
+                }
                 return scene_id::main_menu;
             }
             if(pressed(key_b))

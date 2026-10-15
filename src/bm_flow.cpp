@@ -1,5 +1,7 @@
 #include "bm_flow.h"
 
+#include "bm_run.h"
+
 namespace bm
 {
     session_config make_session_config(const app& a)
@@ -38,6 +40,10 @@ namespace bm
 
         case game_mode::adventure:
             c = make_stage_config(stage(a.flow.world, a.flow.stage), c.diff, c.seed);
+            break;
+
+        case game_mode::chaos_run:
+            c = a.run->make_config(c.diff);
             break;
 
         default:
@@ -245,6 +251,21 @@ namespace bm
             }
             break;
         }
+        case game_mode::chaos_run:
+            if(a.run->phase() == run_phase::encounter)
+            {
+                a.run->finish_encounter(s);
+                if(a.run->phase() == run_phase::victory || a.run->phase() == run_phase::defeat)
+                {
+                    record = record_run_end(a);
+                }
+                if(s.config().boss && s.state() == session_state::won)
+                {
+                    ++sv.stats.bosses_defeated;
+                }
+            }
+            break;
+
         default:
             break;
         }
@@ -268,6 +289,30 @@ namespace bm
         sv.stats.play_seconds += st.frames / 60;
         sv.stats.cross_combos += st.cross_combos;
         sv.stats.abilities_used += st.abilities_used;
+        a.flow.new_record = record;
+        return record;
+    }
+
+    bool record_run_end(app& a)
+    {
+        save_data& sv = a.save;
+        const chaos_run& r = *a.run;
+        const bool won = r.phase() == run_phase::victory;
+        bool record = false;
+        if(r.score() > sv.run_best_score)
+        {
+            record = sv.run_best_score != 0 || won;
+            sv.run_best_score = r.score();
+        }
+        const int reached = won ? 4 : r.act() + 1;     // 4 = complete run
+        if(reached > sv.run_best_act)
+        {
+            sv.run_best_act = uint8_t(reached);
+        }
+        if(won && sv.runs_completed < 0xFFFF)
+        {
+            ++sv.runs_completed;
+        }
         a.flow.new_record = record;
         return record;
     }

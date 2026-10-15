@@ -50,4 +50,33 @@ pieces. Every attack is telegraphed at least two locks ahead (columns, marked ce
 Phase changes are a visible, non-interactive transition with all timers frozen.
 
 ## Modes (current build)
-Classic, Chaos Arcade, Dual Board Relay. Adventure / Chaos Run / Boss Rush in development.
+- **Adventure** — 6 worlds x 5 stages (stage 5 = boss). World map, stage cards with goal icons,
+  per-stage objectives, bonus goals, hazards, layouts and ranks C..S+.
+- **Chaos Run** — the roguelite (below).
+- **Classic** — no specials, heat, abilities or hazards; speed-up and high scores.
+- **Chaos Arcade** — endless score attack with specials, heat, Overheat and three abilities.
+- **Dual Board Relay** — two 8x16 boards, SELECT switches, one equipped ability.
+- Boss Rush — in development.
+
+## Chaos Run (PART 21, 60)
+A run is three acts; each act is three generated encounters and a boss (12 fights). The run seed
+fixes the boss line-up (one per act, never repeated; single-board bosses only), the nine encounter
+templates (never repeated within a run) and every encounter's layout, hazards and bonus goal.
+The run map previews the whole line-up with objective icons so players can plan their build.
+
+Encounter templates (`core/bm_run.cpp`): DEMOLITION YARD (bombs), SPARK GRID (sparks), FIRE PIT
+(fires), ICE FIELD (ice), MAGNET MINE (magnets), LINE RUSH (rows), CHAIN LAB (2+ wave chains),
+QUAD QUARRY (quads + rows), SURVIVAL SHAFT (survive pieces under garbage drip), PRESSURE COOKER
+(lava pressure, act 2+), GRAVITY WELL (settle cycles, act 2+), HEAT WAVE (master an Overheat, act 2+),
+ARMOR DEPOT (armor plates, act 2+), CHAOS STORM (mixed hazards + chains, act 3). Special-cell
+objectives carry distribution guarantees so they are never impossible. Targets, level, hazard
+frequency and starting garbage escalate per act.
+
+After every cleared encounter the player picks one of three seeded offers from 31 upgrades
+(23 effects + 8 ARMORY picks that equip a new ability, max three abilities). Rarity is common /
+rare / legendary; offers never include upgrades that cannot work with the current build (LASER FOCUS
+needs the laser, SAFE VENT the vent, ARMORY needs a free slot). Seven synergies (DEMOLITION, MELTDOWN,
+STORM CELL, CLOCKWORK, BUNKER, WILDFIRE, CAPACITOR) add a bounded extra effect when both halves are
+owned; the selection screen flags cards that complete one. All caps are listed in BALANCE.md.
+Persistent progress only tracks records and the upgrade codex (no power carried between runs).
+Quitting an encounter or abandoning from the map ends the run as a defeat.

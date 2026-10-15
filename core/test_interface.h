@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 #define BM_TI_MAGIC "BMTESTIF"
-#define BM_TI_VERSION 1u
+#define BM_TI_VERSION 2u
 
 /* X-list of every uint32 status field, in memory order. */
 #define BM_TI_FIELDS(X) \
@@ -53,7 +53,7 @@
     X(stages_cleared)   \
     X(achievements)     /* unlocked achievement count */ \
     X(autoplay)         /* 1 while the diagnostic autoplay bot drives input */ \
-    X(error_code)       /* non-zero if the ROM detected an internal error */ \
+    X(error_code)       /* non-zero if the ROM detected an internal error */     X(run_phase)        /* bm::run_phase of the Chaos Run */     X(run_index)        /* current Chaos Run encounter 0..11 */     X(run_cleared)      /* Chaos Run encounters cleared */     X(run_score)            X(run_upgrades)     /* distinct upgrades owned in the current run */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0)             \
     X(arg1)             \

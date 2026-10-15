@@ -58,7 +58,8 @@ namespace bm
         uint32_t play_seconds = 0;
         uint32_t cross_combos = 0;
         uint32_t abilities_used = 0;
-        uint32_t reserved[5] = {};
+        uint32_t upgrades_seen = 0;     // CHAOS RUN codex: bit per upgrade_id ever offered
+        uint32_t reserved[4] = {};
     };
 
     struct save_data

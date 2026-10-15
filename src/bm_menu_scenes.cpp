@@ -2,6 +2,8 @@
 
 #include "bm_audio.h"
 #include "bm_flow.h"
+#include "bm_run.h"
+#include "bm_run_scenes.h"
 
 #include "bn_keypad.h"
 #include "bn_string.h"
@@ -120,6 +122,8 @@ namespace bm
         _count = 0;
         _entries[_count++] = { "ADVENTURE", "6 WORLDS, 30 STAGES, 6 BOSSES", game_mode::adventure, scene_id::world_map,
                                false, "" };
+        _entries[_count++] = { "CHAOS RUN", "3 ACTS, 12 FIGHTS, 31 UPGRADES", game_mode::chaos_run, scene_id::run_map,
+                               false, "" };
         _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic, scene_id::gameplay, false, "" };
         _entries[_count++] = { "CHAOS ARCADE", "ENDLESS SCORE ATTACK WITH POWERS", game_mode::arcade, scene_id::gameplay,
                                false, "" };
@@ -182,6 +186,10 @@ namespace bm
             app& a = the_app();
             a.flow.mode = e.mode;
             a.flow.seed = a.frame * 2654435761u + 12345u;
+            if(e.mode == game_mode::chaos_run)
+            {
+                begin_chaos_run(a.flow.seed);
+            }
             return e.target;
         }
         else if(_input.back())
@@ -201,6 +209,53 @@ namespace bm
         const session& s = *a.game;
         const bool won = a.flow.outcome == session_outcome::won;
         const bool adventure = s.config().mode == game_mode::adventure;
+        const bool run = s.config().mode == game_mode::chaos_run;
+        if(run)
+        {
+            const chaos_run& r = *a.run;
+            const bool boss_fight = s.config().boss != nullptr;
+            _title.show_big(120, 10, ! won ? "RUN OVER" : (boss_fight ? "BOSS DOWN!" : "CLEARED!"),
+                            won ? big_color::gold : big_color::blood, align::center);
+            int line = 0;
+            auto row = [this, &line](const bn::string_view& text, text_color c)
+            {
+                if(line < 9)
+                {
+                    _lines[line].show(120, 36 + line * 12, text, c, align::center);
+                    ++line;
+                }
+            };
+            row(s.config().stage ? s.config().stage->name : "", text_color::cyan);
+            if(won)
+            {
+                bn::string<40> b = boss_fight ? "BOSS BONUS +" : "CLEAR BONUS +";
+                const uint32_t act_number = uint32_t(r.act() + 1);
+                const uint32_t base = uint32_t(boss_fight ? cfg::run_boss_bonus : cfg::run_encounter_bonus) * act_number;
+                b.append(bn::to_string<12>(base));
+                row(b, text_color::yellow);
+                if(s.secondary().def.kind != objective_kind::none)
+                {
+                    bn::string<40> g = s.secondary().done ? "BONUS GOAL +" : "BONUS GOAL MISSED";
+                    if(s.secondary().done)
+                    {
+                        g.append(bn::to_string<12>(uint32_t(cfg::run_secondary_bonus) * act_number));
+                    }
+                    row(g, s.secondary().done ? text_color::green : text_color::gray);
+                }
+            }
+            bn::string<40> sc = "RUN SCORE ";
+            sc.append(bn::to_string<12>(r.score()));
+            row(sc, text_color::white);
+            bn::string<40> en = "ENCOUNTERS ";
+            en.append(bn::to_string<4>(r.cleared()));
+            en.append("/");
+            en.append(bn::to_string<4>(chaos_run::total_encounters));
+            row(en, text_color::white);
+            const char* hint = r.phase() == run_phase::choose ? "A: CHOOSE AN UPGRADE" : "A: RUN SUMMARY";
+            _hint.show(120, 150, hint, text_color::gray, align::center);
+            audio::play_music(won ? audio::music_id::victory : audio::music_id::game_over, won);
+            return;
+        }
         if(adventure)
         {
             _title.show_big(120, 10, won ? "STAGE CLEAR" : "STAGE FAILED", won ? big_color::gold : big_color::blood,
@@ -284,6 +339,15 @@ namespace bm
         app& a = the_app();
         const bool adventure = a.flow.mode == game_mode::adventure;
         const bool won = a.flow.outcome == session_outcome::won;
+        if(a.flow.mode == game_mode::chaos_run)
+        {
+            if((a.flow.autoplay && _frame > 90) || _input.ok() || _input.start())
+            {
+                audio::sfx(audio::sfx_id::menu_ok);
+                return a.run->phase() == run_phase::choose ? scene_id::upgrade_select : scene_id::run_summary;
+            }
+            return bn::nullopt;
+        }
         if(a.flow.autoplay && _frame > 90)
         {
             return adventure ? scene_id::world_map : scene_id::main_menu;

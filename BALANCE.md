@@ -80,3 +80,35 @@ Distribution: one special piece every 5–7 locks (normal), 3–5 (advanced); ra
 Forced switch after 4 locks; CROSS OVER = rows on both boards within 4 locks (+1000 × level, +15 heat);
 2+ rows on one board: +6 heat and one row removed from the other board's pending garbage;
 4 rows: cancels up to 2 pending garbage rows on the other board.
+
+## Chaos Run (PART 21.6 stacking caps — `core/bm_config.h` `run_*`, enforced in `build_modifiers()`)
+
+| Upgrade effect | Per stack | Cap (incl. synergy) |
+|---|---|---|
+| HEAT ENGINE heat gain | +10% (max 3 stacks) | 140% (the session also clamps 50..150%) |
+| CHAIN KING chain bonus | +25% (max 3) | 200% (DEMOLITION adds +25%) |
+| OVERHEAT EXPERT success bonus | +50% (max 2) | 250% (MELTDOWN adds +50%) |
+| PRECISION ENGINE triples / quads / full T-TWISTs | +20% (max 2) | 160% (CLOCKWORK adds +20%) |
+| FINAL GAMBIT | x1.5 score while the stack is >= 70% of the visible rows | fixed 150% |
+| COMBO BATTERY | +2 heat per combo step (max 2) | 6 (CAPACITOR adds +2) |
+| IRON DEFENSE | 1 weakened garbage attack per encounter (max 2) | 3 (BUNKER adds +1) |
+| EXPLOSIVE MASTER | LV1 bomb reach +1, LV2 bomb power 2 | reach +1, power 2 |
+| FIRE STARTER | fire reach +1 (max 2) | 3 (WILDFIRE adds +1) |
+| ELECTRIC SURGE | spark range +1 (max 2) | 6 = `spark_range_max` (STORM CELL adds +1) |
+| MAGNETIC FIELD | LV1 +1 column, LV2 +1 row | 4 columns, 2 rows |
+| RAINBOW MASTER | +1 rainbow target | 3 |
+| CRYSTAL BREAKER | +1 damage vs ice / armor | 1 |
+| LASER FOCUS | laser cost -5 (max 2) | -10; never below `ability_min_cost` 15 |
+| FAST CHARGER | all cooldowns -1 (max 2) | -2; never below `ability_min_cooldown` 1 |
+| TIME ENGINEER | Time Freeze +60 frames (max 2) | 300 frames total |
+| SAFE VENT | Vent +2 cells (max 2) | 12 cells total |
+| HOT START | +20 starting heat per encounter (max 2) | 40 |
+| BOMB / STORM SUPPLY | +20 bomb / spark distribution weight (max 2) | +40 |
+| SECOND CHANCE | one rescued top-out (top 4 rows vented) | 1 per run |
+| REACTIVE ARMOR | absorbs the first hazard of every encounter | 1 per encounter |
+| DOUBLE SPARK | one extra pulse per qualifying spark chain | once per resolution |
+
+Run pacing: 3 acts x (3 encounters + boss). Encounter level = 2 / 4 / 6 (+1 from the third
+encounter); bosses at level 3 / 5 / 7 with HP x0.70 / x0.90 / x1.10. Clear bonus 1500 x act,
+bonus goal 1000 x act, boss bonus 5000 x act. Offer rarity odds (rare / legendary): act 1 22% / 4%,
+act 2 28% / 8%, act 3 34% / 12%; the first card after a boss is always rare or better.

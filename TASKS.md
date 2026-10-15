@@ -16,9 +16,9 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-01 | TESTED | EMU | Real GBA toolchain: MSYS2 + devkitARM (gba-dev) + Butano 21.9.0 | 2.2 | - | README.md | ROM builds; `sprites` example + BlockMayhem.gba built |
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
-| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 61/61 |
+| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 68/68 |
 | ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
-| ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | commits: foundation, core, session, playable |
+| ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
 | ENV-08 | IMPLEMENTED | - | Continuation via native `/loop` self-pacing (documented) | 48.2-48.4 | - | CONTINUE_HERE.md | |
 
@@ -89,7 +89,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | HEAT-06 | IMPLEMENTED | - | Success: 2 rows -> bonus + celebration | 9.4 | HEAT-03 | core/bm_session.cpp | needs unit test |
 | HEAT-07 | TESTED | UNIT | Failure: garbage by difficulty, visible warning, never instant death | 9.5 | HEAT-03 | core/bm_session.cpp | heat.overheat_failure_queues_visible_garbage |
 | HEAT-08 | TESTED | UNIT | Heat during Overheat capped at 50 | 9.6 | HEAT-03 | core/bm_session.cpp | heat.overheat_consumes_meter_and_caps_gain |
-| HEAT-09 | IMPLEMENTED | EMU | SPICE intensity labels MILD..INFERNO/OVERHEAT + meter colours | 61.1 | HEAT-01 | src/bm_game_scene.cpp | arcade_autoplay.png |
+| HEAT-09 | IMPLEMENTED | EMU | SPICE intensity labels MILD..INFERNO/OVERHEAT (coloured) + meter colours | 61.1 | HEAT-01 | src/bm_game_scene.cpp | world4_stage.png (HOT), boss5_fight.png (OVERHEAT) |
 
 ## ABIL — Active abilities (PART 10, 11)
 
@@ -105,7 +105,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ABIL-08 | TESTED | UNIT | EMERGENCY VENT 50/6: remove 8 highest cells, no score | 10.8 | ABIL-10 | core/bm_session.cpp | abilities.vent_removes_highest_cells |
 | ABIL-09 | IMPLEMENTED | EMU | Loadout of 3, SELECT cycles, R activates | 11.1 | - | core/bm_session.cpp, src/* | autoplay uses abilities |
 | ABIL-10 | TESTED | UNIT | Targeting state, A confirm / B cancel / 5 s timeout without cost | 10, 11.1 | - | core/bm_session.cpp | abilities.targeting_timeout_cancels_without_cost |
-| ABIL-11 | IMPLEMENTED | EMU | Cost / cooldown / disabled state shown in HUD | 8.3 | - | src/bm_game_scene.cpp | arcade_autoplay.png |
+| ABIL-11 | IMPLEMENTED | EMU | Cost / cooldown / disabled state shown in HUD (all four layouts) | 8.3 | - | src/bm_game_scene.cpp | world4_stage.png, boss2_fight.png, world4_dual.png |
 | ABIL-12 | IMPLEMENTED | EMU | Ability animations (beam, nuke blast, freeze tint, arrows, sparks, vent steam) | 10 | VIS-04 | src/bm_game_scene.cpp | needs screenshots |
 | ABIL-13 | NOT STARTED | - | Ability unlocks through Adventure progression | 27.3 | ADV-01 | | |
 | ABIL-14 | NOT STARTED | - | Arcade loadout selection screen | 22.2 | UI-02 | | |
@@ -125,7 +125,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 |----|--------|--------|------|------|------|-------|----------|
 | DUAL-01 | IMPLEMENTED | - | Two 8x18 boards, shared queue, own grids/pieces/garbage/combo | 12.2, 12.4 | CORE-01 | core/bm_session.cpp | needs tests |
 | DUAL-02 | IMPLEMENTED | - | One active board; inactive pauses; SELECT switches | 12.3 | DUAL-01 | core/bm_session.cpp | |
-| DUAL-03 | IMPLEMENTED | - | Forced switch after 4 locks, countdown, never during animations | 12.3 | DUAL-02 | core/bm_session.cpp | countdown display missing |
+| DUAL-03 | IMPLEMENTED | EMU | Forced switch after 4 locks, countdown, never during animations | 12.3 | DUAL-02 | core/bm_session.cpp, src/bm_game_scene.cpp | SWITCH n label in world4_dual.png; needs unit test |
 | DUAL-04 | IMPLEMENTED | - | Cross-board interactions (heat+defence, spark charge, garbage cancel) | 12.5 | DUAL-01 | core/bm_session.cpp | needs tests |
 | DUAL-05 | IMPLEMENTED | - | CROSS OVER combo within 4 locks; no switch-farming exploit | 12.6 | DUAL-04 | core/bm_session.cpp | needs tests |
 | DUAL-06 | IMPLEMENTED | - | Failure if either board tops out; warnings for both | 12.7 | DUAL-01 | core/bm_session.cpp | |
@@ -136,28 +136,28 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | ADV-01 | IMPLEMENTED | - | Stage data model: objectives, hazards, layouts, specials, ranks | 13, 50.3 | - | core/bm_content.h | |
-| ADV-02 | NOT STARTED | - | 30 stage definitions (bm_stages.cpp) | 14-19 | ADV-01 | | |
-| ADV-03 | NOT STARTED | - | World map screen (icons, animated minis, locks, progress) | 13.2 | ADV-02 | | |
-| ADV-04 | NOT STARTED | - | Stage intro cards, contextual tutorials | 14, 36 | ADV-02 | | |
-| ADV-05 | NOT STARTED | - | Stage results with transparent ranks C..S+ | 27.2 | ADV-02 | src/bm_flow.cpp | stage_rank() exists |
-| ADV-06 | NOT STARTED | - | Hazard: freezing events (W2) | 15 | ADV-01 | core/bm_session.cpp | logic implemented, untested |
-| ADV-07 | NOT STARTED | - | Hazard: lava pressure meter (W3) | 16 | ADV-01 | core/bm_session.cpp | logic implemented, untested |
-| ADV-08 | NOT STARTED | - | Hazard: settle-direction cycles / gravity shifts (W5) | 18 | ADV-01 | core/bm_session.cpp | logic implemented, untested |
-| ADV-09 | NOT STARTED | - | Hazard: surges / mixed (W4, W6) | 17, 19 | ADV-01 | core/bm_session.cpp | logic implemented, untested |
+| ADV-02 | TESTED | SIM | 30 stage definitions (bm_stages.cpp) | 14-19 | ADV-01 | core/bm_stages.cpp | tests/test_stages.cpp: every stage won by bots, 0 invalid, 0 timeouts |
+| ADV-03 | IMPLEMENTED | EMU | World map screen (icons, locks, progress, cleared stars) | 13.2 | ADV-02 | src/bm_adventure_scenes.cpp | worldmap.png (adventure.txt) |
+| ADV-04 | IMPLEMENTED | EMU | Stage intro cards (goal icons, bonus, best) + contextual tips | 14, 36 | ADV-02 | src/bm_adventure_scenes.cpp, src/bm_game_scene.cpp | stagecard.png, world*_stage.png tips |
+| ADV-05 | IMPLEMENTED | - | Stage results with transparent ranks C..S+ | 27.2 | ADV-02 | src/bm_flow.cpp, src/bm_menu_scenes.cpp | needs results screenshot + rank unit test |
+| ADV-06 | TESTED | SIM | Hazard: freezing events (W2) | 15 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
+| ADV-07 | TESTED | SIM | Hazard: lava pressure meter (W3) | 16 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
+| ADV-08 | TESTED | SIM | Hazard: settle-direction cycles / gravity shifts (W5) | 18 | ADV-01 | core/bm_session.cpp | test_stages + settle.* unit tests |
+| ADV-09 | TESTED | SIM | Hazard: surges / mixed (W4, W6) | 17, 19 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
 | ADV-10 | NOT STARTED | - | STAGE_PASSPORTS.md for all 30 stages | 50.3 | ADV-02 | | |
-| ADV-11 | NOT STARTED | - | Automated validation of all 30 stages (sim + emulator) | 50.10, 56.4 | ADV-02 | | |
-| ADV-12 | NOT STARTED | - | World unlock progression + replay | 27.1 | ADV-02 | | |
+| ADV-11 | IN PROGRESS | SIM | Automated validation of all 30 stages (sim + emulator) | 50.10, 56.4 | ADV-02 | tests/test_stages.cpp, tests/emu/worlds.txt | sims: all 30; emulator: first stage of each world + 4-3 + all 6 bosses |
+| ADV-12 | IMPLEMENTED | - | World unlock progression + replay | 27.1 | ADV-02 | src/bm_flow.cpp | record_session unlocks next world; needs emulator save test |
 
 ## WORLD — World production parity (PART 14-19, 49)
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | W1-ART | IMPLEMENTED | EMU | World 1 factory far+near layers, palette animation (gears, belt, lamps, neon) | 14, 23.3 | - | tools/gfx/backgrounds.py | classic_play.png |
-| W2-ART | NOT STARTED | - | World 2 frozen factory layers + animation | 15 | - | | |
-| W3-ART | NOT STARTED | - | World 3 volcano layers + animation | 16 | - | | |
-| W4-ART | NOT STARTED | - | World 4 neon city layers + animation | 17 | - | | |
-| W5-ART | NOT STARTED | - | World 5 gravity dimension layers + animation | 18 | - | | |
-| W6-ART | NOT STARTED | - | World 6 final meltdown layers + animation | 19 | - | | |
+| W2-ART | IMPLEMENTED | EMU | World 2 frozen factory layers + animation (aurora, icicles, snow) | 15 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world2_stage.png |
+| W3-ART | IMPLEMENTED | EMU | World 3 volcano layers + animation (lava cycle, embers, heat haze HBE) | 16 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world3_stage.png |
+| W4-ART | IMPLEMENTED | EMU | World 4 neon city layers + animation (lightning, neon pictograms, rain) | 17 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world4_stage.png, world4_dual.png |
+| W5-ART | IMPLEMENTED | EMU | World 5 gravity dimension layers + animation (floating islands, dust) | 18 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world5_stage.png |
+| W6-ART | IMPLEMENTED | EMU | World 6 final meltdown layers + animation (glitch HBE, debris) | 19 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world6_stage.png |
 | W-FRAME | IMPLEMENTED | - | World-specific board frame tints | 49.3 | - | src/bm_board_view.cpp | tints for 6 worlds; decor tiles missing |
 | W-MATRIX | NOT STARTED | - | WORLD_PRODUCTION_MATRIX.md | 49.4 | - | | |
 | W-INTRO | NOT STARTED | - | World introductions + world-complete celebrations | 49.3 | ADV-03 | | |
@@ -170,13 +170,13 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | BOSS-FW-02 | IMPLEMENTED | - | Damage table, chain bonus cap, ability damage, Overheat bonus, 40% cap | 20.2 | BOSS-FW-01 | core/bm_session.cpp | needs tests |
 | BOSS-FW-03 | IMPLEMENTED | - | Phase transitions at HP thresholds, visible, timers frozen | 20.3 | BOSS-FW-01 | core/bm_session.cpp | |
 | BOSS-FW-04 | IMPLEMENTED | - | Fairness: no attacks in pause/transition, shield, freeze pauses countdown | 20.5 | BOSS-FW-01 | core/bm_session.cpp | needs tests |
-| BOSS-ANIM | NOT STARTED | - | Boss animation controller (INTRO..FINISHED states) | 51.2 | - | | |
-| BOSS-1 | NOT STARTED | - | Block Monster encounter, art, animation, defeat | 14 | BOSS-FW-01 | | |
-| BOSS-2 | NOT STARTED | - | Cryo Titan | 15 | BOSS-FW-01 | | |
-| BOSS-3 | NOT STARTED | - | Magma Hydra (multi-head) | 16 | BOSS-FW-01 | | |
-| BOSS-4 | NOT STARTED | - | Electric Emperor (dual board) | 17 | BOSS-FW-01 | | |
-| BOSS-5 | NOT STARTED | - | Gravity King | 18 | BOSS-FW-01 | | |
-| BOSS-6 | NOT STARTED | - | Core of Mayhem (5 phases, final victory sequence) | 19 | BOSS-FW-01 | | |
+| BOSS-ANIM | IMPLEMENTED | EMU | Boss animation controller (INTRO..FINISHED states) | 51.2 | - | src/bm_boss_view.cpp | boss*_fight.png, boss1_end.png |
+| BOSS-1 | IMPLEMENTED | EMU | Block Monster encounter, art, animation, defeat | 14 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss1_fight.png, boss1_end.png; stage sim wins |
+| BOSS-2 | IMPLEMENTED | EMU | Cryo Titan | 15 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss2_fight.png; stage sim wins |
+| BOSS-3 | IMPLEMENTED | EMU | Magma Hydra (multi-head) | 16 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss3_fight.png; stage sim wins |
+| BOSS-4 | IMPLEMENTED | EMU | Electric Emperor (dual board) | 17 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss4_fight.png; stage sim wins |
+| BOSS-5 | IMPLEMENTED | EMU | Gravity King | 18 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss5_fight.png; stage sim wins |
+| BOSS-6 | IN PROGRESS | EMU | Core of Mayhem (5 phases, sealed second board, final victory sequence) | 19 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss6_fight.png, boss6_dual.png; ending sequence missing (STORY-03) |
 | BOSS-MATRIX | NOT STARTED | - | BOSS_PRODUCTION_MATRIX.md | 51.6 | - | | |
 | BOSS-VAL | NOT STARTED | - | Six boss validation entries (sim + emulator) | 51.5, 56.5 | BOSS-1..6 | | |
 
@@ -184,13 +184,13 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| RUN-01 | NOT STARTED | - | 3 acts x (3 encounters + boss), seeded generation | 21.1 | ADV-01 | | |
-| RUN-02 | NOT STARTED | - | 20+ upgrades with real effects | 21.3 | - | core/bm_content.h (modifiers) | modifiers wired into rules |
-| RUN-03 | NOT STARTED | - | Rarity (common/rare/legendary) | 21.4 | RUN-02 | | |
-| RUN-04 | NOT STARTED | - | Synergies + explicit stacking caps | 21.5, 21.6 | RUN-02 | | |
-| RUN-05 | NOT STARTED | - | Upgrade selection screen (3 choices) | 21.2 | RUN-02 | | |
-| RUN-06 | NOT STARTED | - | Run summary / defeat screens, saved stats | 21.7 | RUN-01 | | |
-| RUN-07 | NOT STARTED | - | Roguelite tests: generation, caps, seeds, completion, failure | 39.6 | RUN-01 | | |
+| RUN-01 | TESTED | SIM | 3 acts x (3 encounters + boss), seeded generation (14 templates, act escalation) | 21.1 | ADV-01 | core/bm_run.* | run.same_seed_same_run_and_seeds_differ, run.offers_are_always_valid_and_runs_never_repeat_content |
+| RUN-02 | TESTED | SIM | 31 upgrades with real effects (23 effects + 8 ARMORY) | 21.3, 60.2 | - | core/bm_run.cpp, core/bm_session.cpp | run.upgrade_pool_is_large_and_well_formed; full bot runs |
+| RUN-03 | IMPLEMENTED | EMU | Rarity (common/rare/legendary) with odds by act, legendary sparkle cards | 21.4 | RUN-02 | core/bm_run.cpp, src/bm_run_scenes.cpp | run_upgrades.png |
+| RUN-04 | TESTED | UNIT | 7 synergies + explicit stacking caps | 21.5, 21.6 | RUN-02 | core/bm_run.cpp, core/bm_config.h | run.maxed_build_respects_every_cap |
+| RUN-05 | IMPLEMENTED | EMU | Upgrade selection screen (3 choices, synergy / ARMORY hints) | 21.2 | RUN-02 | src/bm_run_scenes.cpp | run_upgrades.png (chaos_run.txt) |
+| RUN-06 | IMPLEMENTED | EMU | Run map, encounter results, summary / defeat screens, saved records + codex | 21.7 | RUN-01 | src/bm_run_scenes.cpp, src/bm_flow.cpp | run_map*.png, run_results.png; summary needs screenshot |
+| RUN-07 | TESTED | SIM | Roguelite tests: generation, caps, seeds, completion, failure | 39.6 | RUN-01 | tests/test_run.cpp | 6 run.* tests; run_report.md (5/6 bot runs complete) |
 
 ## MODE — Modes (PART 22)
 
@@ -200,8 +200,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | MODE-02 | IMPLEMENTED | EMU | CHAOS ARCADE endless with specials/heat/abilities | 22.2 | HEAT-*, ABIL-* | src/bm_flow.cpp | smoke.txt arcade autoplay 20 rows |
 | MODE-03 | NOT STARTED | - | CHAOS ARCADE controlled environmental events | 22.2 | ADV-06..09 | | |
 | MODE-04 | IMPLEMENTED | - | DUAL BOARD RELAY endless mode in menu | 22.5 | DUAL-* | src/bm_flow.cpp | needs emulator test |
-| MODE-05 | NOT STARTED | - | ADVENTURE mode flow | 22.3 | ADV-* | | |
-| MODE-06 | NOT STARTED | - | CHAOS RUN mode flow | 22.4 | RUN-* | | |
+| MODE-05 | IMPLEMENTED | EMU | ADVENTURE mode flow (map, card, stage, results, next stage) | 22.3 | ADV-* | src/bm_adventure_scenes.cpp, src/main.cpp | adventure.txt PASS |
+| MODE-06 | TESTED | EMU | CHAOS RUN mode flow | 22.4 | RUN-* | src/bm_run_scenes.cpp, src/main.cpp | tests/emu/chaos_run.txt PASS |
 | MODE-07 | NOT STARTED | - | BOSS RUSH (unlock, sequence, lives, total time) | 22.6 | BOSS-* | | |
 
 ## VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62)
@@ -237,11 +237,11 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | UI-01 | IMPLEMENTED | EMU | Title screen | 26.1 | - | src/bm_menu_scenes.cpp | title.png |
-| UI-02 | IN PROGRESS | EMU | Main menu with all modes; locked entries explain why | 26.2 | MODE-* | src/bm_menu_scenes.cpp | 3 implemented modes listed |
+| UI-02 | IN PROGRESS | EMU | Main menu with all modes; locked entries explain why | 26.2 | MODE-* | src/bm_menu_scenes.cpp | Adventure, Chaos Run, Classic, Arcade, Dual listed; Boss Rush/Options/Records missing |
 | UI-03 | IMPLEMENTED | EMU | Gameplay HUD single layout | 26.3 | - | src/bm_game_scene.cpp | screenshots |
-| UI-04 | NOT STARTED | - | Boss HUD layout | 34.2 | BOSS-1 | | |
-| UI-05 | IN PROGRESS | - | Dual HUD layout | 34.3 | DUAL-* | | |
-| UI-06 | TESTED | EMU | Original pixel fonts (small + large) | 26.4 | - | tools/gfx/font.py | text renders in screenshots |
+| UI-04 | IMPLEMENTED | EMU | Boss HUD layout (HP bar, phase tag, compact costs) | 34.2 | BOSS-1 | src/bm_game_scene.cpp, src/bm_board_view.cpp | boss1..5_fight.png |
+| UI-05 | IMPLEMENTED | EMU | Dual HUD layouts (relay + dual boss), no overlaps | 34.3 | DUAL-* | src/bm_game_scene.cpp, src/bm_board_view.cpp | world4_dual.png, boss4_fight.png, boss6_dual.png |
+| UI-06 | TESTED | EMU | Original pixel fonts (small, large, compact 3x5 HUD) | 26.4 | - | tools/gfx/font.py | text renders in screenshots |
 | UI-07 | IMPLEMENTED | - | Danger indicators (frame pulse, alarm) | 26.5 | - | src/bm_board_view.cpp | |
 | UI-08 | IMPLEMENTED | EMU | Pause menu RESUME/RESTART/CONTROLS/GHOST/QUIT(confirm) | 26.6 | - | src/bm_game_scene.cpp | pause.png |
 | UI-09 | NOT STARTED | - | Options screen (difficulty, ghost, shake, flash, volumes) | 34.4 | - | | |
@@ -255,7 +255,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| PROG-01 | NOT STARTED | - | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | | |
+| PROG-01 | IMPLEMENTED | - | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | src/bm_flow.cpp | needs save/emulator test |
 | PROG-02 | IMPLEMENTED | - | Rank formula (score, time, garbage, secondary objective) | 27.2 | ADV-01 | src/bm_flow.cpp | needs test |
 | PROG-03 | NOT STARTED | - | Rewards: abilities, modes, cosmetics, sound test, modifiers | 27.3 | PROG-01 | | |
 | ACH-01 | NOT STARTED | - | 25+ achievements incl. hidden ones, triggers + progress | 28, 35.2 | - | | |
@@ -291,7 +291,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | STORY-01 | NOT STARTED | - | Intro cutscene | 36.1 | - | | |
-| STORY-02 | NOT STARTED | - | World intros, boss entrances, dialogue cards | 36 | ADV-* | | |
+| STORY-02 | IN PROGRESS | EMU | World intros, boss entrances, dialogue cards | 36 | ADV-* | src/bm_game_scene.cpp | boss entrance card done; world intros missing |
 | STORY-03 | NOT STARTED | - | Final ending + credits roll + statistics | 19, 36 | BOSS-6 | | |
 | SECRET-01 | NOT STARTED | - | Secret events, easter eggs, unlockable cosmetics | 35 | - | | |
 

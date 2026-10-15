@@ -54,6 +54,7 @@ namespace bm
         uint8_t start_heat = 0;
         bool endless = false;                   // Arcade / Dual relay endless variants
         uint16_t lines_goal = 0;                // optional line target for non-stage modes (0 = none)
+        uint16_t boss_hp_percent = 100;         // Chaos Run act scaling
         bool skip_intro = false;
     };
 

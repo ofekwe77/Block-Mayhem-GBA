@@ -197,7 +197,7 @@ namespace bm
                     int score = _evaluate(rows, cols, nrows, lines, low);
                     if(_strategy == bot_strategy::random_legal)
                     {
-                        score = int(const_cast<rng&>(_rng).below(1000));
+                        score = const_cast<rng&>(_rng).below(1000);
                     }
                     if(! best.valid || score > best.score)
                     {

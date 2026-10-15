@@ -152,6 +152,32 @@ namespace bm::cfg
     constexpr int special_interval_normal_max = 7;
     constexpr int special_interval_advanced_min = 3;
     constexpr int special_interval_advanced_max = 5;
+
+    // ---------------------------------------------------------------- CHAOS RUN (PART 21.6 stacking caps)
+    constexpr int run_heat_gain_percent_max = 140;      // HEAT ENGINE
+    constexpr int run_chain_score_percent_max = 200;    // CHAIN KING (+ DEMOLITION)
+    constexpr int run_overheat_bonus_percent_max = 250; // OVERHEAT EXPERT (+ MELTDOWN)
+    constexpr int run_precision_percent_max = 160;      // PRECISION ENGINE (+ CLOCKWORK)
+    constexpr int run_gambit_percent = 150;             // FINAL GAMBIT (stack >= 70% of the visible rows)
+    constexpr int run_combo_battery_max = 6;            // heat per combo step
+    constexpr int run_iron_defense_max = 3;             // weakened garbage attacks per encounter
+    constexpr int run_fire_reach_max = 3;
+    constexpr int run_bomb_plus_max = 1;
+    constexpr int run_bomb_power_max = 2;
+    constexpr int run_magnet_cols_max = 4;
+    constexpr int run_magnet_rows_max = 2;
+    constexpr int run_rainbow_targets_max = 3;
+    constexpr int run_freeze_bonus_max = time_freeze_max_frames - time_freeze_frames;
+    constexpr int run_vent_bonus_max = vent_cells_max - vent_cells;
+    constexpr int run_cost_reduction_max = 10;          // per ability; ability_min_cost still applies
+    constexpr int run_cooldown_reduction_max = 2;       // ability_min_cooldown still applies
+    constexpr int run_start_heat_max = 40;              // HOT START
+    constexpr int run_supply_weight_max = 40;           // BOMB / STORM SUPPLY extra distribution weight
+    constexpr int run_second_chances_max = 1;           // SECOND CHANCE: one rescue per run
+    constexpr int run_encounter_bonus = 1500;           // x act number
+    constexpr int run_secondary_bonus = 1000;           // x act number
+    constexpr int run_boss_bonus = 5000;                // x act number
+    constexpr int run_boss_hp_percent[3] = { 70, 90, 110 };
 }
 
 #endif
