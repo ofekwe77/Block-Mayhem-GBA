@@ -1,6 +1,7 @@
 /*
  * BLOCK MAYHEM: THE SPICE PROTOCOL - Game Boy Advance entry point.
  */
+#include "bm_adventure_scenes.h"
 #include "bm_app.h"
 #include "bm_audio.h"
 #include "bm_game_scene.h"
@@ -24,6 +25,10 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::main_menu_scene());
         case bm::scene_id::results:
             return bn::unique_ptr<bm::scene>(new bm::results_scene());
+        case bm::scene_id::world_map:
+            return bn::unique_ptr<bm::scene>(new bm::world_map_scene());
+        case bm::scene_id::stage_card:
+            return bn::unique_ptr<bm::scene>(new bm::stage_select_scene());
         case bm::scene_id::title:
         default:
             return bn::unique_ptr<bm::scene>(new bm::title_scene());
@@ -55,6 +60,24 @@ namespace
             a.flow.autoplay = a.pending_args[2] != 0;
             a.autoplayer.reset(bm::bot_strategy::resource_aware, a.flow.seed);
             return bm::scene_id::gameplay;
+
+        case BM_TI_CMD_START_STAGE:
+            a.flow.mode = bm::game_mode::adventure;
+            a.flow.world = uint8_t(a.pending_args[0] >= 1 && a.pending_args[0] <= 6 ? a.pending_args[0] : 1);
+            a.flow.stage = uint8_t(a.pending_args[1] >= 1 && a.pending_args[1] <= 5 ? a.pending_args[1] : 1);
+            a.flow.seed = a.pending_args[2] ? a.pending_args[2] : 1;
+            a.flow.autoplay = a.pending_args[3] != 0;
+            a.autoplayer.reset(bm::bot_strategy::resource_aware, a.flow.seed);
+            return bm::scene_id::gameplay;
+
+        case BM_TI_CMD_UNLOCK_ALL:
+            // Diagnostic save image with every world reachable (in memory only, never written by this command).
+            a.save.worlds_unlocked = 6;
+            for(bm::stage_record& r : a.save.stages)
+            {
+                r.cleared = 1;
+            }
+            return bn::nullopt;
 
         case BM_TI_CMD_GOTO_SCENE:
             return bm::scene_id(a.pending_args[0]);

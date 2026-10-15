@@ -65,7 +65,32 @@ namespace bm::tile
     constexpr int meter_7 = 58;
     constexpr int meter_8 = 59;
     constexpr int garbage_ghost = 60;
-    constexpr int count = 61;
+    constexpr int warn_row = 61;
+    constexpr int target = 62;
+    constexpr int gap_mark = 63;
+    constexpr int hp_left = 64;
+    constexpr int hp_right = 65;
+    constexpr int hp_0 = 66;
+    constexpr int hp_1 = 67;
+    constexpr int hp_2 = 68;
+    constexpr int hp_3 = 69;
+    constexpr int hp_4 = 70;
+    constexpr int hp_5 = 71;
+    constexpr int hp_6 = 72;
+    constexpr int hp_7 = 73;
+    constexpr int hp_8 = 74;
+    constexpr int heath_left = 75;
+    constexpr int heath_right = 76;
+    constexpr int heath_0 = 77;
+    constexpr int heath_1 = 78;
+    constexpr int heath_2 = 79;
+    constexpr int heath_3 = 80;
+    constexpr int heath_4 = 81;
+    constexpr int heath_5 = 82;
+    constexpr int heath_6 = 83;
+    constexpr int heath_7 = 84;
+    constexpr int heath_8 = 85;
+    constexpr int count = 86;
 }
 
 #endif

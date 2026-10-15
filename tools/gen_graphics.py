@@ -121,8 +121,10 @@ def main():
     gen_fonts()
     import sprites  # noqa: E402
     import backgrounds  # noqa: E402
+    import bosses  # noqa: E402
     sprites.generate(GFX, write_bmp, write_json)
     backgrounds.generate(GFX, INC, write_bmp, write_json)
+    bosses.generate(GFX, write_bmp, write_json)
     print("graphics generated (%d board tiles)" % n)
 
 

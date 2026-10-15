@@ -122,6 +122,7 @@ namespace bm
     struct boss_def
     {
         const char* name = "";
+        const char* short_name = "";    // compact name for HUD / map lines
         const char* title = "";         // short epithet shown on the boss entrance card
         uint16_t hp = 100;
         uint8_t phase_count = 1;

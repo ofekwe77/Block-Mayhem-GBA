@@ -46,6 +46,7 @@ class Layer:
         self.px = [[0] * w for _ in range(h)]
 
     def set(self, x, y, c):
+        y = int(y)
         if 0 <= y < self.h:
             self.px[y][int(x) % self.w] = self.pal[c]
 

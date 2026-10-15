@@ -24,8 +24,9 @@ namespace bm
     enum class layout_kind : uint8_t
     {
         single,     // board centred, panels on both sides
-        boss,       // board on the left, boss on the right
-        dual        // two boards with a shared centre column
+        boss,       // board on the left, HUD column, boss on the right
+        dual,       // two boards with a shared centre column
+        dual_boss   // two boards, boss in the centre column (or on the right while board B is sealed)
     };
 
     struct board_slot
@@ -43,6 +44,9 @@ namespace bm
         int8_t next_count = 3;
         int8_t meter_x = 7, meter_y = 7;        // heat meter column, 11 tiles tall
         int8_t meter_tiles = 9;
+        int8_t hp_x = -1, hp_y = 0, hp_tiles = 0;   // boss HP bar (map cells), hp_x < 0 = none
+        int8_t heat_bar_x = -1, heat_bar_y = 0, heat_bar_tiles = 0;   // horizontal heat bar instead of the meter
+        int16_t boss_x = 196, boss_y = 92;      // boss rig centre (screen pixels)
     };
 
     // Rows currently flashing because they were cleared (presentation state, set by the effects system).
@@ -68,6 +72,7 @@ namespace bm
 
         void flash_rows(int board, uint32_t rows, int frames);
         void set_world_tint(int world);
+        void set_board_b_visible(bool visible);
         void update(const session& s, bool ghost_enabled, int frame);
 
     private:
@@ -88,6 +93,9 @@ namespace bm
 
         void _put(int mx, int my, int tile, int bank, bool hflip = false, bool vflip = false);
         void _draw_static(int world);
+        void _draw_telegraphs(const session& s, int frame);
+        void _draw_hp(const session& s);
+        bool _board_b_visible = true;
         void _draw_panel(int x, int y, int w, int h);
         void _draw_frame(int board, int cols, int rows);
         void _draw_board(const session& s, int board, bool ghost_enabled, int frame);

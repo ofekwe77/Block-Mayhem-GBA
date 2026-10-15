@@ -30,7 +30,10 @@ namespace bm
                 l.boards[0] = { 2, 1 };
                 l.next_x = 13; l.next_y = 1; l.next_count = 2;
                 l.hold_x = 13; l.hold_y = 9;
-                l.meter_x = 18; l.meter_y = 9; l.meter_tiles = 8;
+                l.meter_x = -1; l.meter_y = 0; l.meter_tiles = 0;
+                l.heat_bar_x = 13; l.heat_bar_y = 14; l.heat_bar_tiles = 4;
+                l.hp_x = 19; l.hp_y = 1; l.hp_tiles = 9;
+                l.boss_x = 196; l.boss_y = 88;
                 break;
 
             case layout_kind::dual:
@@ -39,6 +42,16 @@ namespace bm
                 l.next_x = 12; l.next_y = 1; l.next_count = 2;
                 l.hold_x = 12; l.hold_y = 9;
                 l.meter_x = 14; l.meter_y = 15; l.meter_tiles = 2;
+                break;
+
+            case layout_kind::dual_boss:
+                l.boards[0] = { 2, 3 };
+                l.boards[1] = { 20, 3 };
+                l.next_x = 12; l.next_y = 10; l.next_count = 1;
+                l.hold_x = 12; l.hold_y = 15;
+                l.meter_x = 14; l.meter_y = 15; l.meter_tiles = 2;
+                l.hp_x = 11; l.hp_y = 0; l.hp_tiles = 6;
+                l.boss_x = 120; l.boss_y = 40;
                 break;
 
             case layout_kind::single:
@@ -176,16 +189,138 @@ namespace bm
     void board_view::_draw_static(int world)
     {
         bn::memory::clear(_map->cells);
-        const bool dual = _layout.kind == layout_kind::dual;
+        const bool dual = _layout.kind == layout_kind::dual || _layout.kind == layout_kind::dual_boss;
         const int cols = dual ? cfg::dual_board_cols : cfg::board_cols;
         const int rows = dual ? cfg::dual_board_rows : cfg::board_rows;
         for(int b = 0; b < (dual ? 2 : 1); ++b)
         {
+            if(b == 1 && ! _board_b_visible)
+            {
+                continue;
+            }
             _draw_frame(b, cols, rows);
         }
         _draw_panel(_layout.hold_x, _layout.hold_y, 6, 5);
         _draw_panel(_layout.next_x, _layout.next_y, 6, 2 + _layout.next_count * 3);
         set_world_tint(world);
+    }
+
+    void board_view::set_board_b_visible(bool visible)
+    {
+        if(visible == _board_b_visible)
+        {
+            return;
+        }
+        _board_b_visible = visible;
+        _draw_static(_world);
+        _map_ptr.reload_cells_ref();
+    }
+
+    void board_view::_draw_telegraphs(const session& s, int frame)
+    {
+        for(int b = 0; b < s.board_count(); ++b)
+        {
+            if(b == 1 && ! _board_b_visible)
+            {
+                continue;
+            }
+            const board& g = s.board_player(b).grid();
+            const board_slot& slot = _layout.boards[b];
+            const int visible = g.rows() - g.hidden();
+
+            // Restore the left frame column and the bottom frame row, then overlay warnings.
+            for(int r = 0; r < visible; ++r)
+            {
+                _put(slot.map_x - 1, slot.map_y + r, tile::frame_l, bank_frame);
+            }
+            for(int c = 0; c < g.cols(); ++c)
+            {
+                _put(slot.map_x + c, slot.map_y + visible, tile::frame_b, bank_frame);
+            }
+
+            int rows = s.incoming_rows(b);
+            int gap = rows > 0 ? s.garbage(b, 0).gap : -1;
+            bool imminent = rows > 0;
+            const pending_action& ba = s.boss_action();
+            if(ba.source && ba.board == b)
+            {
+                const attack_kind k = attack_kind(ba.kind);
+                if(k == attack_kind::garbage || k == attack_kind::punch || k == attack_kind::cross_garbage)
+                {
+                    rows += ba.strength;
+                    gap = ba.gap;
+                    imminent = imminent || ba.countdown <= 1;
+                }
+            }
+            const pending_action& ha = s.hazard_action();
+            if(ha.source && ha.board == b)
+            {
+                const hazard_kind k = hazard_kind(ha.kind);
+                if(k == hazard_kind::garbage_drip || k == hazard_kind::lava_pressure)
+                {
+                    rows += ha.strength;
+                    gap = ha.gap;
+                    imminent = imminent || ha.countdown <= 1;
+                }
+            }
+            if(b == s.active_board() && s.overheat_active() && ! s.overheat_secured() &&
+               s.overheat_timer() < cfg::overheat_garbage_warning_frames)
+            {
+                rows += s.overheat_fail_rows();
+                imminent = true;
+            }
+            if(rows > visible)
+            {
+                rows = visible;
+            }
+            const bool lit = ! imminent || (frame & 8);
+            for(int r = 0; r < rows && lit; ++r)
+            {
+                _put(slot.map_x - 1, slot.map_y + visible - 1 - r, tile::warn_row, bank_frame);
+            }
+            if(gap >= 0 && gap < g.cols() && rows > 0)
+            {
+                _put(slot.map_x + gap, slot.map_y + visible, tile::gap_mark, bank_frame);
+            }
+
+            // Column targets (crystal shards, molten rain, fire breath, frozen wall) shown in the chute row.
+            const pending_action* actions[2] = { &ba, &ha };
+            for(const pending_action* a : actions)
+            {
+                if(! a->source || a->board != b)
+                {
+                    continue;
+                }
+                for(int8_t col : a->columns)
+                {
+                    if(col >= 0 && col < g.cols() && ((frame >> 3) & 1))
+                    {
+                        _put(slot.map_x + col, slot.map_y - 1, tile::target, bank_frame);
+                    }
+                }
+            }
+        }
+    }
+
+    void board_view::_draw_hp(const session& s)
+    {
+        if(_layout.hp_x < 0 || ! s.has_boss())
+        {
+            return;
+        }
+        const int x = _layout.hp_x;
+        const int y = _layout.hp_y;
+        const int n = _layout.hp_tiles;
+        _put(x, y, tile::hp_left, bank_meter);
+        _put(x + n + 1, y, tile::hp_right, bank_meter);
+        const int total = n * 8;
+        const int fill = s.boss_max_hp() ? s.boss_hp() * total / s.boss_max_hp() : 0;
+        for(int k = 0; k < n; ++k)
+        {
+            int level = fill - k * 8;
+            level = level < 0 ? 0 : (level > 8 ? 8 : level);
+            _put(x + 1 + k, y, tile::hp_0 + level, bank_meter);
+        }
     }
 
     void board_view::set_world_tint(int world)
@@ -393,9 +528,37 @@ namespace bm
         const int x = _layout.meter_x;
         const int top = _layout.meter_y;
         const int n = _layout.meter_tiles;
-        if(_layout.kind == layout_kind::dual || ! s.config().heat)
+        if(_layout.kind == layout_kind::dual || _layout.kind == layout_kind::dual_boss || ! s.config().heat)
         {
-            return;     // dual layout shows heat with sprites; Classic has no heat at all
+            return;     // dual layouts show heat as text; Classic has no heat at all
+        }
+        if(_layout.heat_bar_x >= 0)
+        {
+            // Horizontal bar (boss layout).
+            const int hx = _layout.heat_bar_x;
+            const int hy = _layout.heat_bar_y;
+            const int hn = _layout.heat_bar_tiles;
+            _put(hx, hy, tile::heath_left, bank_meter);
+            _put(hx + hn + 1, hy, tile::heath_right, bank_meter);
+            const int htotal = hn * 8;
+            int hfill = s.overheat_active() ? s.overheat_timer() * htotal / cfg::overheat_frames
+                                            : s.heat() * htotal / cfg::heat_max;
+            if(s.overheat_active() && s.overheat_timer() < cfg::overheat_garbage_warning_frames &&
+               ! s.overheat_secured() && (frame & 8))
+            {
+                hfill = htotal;
+            }
+            for(int k = 0; k < hn; ++k)
+            {
+                int level = hfill - k * 8;
+                level = level < 0 ? 0 : (level > 8 ? 8 : level);
+                _put(hx + 1 + k, hy, tile::heath_0 + level, bank_meter);
+            }
+            return;
+        }
+        if(x < 0)
+        {
+            return;
         }
         _put(x, top, tile::meter_top, bank_meter);
         _put(x, top + n + 1, tile::meter_bottom, bank_meter);
@@ -484,12 +647,18 @@ namespace bm
     {
         for(int b = 0; b < s.board_count(); ++b)
         {
+            if(b == 1 && ! _board_b_visible)
+            {
+                continue;
+            }
             _draw_board(s, b, ghost_enabled, frame);
             if(_flash[b].timer > 0)
             {
                 --_flash[b].timer;
             }
         }
+        _draw_telegraphs(s, frame);
+        _draw_hp(s);
 
         // Hold (the active board's hold slot) and next previews.
         const player& p = s.board_player(s.active_board());

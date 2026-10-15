@@ -118,6 +118,8 @@ namespace bm
     {
         const app& a = the_app();
         _count = 0;
+        _entries[_count++] = { "ADVENTURE", "6 WORLDS, 30 STAGES, 6 BOSSES", game_mode::adventure, scene_id::world_map,
+                               false, "" };
         _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic, scene_id::gameplay, false, "" };
         _entries[_count++] = { "CHAOS ARCADE", "ENDLESS SCORE ATTACK WITH POWERS", game_mode::arcade, scene_id::gameplay,
                                false, "" };
@@ -198,16 +200,50 @@ namespace bm
         app& a = the_app();
         const session& s = *a.game;
         const bool won = a.flow.outcome == session_outcome::won;
-        _title.show_big(120, 12, won ? "VICTORY" : "RESULTS", won ? big_color::gold : big_color::steel, align::center);
+        const bool adventure = s.config().mode == game_mode::adventure;
+        if(adventure)
+        {
+            _title.show_big(120, 10, won ? "STAGE CLEAR" : "STAGE FAILED", won ? big_color::gold : big_color::blood,
+                            align::center);
+        }
+        else
+        {
+            _title.show_big(120, 12, won ? "VICTORY" : "RESULTS", won ? big_color::gold : big_color::steel, align::center);
+        }
         int line = 0;
         auto row = [this, &line](const char* name, const bn::string_view& value, text_color c)
         {
+            if(line >= 9)
+            {
+                return;
+            }
             bn::string<40> t = name;
             t.append(value);
-            _lines[line].show(120, 44 + line * 11, t, c, align::center);
+            _lines[line].show(120, 36 + line * 12, t, c, align::center);
             ++line;
         };
-        row(mode_name(s.config().mode), "", text_color::cyan);
+        if(adventure && s.config().stage)
+        {
+            bn::string<40> name = bn::to_string<4>(s.config().stage->world);
+            name.append("-");
+            name.append(bn::to_string<4>(s.config().stage->index));
+            name.append(" ");
+            name.append(s.config().stage->name);
+            row(name.c_str(), "", text_color::cyan);
+            if(won)
+            {
+                row("RANK  ", rank_name(a.flow.rank), a.flow.rank >= 4 ? text_color::yellow : text_color::white);
+                if(s.secondary().def.kind != objective_kind::none)
+                {
+                    row(s.secondary().done ? "BONUS GOAL: DONE" : "BONUS GOAL: MISSED", "",
+                        s.secondary().done ? text_color::green : text_color::gray);
+                }
+            }
+        }
+        else
+        {
+            row(mode_name(s.config().mode), "", text_color::cyan);
+        }
         row("SCORE  ", bn::to_string<16>(s.score()), text_color::yellow);
         row("ROWS  ", bn::to_string<16>(s.lines()), text_color::white);
         const uint32_t secs = s.stats().frames / 60;
@@ -225,12 +261,19 @@ namespace bm
         {
             row("OVERHEATS  ", bn::to_string<8>(s.stats().overheat_success), text_color::red);
         }
-        if(a.flow.new_record)
+        if(a.flow.new_record && line < 9)
         {
             row("NEW RECORD!", "", text_color::green);
         }
-        _hint.show(120, 148, "A: PLAY AGAIN   B: MENU", text_color::gray, align::center);
-        audio::play_music(audio::music_id::menu);
+        if(adventure)
+        {
+            _hint.show(120, 150, won ? "A: CONTINUE   B: STAGES" : "A: RETRY   B: STAGES", text_color::gray, align::center);
+        }
+        else
+        {
+            _hint.show(120, 150, "A: PLAY AGAIN   B: MENU", text_color::gray, align::center);
+        }
+        audio::play_music(won ? audio::music_id::victory : audio::music_id::game_over, won);
     }
 
     bn::optional<scene_id> results_scene::update()
@@ -239,20 +282,31 @@ namespace bm
         _input.update();
         _backdrop.update();
         app& a = the_app();
+        const bool adventure = a.flow.mode == game_mode::adventure;
+        const bool won = a.flow.outcome == session_outcome::won;
         if(a.flow.autoplay && _frame > 90)
         {
-            return scene_id::main_menu;
+            return adventure ? scene_id::world_map : scene_id::main_menu;
         }
         if(_input.ok() || _input.start())
         {
             audio::sfx(audio::sfx_id::menu_ok);
             a.flow.seed = a.flow.seed * 1103515245u + a.frame;
+            if(adventure && won)
+            {
+                if(a.flow.stage < 5)
+                {
+                    ++a.flow.stage;
+                    return scene_id::stage_card;
+                }
+                return scene_id::world_map;     // world cleared: celebration on the map
+            }
             return scene_id::gameplay;
         }
         if(_input.back())
         {
             audio::sfx(audio::sfx_id::menu_back);
-            return scene_id::main_menu;
+            return adventure ? scene_id::stage_card : scene_id::main_menu;
         }
         return bn::nullopt;
     }

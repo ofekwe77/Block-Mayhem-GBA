@@ -86,6 +86,7 @@ namespace bm
             boss_table t{};
             boss_def* d = &t.b[0];
             d->name = "THE BLOCK MONSTER";
+            d->short_name = "BLOCK MONSTER";
             d->title = "FACTORY BRUTE";
             d->hp = cfg::boss_hp[0];
             d->phase_count = 3;
@@ -95,6 +96,7 @@ namespace bm
 
             d = &t.b[1];
             d->name = "THE CRYO TITAN";
+            d->short_name = "CRYO TITAN";
             d->title = "WARDEN OF THE DEEP COLD";
             d->hp = cfg::boss_hp[1];
             d->phase_count = 3;
@@ -104,6 +106,7 @@ namespace bm
 
             d = &t.b[2];
             d->name = "THE MAGMA HYDRA";
+            d->short_name = "MAGMA HYDRA";
             d->title = "THREE HEADS, ONE FURNACE";
             d->hp = cfg::boss_hp[2];
             d->phase_count = 4;
@@ -114,6 +117,7 @@ namespace bm
 
             d = &t.b[3];
             d->name = "THE ELECTRIC EMPEROR";
+            d->short_name = "ELECTRIC EMPEROR";
             d->title = "SOVEREIGN OF THE GRID";
             d->hp = cfg::boss_hp[3];
             d->phase_count = 3;
@@ -124,6 +128,7 @@ namespace bm
 
             d = &t.b[4];
             d->name = "THE GRAVITY KING";
+            d->short_name = "GRAVITY KING";
             d->title = "LORD OF FALLING THINGS";
             d->hp = cfg::boss_hp[4];
             d->phase_count = 4;
@@ -134,6 +139,7 @@ namespace bm
 
             d = &t.b[5];
             d->name = "THE CORE OF MAYHEM";
+            d->short_name = "CORE OF MAYHEM";
             d->title = "HEART OF THE SPICE PROTOCOL";
             d->hp = cfg::boss_hp[5];
             d->phase_count = 5;

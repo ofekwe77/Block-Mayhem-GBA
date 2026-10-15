@@ -5,6 +5,7 @@
 
 #include "bn_regular_bg_items_bg_menu.h"
 #include "bn_regular_bg_items_bg_title.h"
+#include "bn_regular_bg_items_bg_worldmap.h"
 #include "bn_regular_bg_items_bg_w1_far.h"
 #include "bn_regular_bg_items_bg_w1_near.h"
 
@@ -36,6 +37,10 @@ namespace bm
                 { &bn::regular_bg_items::bg_menu, bgfx::bg_menu_cycles, bgfx::bg_menu_cycle_count, 1 },
                 { nullptr, nullptr, 0, 0 }
             };
+            static const backdrop_def map_def = {
+                { &bn::regular_bg_items::bg_worldmap, bgfx::bg_worldmap_cycles, bgfx::bg_worldmap_cycle_count, 0 },
+                { nullptr, nullptr, 0, 0 }
+            };
             static const backdrop_def w1 = {
                 { &bn::regular_bg_items::bg_w1_far, bgfx::bg_w1_far_cycles, bgfx::bg_w1_far_cycle_count, 2 },
                 { &bn::regular_bg_items::bg_w1_near, bgfx::bg_w1_near_cycles, bgfx::bg_w1_near_cycle_count, 6 }
@@ -46,6 +51,8 @@ namespace bm
                 return title_def;
             case backdrop_id::menu:
                 return menu_def;
+            case backdrop_id::worldmap:
+                return map_def;
             default:
                 return w1;
             }

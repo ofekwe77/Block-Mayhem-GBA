@@ -37,6 +37,15 @@ namespace bm::bgfx
     };
     constexpr int bg_menu_cycle_count = 2;
 
+    constexpr cycle bg_worldmap_cycles[] = {
+        { 3, 1, 4, 4, 0 },
+        { 2, 4, 3, 5, 0 },
+        { 2, 11, 2, 0, 2 },
+        { 3, 13, 2, 30, 3 },
+        { 1, 4, 2, 8, 0 },
+    };
+    constexpr int bg_worldmap_cycle_count = 5;
+
 }
 
 #endif

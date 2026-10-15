@@ -1,0 +1,52 @@
+# Adventure flow: menu -> world map -> stage card -> stage 1-1, then every boss via the autoplay test path.
+frames 30
+tap START
+frames 30
+expect scene == 4
+tap A
+frames 40
+expect scene == 5
+shot worldmap
+tap A
+frames 40
+expect scene == 6
+shot stagecard
+tap A
+frames 120
+expect scene == 7
+expect stage == 11
+shot stage_1_1
+# Boss 1 with autoplay.
+cmd 1 1 5 777 1
+frames 300
+shot boss1_fight
+wait boss_attacks >= 1 3000
+shot boss1_attack
+wait session_state >= 3 20000
+print boss_hp boss_phase boss_attacks session_state score cpu_max error_code
+frames 260
+shot boss1_end
+# Boss 2..6.
+cmd 1 2 5 778 1
+frames 600
+shot boss2_fight
+cmd 1 3 5 779 1
+frames 900
+shot boss3_fight
+cmd 1 4 5 780 1
+frames 600
+shot boss4_fight
+cmd 1 5 5 781 1
+frames 700
+shot boss5_fight
+cmd 1 6 5 782 1
+frames 600
+shot boss6_fight
+cmd 8 120
+frames 400
+shot boss6_phase
+cmd 8 30
+frames 300
+shot boss6_dual
+print boss_hp boss_phase active_board error_code
+expect error_code == 0

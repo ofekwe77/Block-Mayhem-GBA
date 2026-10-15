@@ -36,6 +36,10 @@ namespace bm
             c.endless = true;
             break;
 
+        case game_mode::adventure:
+            c = make_stage_config(stage(a.flow.world, a.flow.stage), c.diff, c.seed);
+            break;
+
         default:
             break;
         }
@@ -110,6 +114,54 @@ namespace bm
         return 1;
     }
 
+    void objective_text(const objective_def& o, bn::istring_base& out)
+    {
+        bn::ostringstream s(out);
+        switch(o.kind)
+        {
+        case objective_kind::lines: s << "CLEAR " << o.target << " ROWS"; break;
+        case objective_kind::bombs: s << "TRIGGER " << o.target << " BOMBS"; break;
+        case objective_kind::chains: s << o.target << " CHAINS OF " << int(o.param) << "+ WAVES"; break;
+        case objective_kind::magnets: s << o.target << " MAGNET PULLS"; break;
+        case objective_kind::overheat_success: s << "MASTER " << o.target << " OVERHEAT"; break;
+        case objective_kind::cross_combos: s << o.target << " CROSS OVER COMBOS"; break;
+        case objective_kind::survive_pieces: s << "SURVIVE " << o.target << " PIECES"; break;
+        case objective_kind::boss_defeat: s << "DEFEAT THE BOSS"; break;
+        case objective_kind::sparks: s << "TRIGGER " << o.target << " SPARKS"; break;
+        case objective_kind::fires: s << "TRIGGER " << o.target << " FIRES"; break;
+        case objective_kind::ice_broken: s << "BREAK " << o.target << " ICE"; break;
+        case objective_kind::quads: s << o.target << " QUAD BLASTS"; break;
+        case objective_kind::twists: s << o.target << " T-TWISTS"; break;
+        case objective_kind::max_height: s << "STACK NEVER ABOVE " << o.target; break;
+        case objective_kind::no_garbage: s << "TAKE NO GARBAGE"; break;
+        case objective_kind::time_limit: s << "FINISH IN " << o.target << " SECONDS"; break;
+        default: break;
+        }
+    }
+
+    bool stage_unlocked(const save_data& sv, int world, int index)
+    {
+        if(world > sv.worlds_unlocked)
+        {
+            return false;
+        }
+        if(index <= 1)
+        {
+            return true;
+        }
+        return sv.stages[stage_number(world, index - 1)].cleared != 0;
+    }
+
+    int world_cleared_stages(const save_data& sv, int world)
+    {
+        int n = 0;
+        for(int i = 1; i <= 5; ++i)
+        {
+            n += sv.stages[stage_number(world, i)].cleared ? 1 : 0;
+        }
+        return n;
+    }
+
     bool record_session(app& a)
     {
         const session& s = *a.game;
@@ -144,6 +196,55 @@ namespace bm
         case game_mode::dual_relay:
             insert_high(sv.dual_high, s.score());
             break;
+        case game_mode::adventure:
+        {
+            const stage_def* st = s.config().stage;
+            a.flow.rank = 0;
+            if(st && s.state() == session_state::won)
+            {
+                stage_record& rec = sv.stages[stage_number(st->world, st->index)];
+                const int rank = stage_rank(s);
+                const uint16_t secs = uint16_t(s.stats().frames / 60 > 65535 ? 65535 : s.stats().frames / 60);
+                a.flow.rank = uint8_t(rank);
+                if(! rec.cleared || s.score() > rec.best_score)
+                {
+                    record = rec.cleared != 0;
+                    rec.best_score = s.score();
+                }
+                if(! rec.cleared || secs < rec.best_seconds)
+                {
+                    rec.best_seconds = secs;
+                }
+                if(rank > rec.best_rank)
+                {
+                    rec.best_rank = uint8_t(rank);
+                }
+                rec.cleared = 1;
+                // Abilities met in the campaign become available in Chaos Arcade.
+                for(int i = 0; i < st->loadout_count; ++i)
+                {
+                    sv.abilities_unlocked = uint8_t(sv.abilities_unlocked | (1u << st->loadout[i]));
+                }
+                if(st->boss)
+                {
+                    ++sv.stats.bosses_defeated;
+                    if(st->world < 6 && sv.worlds_unlocked <= st->world)
+                    {
+                        sv.worlds_unlocked = uint8_t(st->world + 1);
+                    }
+                    if(st->world >= 3)
+                    {
+                        sv.boss_rush_unlocked = 1;
+                    }
+                    if(st->world == 6)
+                    {
+                        sv.campaign_complete = 1;
+                    }
+                    sv.music_unlocked |= 1u << (st->world + 1);
+                }
+            }
+            break;
+        }
         default:
             break;
         }

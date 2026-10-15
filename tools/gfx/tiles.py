@@ -495,6 +495,87 @@ def build():
         add("METER_%d" % level, meter_fill(level))
     # Charged variant on a garbage-looking cell and a ghost for telegraphed incoming garbage.
     add("GARBAGE_GHOST", [[(4 if v in (3, 4, 5) else (0 if v == 2 else v)) for v in r] for r in GARBAGE])
+    # Telegraph tiles (bank 0): incoming-garbage warning inside the frame column, column target in the chute,
+    # gap marker under the board.
+    add("WARN_ROW", T(
+        "1cccccc1",
+        "1cddddc1",
+        "1cdeedc1",
+        "1cdeedc1",
+        "1cddddc1",
+        "1cccccc1",
+        "1cccccc1",
+        "11111111",
+    ))
+    add("TARGET", T(
+        "........",
+        ".cccccc.",
+        ".cddddc.",
+        "..cddc..",
+        "..ceec..",
+        "...cc...",
+        "...ee...",
+        "........",
+    ))
+    add("GAP_MARK", T(
+        "11111111",
+        "222ee222",
+        "44eeee44",
+        "5eeffee5",
+        "4a4ee4b4",
+        "33333333",
+        "22222222",
+        "11111111",
+    ))
+    # Boss HP bar (bank 11: 12 frame, 13 fill light, 14 fill, 1 outline, 2 empty).
+    add("HP_LEFT", T(
+        "11111111",
+        "1ccccccc",
+        "1c222222",
+        "1c222222",
+        "1c222222",
+        "1ccccccc",
+        "11111111",
+        "........",
+    ))
+    add("HP_RIGHT", T(
+        "11111111",
+        "ccccccc1",
+        "222222c1",
+        "222222c1",
+        "222222c1",
+        "ccccccc1",
+        "11111111",
+        "........",
+    ))
+    for level in range(9):
+        rows = []
+        for y in range(8):
+            if y in (0, 6):
+                rows.append([1] * 8)
+            elif y in (1, 5):
+                rows.append([12] * 8)
+            elif y == 7:
+                rows.append([0] * 8)
+            else:
+                rows.append([(13 if y == 2 else 14) if x < level else 2 for x in range(8)])
+        add("HP_%d" % level, rows)
+    # Horizontal heat bar (bank 11, same animated fill colours as the vertical meter).
+    add("HEATH_LEFT", [[1] * 8 if y in (0, 7) else ([1] + [3] * 7 if y in (1, 6) else [1, 3] + [2] * 6)
+                       for y in range(8)])
+    add("HEATH_RIGHT", [[1] * 8 if y in (0, 7) else ([3] * 7 + [1] if y in (1, 6) else [2] * 6 + [3, 1])
+                        for y in range(8)])
+    for level in range(9):
+        rows = []
+        for y in range(8):
+            if y in (0, 7):
+                rows.append([1] * 8)
+            elif y in (1, 6):
+                rows.append([3] * 8)
+            else:
+                fill = {2: 4, 3: 5, 4: 5, 5: 6}[y]
+                rows.append([fill if x < level else 2 for x in range(8)])
+        add("HEATH_%d" % level, rows)
     return tiles, names
 
 

@@ -299,6 +299,117 @@ def menu(gfx_dir, write_bmp, write_json):
     save_layer("bg_menu", lay, gfx_dir, write_bmp, write_json, cycles)
 
 
+WORLD_POS = [(36, 118), (78, 74), (120, 116), (160, 68), (198, 110), (214, 34)]
+
+
+def worldmap(gfx_dir, write_bmp, write_json):
+    pal = Palette([
+        bank((0, 0, 0), (4, 4, 16), (10, 8, 30), (18, 14, 48), (28, 22, 70), (44, 34, 96), (70, 56, 130),
+             (110, 96, 170), (40, 30, 34), (70, 54, 52), (104, 82, 76), (140, 116, 104), (180, 160, 150),
+             (220, 210, 240), (255, 255, 255), (6, 6, 12)),
+        bank((0, 0, 0), (20, 22, 36), (56, 60, 80), (96, 104, 128), (150, 160, 184), (220, 226, 240),
+             (232, 192, 40), (150, 110, 20), (80, 160, 220), (140, 210, 250), (210, 240, 255), (255, 255, 255),
+             (40, 70, 110), (24, 40, 80), (248, 144, 32), (8, 10, 20)),
+        bank((0, 0, 0), (40, 10, 12), (110, 24, 20), (180, 40, 16), (240, 96, 24), (255, 168, 48), (255, 232, 120),
+             (60, 40, 40), (40, 24, 72), (72, 44, 120), (120, 80, 180), (64, 232, 255), (255, 80, 200),
+             (200, 170, 240), (20, 10, 30), (255, 255, 255)),
+        bank((0, 0, 0), (60, 230, 140), (120, 255, 200), (200, 255, 230), (255, 255, 255), (20, 120, 80),
+             (176, 72, 232), (255, 60, 60), (255, 160, 60), (120, 220, 255), (80, 76, 100), (40, 36, 56),
+             (140, 136, 168), (220, 40, 40), (255, 210, 90), (6, 4, 12)),
+    ])
+    for i in range(16):
+        pal.name("s%d" % i, 0, i)
+        pal.name("f%d" % i, 1, i)
+        pal.name("v%d" % i, 2, i)
+        pal.name("p%d" % i, 3, i)
+    lay = Layer(pal)
+    lay.vgradient(0, 0, 256, 256, ["s1", "s2", "s3", "s4", "s3", "s2"])
+    rnd = random.Random(77)
+    for _ in range(110):
+        lay.set(rnd.randrange(256), rnd.randrange(256), rnd.choice(["s7", "s13", "s14", "s6"]))
+    # Nebula wisps.
+    for k in range(5):
+        cx, cy = rnd.randrange(256), rnd.randrange(160)
+        for i in range(60):
+            a = i * 0.21 + k
+            lay.set(cx + math.cos(a) * (10 + i * 0.6), cy + math.sin(a * 1.3) * (6 + i * 0.3), "s5")
+
+    # Energy path between worlds (dots cycle p1..p4 -> the path flows).
+    for w in range(5):
+        (x0, y0), (x1, y1) = WORLD_POS[w], WORLD_POS[w + 1]
+        steps = int(math.hypot(x1 - x0, y1 - y0) / 3)
+        for i in range(steps):
+            t = i / steps
+            x = x0 + (x1 - x0) * t
+            y = y0 + (y1 - y0) * t - math.sin(t * math.pi) * 10
+            lay.disc(x, y, 1.3, "p%d" % (1 + i % 4))
+
+    def island(cx, cy, w=22, h=12):
+        lay.poly([(cx - w, cy), (cx + w, cy), (cx + w * 0.6, cy + h * 0.6), (cx + 4, cy + h * 1.4),
+                  (cx - 6, cy + h * 1.2), (cx - w * 0.7, cy + h * 0.5)], "s9")
+        lay.poly([(cx - w, cy), (cx + w, cy), (cx + w * 0.5, cy + h * 0.35), (cx - w * 0.6, cy + h * 0.3)], "s10")
+        lay.rect(cx - w, cy - 1, cx + w, cy + 1, "s11")
+        for k in range(4):
+            lay.set(cx - w * 0.5 + k * w * 0.35, cy + h * 0.8 + (k % 2) * 2, "s8")
+
+    # W1 factory: platform, chimney, gear.
+    x, y = WORLD_POS[0]
+    island(x, y)
+    lay.rect(x - 14, y - 12, x + 4, y, "f3")
+    lay.rect(x - 14, y - 12, x + 4, y - 11, "f4")
+    lay.rect(x + 6, y - 20, x + 11, y, "f2")
+    lay.rect(x + 6, y - 21, x + 11, y - 20, "f6")
+    lay.gear(x - 5, y - 18, 4, 6, 8, "f2", ["f4", "f5", "f4", "f3"], "f6", "f1")
+    lay.rect(x - 12, y - 8, x - 9, y - 5, "f6")
+    lay.rect(x - 6, y - 8, x - 3, y - 5, "f14")
+    # W2 frozen factory: crystal spires.
+    x, y = WORLD_POS[1]
+    island(x, y)
+    for (dx, h) in ((-14, 10), (-7, 16), (0, 22), (7, 14), (14, 9)):
+        lay.poly([(x + dx - 3, y), (x + dx, y - h), (x + dx + 3, y)], "f9")
+        lay.line(x + dx, y - h + 2, x + dx, y - 1, "f10")
+    lay.rect(x - 18, y - 2, x + 18, y, "f11")
+    # W3 volcano: cone with a glowing crater (lava colours pulse).
+    x, y = WORLD_POS[2]
+    island(x, y)
+    lay.poly([(x - 18, y), (x - 5, y - 20), (x + 5, y - 20), (x + 18, y)], "v7")
+    lay.poly([(x - 5, y - 20), (x + 5, y - 20), (x + 3, y - 17), (x - 3, y - 17)], "v5")
+    lay.line(x - 2, y - 17, x - 6, y - 4, "v4")
+    lay.line(x + 1, y - 17, x + 5, y - 6, "v3")
+    lay.disc(x, y - 24, 2, "v6")
+    # W4 electric city: skyscrapers with neon windows (flicker).
+    x, y = WORLD_POS[3]
+    island(x, y)
+    for (dx, h, c) in ((-15, 12, "v9"), (-8, 20, "v8"), (-1, 26, "v9"), (6, 16, "v8"), (13, 10, "v9")):
+        lay.rect(x + dx, y - h, x + dx + 6, y, c)
+        for wy in range(y - h + 2, y - 1, 3):
+            lay.set(x + dx + 2, wy, "v11" if (wy + dx) % 2 else "v12")
+    lay.line(x + 1, y - 26, x + 2, y - 32, "v11")
+    # W5 gravity dimension: floating fragments and a ring.
+    x, y = WORLD_POS[4]
+    island(x, y)
+    lay.ring(x, y - 14, 10, 1.5, "p1")
+    for (dx, dy) in ((-10, -22), (8, -26), (14, -12), (-14, -8)):
+        lay.rect(x + dx, y + dy, x + dx + 4, y + dy + 4, "p6")
+        lay.set(x + dx, y + dy, "p3")
+    lay.disc(x, y - 14, 3, "p2")
+    # W6 final meltdown: dark core with a red eye.
+    x, y = WORLD_POS[5]
+    island(x, y, 20, 12)
+    lay.disc(x, y - 14, 12, "p11")
+    lay.ring(x, y - 14, 12, 2, "p12")
+    lay.disc(x, y - 14, 7, "p13")
+    lay.disc(x, y - 14, 4, "p8")
+    lay.disc(x, y - 14, 2, "p15")
+    for k in range(6):
+        a = k * math.pi / 3
+        lay.line(x + math.cos(a) * 13, y - 14 + math.sin(a) * 13, x + math.cos(a) * 17, y - 14 + math.sin(a) * 17,
+                 "p9" if k % 2 else "p6")
+    cycles = [(3, 1, 4, 4, ROTATE), (2, 4, 3, 5, ROTATE), (2, 11, 2, 0, FLICKER), (3, 13, 2, 30, PULSE),
+              (1, 4, 2, 8, ROTATE)]
+    save_layer("bg_worldmap", lay, gfx_dir, write_bmp, write_json, cycles)
+
+
 def write_cycles_header(inc_dir):
     lines = ["#ifndef BM_BG_CYCLES_H\n#define BM_BG_CYCLES_H\n\n#include <stdint.h>\n\nnamespace bm::bgfx\n{\n",
              "    struct cycle { uint8_t bank; uint8_t first; uint8_t count; uint8_t period; uint8_t mode; };\n",
@@ -320,4 +431,5 @@ def generate(gfx_dir, inc_dir, write_bmp, write_json):
     world1(gfx_dir, write_bmp, write_json)
     title(gfx_dir, write_bmp, write_json)
     menu(gfx_dir, write_bmp, write_json)
+    worldmap(gfx_dir, write_bmp, write_json)
     write_cycles_header(inc_dir)

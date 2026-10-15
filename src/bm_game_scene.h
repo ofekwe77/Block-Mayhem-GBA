@@ -7,6 +7,7 @@
 #include "bm_app.h"
 #include "bm_backdrop.h"
 #include "bm_board_view.h"
+#include "bm_boss_view.h"
 #include "bm_fx.h"
 #include "bm_scene.h"
 #include "bm_text.h"
@@ -50,6 +51,14 @@ namespace bm
         label _center_text;
         label _center_sub;
         label _pause_items[6];
+        label _warning;
+        label _boss_name;
+        label _tip;
+        label _switch_label;
+        bn::optional<boss_view> _boss;
+        int _tip_index = 0;
+        int _tip_timer = 0;
+        bool _board_b_shown = true;
         bn::optional<bn::sprite_ptr> _icons[3];
         bn::optional<bn::sprite_ptr> _icon_frame;
         bn::optional<bn::sprite_ptr> _cursor;

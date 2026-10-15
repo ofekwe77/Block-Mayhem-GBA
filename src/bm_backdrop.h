@@ -20,7 +20,8 @@ namespace bm
     {
         title,
         world1, world2, world3, world4, world5, world6,
-        menu
+        menu,
+        worldmap
     };
 
     class backdrop

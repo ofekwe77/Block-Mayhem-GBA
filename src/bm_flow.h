@@ -7,6 +7,8 @@
 
 #include "bm_app.h"
 
+#include "bn_string.h"
+
 namespace bm
 {
     // Builds the session configuration for the mode / stage selected in the flow state.
@@ -23,6 +25,13 @@ namespace bm
 
     // Stage rank (1 C .. 5 S+) from transparent criteria.
     [[nodiscard]] int stage_rank(const session& s);
+
+    // Human-readable objective ("CLEAR 12 ROWS"), written into 'out'.
+    void objective_text(const objective_def& o, bn::istring_base& out);
+
+    // True when the stage can be played (first stage of an unlocked world, or previous stage cleared).
+    [[nodiscard]] bool stage_unlocked(const save_data& sv, int world, int index);
+    [[nodiscard]] int world_cleared_stages(const save_data& sv, int world);
 }
 
 #endif

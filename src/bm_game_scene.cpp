@@ -22,7 +22,67 @@ namespace bm
             {
                 return layout_kind::dual;
             }
+            if(a.flow.mode == game_mode::adventure || a.flow.mode == game_mode::boss_rush)
+            {
+                const stage_def& st = stage(a.flow.world, a.flow.mode == game_mode::boss_rush ? 5 : a.flow.stage);
+                if(st.boss)
+                {
+                    return boss(st.boss).dual ? layout_kind::dual_boss : layout_kind::boss;
+                }
+                return st.dual ? layout_kind::dual : layout_kind::single;
+            }
             return layout_kind::single;
+        }
+
+        audio::music_id music_for(const session& s, const app& a)
+        {
+            if(s.config().mode == game_mode::classic)
+            {
+                return audio::music_id::classic;
+            }
+            if(s.config().boss)
+            {
+                return s.config().boss_id == 6 ? audio::music_id::final_boss : audio::music_id::boss;
+            }
+            if(s.config().mode == game_mode::adventure)
+            {
+                return audio::music_id(int(audio::music_id::world1) + a.flow.world - 1);
+            }
+            return audio::music_id::world1;
+        }
+
+        // HUD anchor positions per layout (screen pixels).
+        struct hud_pos
+        {
+            int16_t score_x, score_y;
+            int16_t level_y, lines_y;          // < 0 hidden
+            int16_t heat_x, heat_y, heat_name_y;
+            int16_t icon_x[3], icon_y[3];
+            int16_t cost_dx, cost_dy;
+            int16_t status_x, status_y;
+            int16_t objective_x, objective_y;
+            int16_t warning_x, warning_y;
+            int16_t tip_x, tip_y;
+        };
+
+        const hud_pos& hud_for(layout_kind kind)
+        {
+            static const hud_pos single = { 200, 98, 120, 132, 60, 47, 153, { 20, 20, 20 }, { 66, 92, 118 }, 12, -4,
+                                            200, 153, 32, 140, 200, 142, 120, 0 };
+            static const hud_pos boss_l = { 196, 141, -1, -1, 128, 121, -1, { 112, 128, 144 }, { 138, 138, 138 }, 0,
+                                            10, 196, 121, 196, 30, 196, 131, 120, 0 };
+            static const hud_pos dual = { 120, 116, -1, 136, 120, 140, 150, { 104, 104, 104 }, { 96, 96, 96 }, 12, -4,
+                                          120, 152, 120, 60, 120, 0, 120, 0 };
+            static const hud_pos dual_boss = { 48, 0, -1, -1, 120, 73, -1, { 12, 12, 12 }, { 8, 8, 8 }, 12, -4,
+                                               196, 0, 120, 60, 120, 152, 120, 152 };
+            switch(kind)
+            {
+            case layout_kind::boss: return boss_l;
+            case layout_kind::dual: return dual;
+            case layout_kind::dual_boss: return dual_boss;
+            case layout_kind::single:
+            default: return single;
+            }
         }
 
         backdrop_id backdrop_for(const app& a)
@@ -72,7 +132,8 @@ namespace bm
     void game_scene::_start_session()
     {
         _s.start(make_session_config(_app));
-        _view.set_world_tint(_app.flow.mode == game_mode::adventure ? _app.flow.world : 1);
+        _view.set_world_tint(_app.flow.mode == game_mode::adventure || _app.flow.mode == game_mode::boss_rush ?
+                             _app.flow.world : 1);
         if(_app.flow.autoplay)
         {
             _app.autoplayer.reset(bot_strategy::resource_aware, _app.flow.seed);
@@ -84,12 +145,24 @@ namespace bm
         _shown_level = -1;
         _shown_lines = -1;
         _freeze_tint = 0;
+        _tip_index = 0;
+        _tip_timer = 0;
         for(int i = 0; i < 3; ++i)
         {
             _icons[i].reset();
             _ability_cost[i].hide();
         }
-        audio::play_music(_s.config().mode == game_mode::classic ? audio::music_id::classic : audio::music_id::world1);
+        _boss.reset();
+        _board_b_shown = ! _s.board_sealed(1);
+        _view.set_board_b_visible(_board_b_shown);
+        _boss_name.hide();
+        if(_s.has_boss())
+        {
+            const view_layout& lay = _view.layout();
+            const bool sealed = _s.board_sealed(1);
+            _boss.emplace(_s.config().boss_id, _camera, sealed ? 192 : lay.boss_x, sealed ? 86 : lay.boss_y);
+        }
+        audio::play_music(music_for(_s, _app));
     }
 
     void game_scene::_cell_center(int board, int x, int y, int& sx, int& sy) const
@@ -108,8 +181,33 @@ namespace bm
             const int b = e.board < 0 ? 0 : (e.board > 1 ? 1 : e.board);
             int sx = 0;
             int sy = 0;
+            if(_boss && e.type >= event_type::boss_damage && e.type <= event_type::boss_defeated)
+            {
+                _boss->on_event(e, _fx);
+            }
             switch(e.type)
             {
+            case event_type::hazard_fired:
+                _fx.callout(lay.kind == layout_kind::dual ? 120 : _view.cell_screen_x(b, board_cols / 2), 48,
+                            hazard_name(e.a), big_color::ice, 50);
+                _fx.shake(shake_profile::medium);
+                _backdrop.excite(60, 2);
+                break;
+
+            case event_type::hazard_warning:
+                audio::sfx(audio::sfx_id::danger);
+                break;
+
+            case event_type::boss_phase:
+                _fx.callout(lay.kind == layout_kind::boss ? 196 : 120, 60,
+                            _s.config().boss && e.a + 1 >= _s.config().boss->phase_count ? "FINAL PHASE!" : "PHASE UP!",
+                            big_color::blood, 80);
+                break;
+
+            case event_type::boss_defeated:
+                _backdrop.excite(240, 3);
+                break;
+
             case event_type::piece_moved:
                 audio::sfx(audio::sfx_id::move);
                 break;
@@ -430,8 +528,15 @@ namespace bm
                 break;
 
             case event_type::gravity_shift:
+            {
+                static constexpr const char* arrows[4] = { "↓", "←", "→", "↑" };
+                bn::string<20> t = e.b ? "SETTLE " : "GRAVITY ";
+                t.append(arrows[e.a & 3]);
+                _fx.popup(_view.cell_screen_x(b, board_cols / 2), 64, t, text_color::violet, 50);
                 _fx.shake(shake_profile::medium);
+                _backdrop.excite(60, 1);
                 break;
+            }
 
             case event_type::cross_combo:
                 _fx.callout(120, 40, "CROSS OVER!", big_color::neon, 70);
@@ -532,43 +637,128 @@ namespace bm
     void game_scene::_update_hud()
     {
         const view_layout& lay = _view.layout();
-        const bool dual = lay.kind == layout_kind::dual;
+        const hud_pos& hp = hud_for(lay.kind);
+        const bool dual = lay.kind == layout_kind::dual || lay.kind == layout_kind::dual_boss;
         const int hold_cx = lay.hold_x * 8 + 24;
         const int next_cx = lay.next_x * 8 + 24;
         _hold_label.show(hold_cx, lay.hold_y * 8 + 8, "HOLD", text_color::gray, align::center);
         _next_label.show(next_cx, lay.next_y * 8 + 8, "NEXT", text_color::gray, align::center);
 
-        const int sx = dual ? 120 : 200;
-        const int sy = dual ? 116 : 98;
-        _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
-        if(_s.score() != _shown_score)
+        const int sx = hp.score_x;
+        const int sy = hp.score_y;
+        if(lay.kind == layout_kind::dual_boss)
         {
-            _shown_score = _s.score();
-            _score_value.show(sx, sy + 9, number(_s.score()), text_color::white, align::center);
-        }
-        if(! dual)
-        {
-            if(_s.level() != _shown_level)
+            if(_s.score() != _shown_score)
             {
-                _shown_level = _s.level();
-                bn::string<16> t = "LV ";
-                t.append(number(uint32_t(_s.level())));
-                _level_value.show(sx, sy + 22, t, text_color::green, align::center);
-            }
-            if(_s.lines() != _shown_lines)
-            {
-                _shown_lines = _s.lines();
-                bn::string<16> t = "ROWS ";
-                t.append(number(uint32_t(_s.lines())));
-                _lines_value.show(sx, sy + 34, t, text_color::cyan, align::center);
+                _shown_score = _s.score();
+                bn::string<20> t = "SCORE ";
+                t.append(number(_s.score()));
+                _score_value.show(sx, sy, t, text_color::white, align::center);
             }
         }
-        else if(_s.lines() != _shown_lines)
+        else
+        {
+            _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
+            if(_s.score() != _shown_score)
+            {
+                _shown_score = _s.score();
+                _score_value.show(sx, sy + 9, number(_s.score()), text_color::white, align::center);
+            }
+        }
+        if(hp.level_y >= 0 && _s.level() != _shown_level)
+        {
+            _shown_level = _s.level();
+            bn::string<16> t = "LV ";
+            t.append(number(uint32_t(_s.level())));
+            _level_value.show(sx, hp.level_y, t, text_color::green, align::center);
+        }
+        if(hp.lines_y >= 0 && _s.lines() != _shown_lines)
         {
             _shown_lines = _s.lines();
             bn::string<16> t = "ROWS ";
             t.append(number(uint32_t(_s.lines())));
-            _lines_value.show(120, sy + 20, t, text_color::cyan, align::center);
+            _lines_value.show(sx, hp.lines_y, t, text_color::cyan, align::center);
+        }
+
+        // Stage tips: short contextual overlays during the first seconds of a stage.
+        const stage_def* st = _s.config().stage;
+        if(st && _s.state() == session_state::playing && _tip_index < 3)
+        {
+            if(st->tips[_tip_index])
+            {
+                if(_tip_timer == 0)
+                {
+                    _tip.show(hp.tip_x, hp.tip_y, st->tips[_tip_index], text_color::yellow, align::center);
+                }
+                if(++_tip_timer > 200)
+                {
+                    _tip_timer = 0;
+                    ++_tip_index;
+                    _tip.hide();
+                }
+            }
+            else
+            {
+                _tip_index = 3;
+                _tip.hide();
+            }
+        }
+
+        // Incoming attack / hazard warning with its countdown in locked pieces.
+        const pending_action& ba = _s.boss_action();
+        const pending_action& ha = _s.hazard_action();
+        const pending_action* warn = ba.source ? &ba : (ha.source ? &ha : nullptr);
+        if(warn)
+        {
+            bn::string<32> t = warn->source == 2 ? attack_name(warn->kind) : hazard_name(warn->kind);
+            t.append(" IN ");
+            t.append(number(uint32_t(warn->countdown > 0 ? warn->countdown : 0)));
+            _warning.show(hp.warning_x, hp.warning_y, t, warn->countdown <= 1 ? text_color::red : text_color::orange,
+                          align::center);
+            _warning.set_visible(warn->countdown > 1 || (_frame & 8));
+        }
+        else if(_s.config().stage)
+        {
+            // Show the current settle direction in gravity stages.
+            bool settle = false;
+            for(const hazard_def& h : _s.config().stage->hazards)
+            {
+                settle = settle || h.kind == hazard_kind::settle_cycle;
+            }
+            if(settle)
+            {
+                static constexpr const char* arrows[4] = { "↓", "←", "→", "↑" };
+                bn::string<16> t = "SETTLE ";
+                t.append(arrows[int(_s.settle_direction()) & 3]);
+                _warning.show(hp.warning_x, hp.warning_y, t, text_color::violet, align::center);
+                _warning.set_visible(true);
+            }
+            else
+            {
+                _warning.hide();
+            }
+        }
+        else
+        {
+            _warning.hide();
+        }
+
+        if(warn && hp.tip_y == hp.warning_y)
+        {
+            _tip.hide();    // the warning has priority over tutorial tips
+        }
+
+        // Dual board: forced-switch countdown.
+        if(dual && ! _s.board_sealed(1) && _s.state() == session_state::playing)
+        {
+            bn::string<16> t = "SWITCH ";
+            t.append(number(uint32_t(cfg::dual_forced_switch_locks - _s.forced_switch_locks())));
+            const int bx = _view.cell_screen_x(_s.active_board(), _s.board_player(0).grid().cols() / 2);
+            _switch_label.show(bx, 8, t, text_color::cyan, align::center);
+        }
+        else
+        {
+            _switch_label.hide();
         }
 
         // Heat + abilities (Classic shows time and pieces instead).
@@ -594,21 +784,30 @@ namespace bm
         }
         if(heat)
         {
+            const text_color c = _s.overheat_active() ? ((_frame & 8) ? text_color::red : text_color::yellow)
+                                                      : (_s.heat() >= 60 ? text_color::red : text_color::yellow);
             if(dual)
             {
                 bn::string<20> t = "HEAT ";
                 t.append(number(uint32_t(_s.overheat_active() ? 100 : _s.heat())));
-                _heat_title.show(120, 140, t, _s.overheat_active() ? text_color::red : text_color::orange, align::center);
-                _heat_name.show(120, 150, heat_label(_s.heat(), _s.overheat_active()), text_color::yellow, align::center);
+                t.append(" ");
+                t.append(heat_label(_s.heat(), _s.overheat_active()));
+                _heat_title.show(hp.heat_x, hp.heat_y, t, c, align::center);
+                _heat_name.hide();
+            }
+            else if(lay.kind == layout_kind::boss)
+            {
+                // Boss layout: the horizontal bar carries the value, the label names the intensity.
+                _heat_title.show(hp.heat_x, hp.heat_y, heat_label(_s.heat(), _s.overheat_active()), c, align::center);
             }
             else
             {
-                const int mx = lay.meter_x * 8 + 4;
-                _heat_title.show(mx, lay.meter_y * 8 - 9, "HEAT", text_color::orange, align::center);
-                const text_color c = _s.overheat_active() ? ((_frame & 8) ? text_color::red : text_color::yellow)
-                                                          : (_s.heat() >= 60 ? text_color::red : text_color::yellow);
-                _heat_name.show(mx - 2, (lay.meter_y + lay.meter_tiles + 2) * 8 + 1,
-                                heat_label(_s.heat(), _s.overheat_active()), c, align::center);
+                _heat_title.show(hp.heat_x, hp.heat_y, "HEAT", text_color::orange, align::center);
+                if(hp.heat_name_y >= 0)
+                {
+                    _heat_name.show(hp.heat_x - 2, hp.heat_name_y, heat_label(_s.heat(), _s.overheat_active()), c,
+                                    align::center);
+                }
             }
         }
 
@@ -622,8 +821,8 @@ namespace bm
                 continue;
             }
             const int ability = _s.loadout(i);
-            const int ix = dual ? 104 : 20;
-            const int iy = dual ? 96 : 66 + i * 26;
+            const int ix = hp.icon_x[i];
+            const int iy = hp.icon_y[i];
             if(! _icons[i])
             {
                 _icons[i] = bn::sprite_items::spr_icons.create_sprite(ix - 120, iy - 80, ability);
@@ -635,7 +834,8 @@ namespace bm
             text_color tc = text_color::gray;
             if(_s.cooldown(ability) > 0)
             {
-                t = "CD";
+                // Stacked layouts have no room for the "CD" prefix: red numbers mean cooldown.
+                t = hp.cost_dy > 0 ? "" : "CD";
                 t.append(number(uint32_t(_s.cooldown(ability))));
                 tc = text_color::red;
             }
@@ -644,7 +844,8 @@ namespace bm
                 t = number(uint32_t(_s.ability_cost(ability)));
                 tc = _s.heat() >= _s.ability_cost(ability) ? text_color::green : text_color::gray;
             }
-            _ability_cost[i].show(ix + 12, iy - 4, t, selected ? (ready ? text_color::yellow : tc) : tc);
+            _ability_cost[i].show(ix + hp.cost_dx, iy + hp.cost_dy, t, selected ? (ready ? text_color::yellow : tc) : tc,
+                                  hp.cost_dy > 0 ? align::center : align::left);
             if(selected)
             {
                 if(! _icon_frame)
@@ -673,7 +874,7 @@ namespace bm
         }
         if(! status.empty())
         {
-            _status.show(dual ? 120 : 40, dual ? 160 - 8 : 150, status, text_color::cyan, align::center);
+            _status.show(hp.status_x, hp.status_y, status, text_color::cyan, align::center);
         }
         else if(heat || dual)
         {
@@ -717,8 +918,13 @@ namespace bm
             t.append(number(o.value));
             t.append("/");
             t.append(number(o.def.target));
-            _objective[i].show(dual ? 120 : 32, dual ? 60 + i * 9 : 120 - 9 * (_s.objective_count() - 1 - i) - 0 + 30,
-                               t, o.done ? text_color::green : text_color::white, align::center);
+            if(o.def.kind == objective_kind::boss_defeat)
+            {
+                _objective[i].hide();
+                continue;
+            }
+            _objective[i].show(hp.objective_x, hp.objective_y - 9 * (_s.objective_count() - 1 - i), t,
+                               o.done ? text_color::green : text_color::white, align::center);
         }
 
         _update_targeting_sprites();
@@ -890,21 +1096,72 @@ namespace bm
         _view.update(_s, _app.save.settings.ghost, _frame);
         _backdrop.update();
         _fx.update();
+        if(_boss)
+        {
+            _boss->update(_s, _frame, _fx);
+        }
         _update_hud();
+
+        // Final boss: the sealed second board opens at its dual phase and the boss moves to the centre.
+        const bool want_b = ! _s.board_sealed(1);
+        if(want_b != _board_b_shown)
+        {
+            _board_b_shown = want_b;
+            _view.set_board_b_visible(want_b);
+            if(want_b && _boss)
+            {
+                _boss->move_to(_view.layout().boss_x, _view.layout().boss_y, 60);
+                _fx.callout(120, 80, "SECOND BOARD!", big_color::neon, 90);
+            }
+        }
+
+        // Boss phase indicator.
+        if(_boss && _s.state() != session_state::intro && ! _boss->defeat_done())
+        {
+            bn::string<16> t = "PHASE ";
+            t.append(number(uint32_t(_s.boss_phase() + 1)));
+            t.append("/");
+            t.append(number(uint32_t(_s.config().boss->phase_count)));
+            const bool dual_boss = _view.layout().kind == layout_kind::dual_boss;
+            const bool right = ! dual_boss || _s.board_sealed(1);
+            _boss_name.show(right ? 196 : 120, right ? 17 : 9, t, _s.boss_phase() >= 2 ? text_color::red : text_color::orange,
+                            align::center);
+        }
+        else
+        {
+            _boss_name.hide();
+        }
 
         if(_s.state() == session_state::intro)
         {
             const int t = _s.intro_timer();
-            _center_text.show_big(_view.cell_screen_x(0, _s.board_player(0).grid().cols() / 2) + (_view.layout().kind == layout_kind::dual ? 40 : 0),
-                                  64, t > 40 ? "READY" : "GO!", t > 40 ? big_color::gold : big_color::toxic,
-                                  align::center);
+            const layout_kind kind = _view.layout().kind;
+            const int cx = kind == layout_kind::single ? _view.cell_screen_x(0, _s.board_player(0).grid().cols() / 2) : 120;
+            if(_s.has_boss() && t > 40)
+            {
+                // Boss entrance card.
+                _center_text.show_big(120, 46, _s.config().boss->short_name, big_color::blood, align::center);
+                _center_sub.show(120, 66, _s.config().boss->title, text_color::white, align::center);
+            }
+            else
+            {
+                _center_sub.hide();
+                _center_text.show_big(cx, 64, t > 40 ? "READY" : "GO!", t > 40 ? big_color::gold : big_color::toxic,
+                                      align::center);
+            }
         }
         else if(_s.state() == session_state::playing)
         {
             _center_text.hide();
+            if(_end_timer == 0)
+            {
+                _center_sub.hide();
+            }
         }
 
-        if(_s.state() == session_state::won || _s.state() == session_state::lost)
+        // A defeated boss finishes its destruction sequence before the stage-clear screen.
+        const bool boss_dying = _boss && _s.state() == session_state::won && ! _boss->defeat_done();
+        if((_s.state() == session_state::won || _s.state() == session_state::lost) && ! boss_dying)
         {
             if(! _end_recorded)
             {

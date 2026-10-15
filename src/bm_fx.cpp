@@ -141,6 +141,8 @@ namespace bm
 
     void fx::popup(int x, int y, const bn::string_view& text, text_color color, int life)
     {
+        const int half = text::small_width(text) / 2 + 2;
+        x = x < half ? half : (x > 240 - half ? 240 - half : x);
         int best = 0;
         for(int i = 1; i < max_popups; ++i)
         {
@@ -160,6 +162,9 @@ namespace bm
 
     void fx::callout(int x, int y, const bn::string_view& text, big_color color, int life)
     {
+        // Keep call-outs fully on screen.
+        const int half = text::big_width(text) / 2 + 10;    // generous margin: glyph outlines extend past widths
+        x = half >= 120 ? 120 : (x < half ? half : (x > 240 - half ? 240 - half : x));
         _callout.life = int16_t(life);
         _callout.x = int16_t(x);
         _callout.y = int16_t(y);
