@@ -24,6 +24,76 @@ namespace bm::bgfx
     };
     constexpr int bg_w1_near_cycle_count = 3;
 
+    constexpr cycle bg_w2_far_cycles[] = {
+        { 0, 11, 4, 8, 0 },
+        { 1, 11, 2, 50, 1 },
+        { 0, 9, 1, 0, 2 },
+    };
+    constexpr int bg_w2_far_cycle_count = 3;
+
+    constexpr cycle bg_w2_near_cycles[] = {
+        { 0, 11, 3, 10, 0 },
+        { 0, 12, 1, 0, 2 },
+    };
+    constexpr int bg_w2_near_cycle_count = 2;
+
+    constexpr cycle bg_w3_far_cycles[] = {
+        { 0, 11, 4, 4, 0 },
+        { 1, 6, 4, 5, 0 },
+        { 0, 13, 1, 0, 2 },
+    };
+    constexpr int bg_w3_far_cycle_count = 3;
+
+    constexpr cycle bg_w3_near_cycles[] = {
+        { 0, 6, 4, 3, 0 },
+        { 1, 13, 2, 0, 2 },
+        { 0, 14, 1, 0, 2 },
+    };
+    constexpr int bg_w3_near_cycle_count = 3;
+
+    constexpr cycle bg_w4_far_cycles[] = {
+        { 0, 10, 1, 90, 1 },
+        { 1, 5, 3, 7, 0 },
+        { 0, 11, 3, 6, 0 },
+        { 1, 9, 1, 0, 2 },
+    };
+    constexpr int bg_w4_far_cycle_count = 4;
+
+    constexpr cycle bg_w4_near_cycles[] = {
+        { 0, 6, 3, 9, 0 },
+        { 0, 12, 1, 0, 2 },
+    };
+    constexpr int bg_w4_near_cycle_count = 2;
+
+    constexpr cycle bg_w5_far_cycles[] = {
+        { 0, 9, 4, 5, 0 },
+        { 0, 12, 2, 0, 2 },
+        { 1, 8, 2, 20, 1 },
+    };
+    constexpr int bg_w5_far_cycle_count = 3;
+
+    constexpr cycle bg_w5_near_cycles[] = {
+        { 1, 2, 2, 6, 0 },
+        { 0, 5, 2, 12, 0 },
+        { 0, 10, 1, 0, 2 },
+    };
+    constexpr int bg_w5_near_cycle_count = 3;
+
+    constexpr cycle bg_w6_far_cycles[] = {
+        { 0, 12, 3, 4, 0 },
+        { 1, 10, 1, 60, 1 },
+        { 0, 9, 3, 6, 0 },
+        { 1, 13, 1, 0, 2 },
+    };
+    constexpr int bg_w6_far_cycle_count = 4;
+
+    constexpr cycle bg_w6_near_cycles[] = {
+        { 0, 6, 2, 5, 0 },
+        { 0, 10, 2, 0, 2 },
+        { 1, 9, 3, 7, 0 },
+    };
+    constexpr int bg_w6_near_cycle_count = 3;
+
     constexpr cycle bg_title_cycles[] = {
         { 1, 8, 4, 5, 0 },
         { 0, 11, 5, 6, 0 },

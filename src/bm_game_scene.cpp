@@ -10,6 +10,7 @@
 
 #include "bn_sprite_items_spr_arrows.h"
 #include "bn_sprite_items_spr_cursor.h"
+#include "bn_sprite_items_spr_goals.h"
 #include "bn_sprite_items_spr_icons.h"
 
 namespace bm
@@ -51,38 +52,89 @@ namespace bm
             return audio::music_id::world1;
         }
 
-        // HUD anchor positions per layout (screen pixels).
+        // HUD anchor positions per layout (screen pixels). Every element has its own slot so nothing overlaps;
+        // shared slots (dual boss centre line) are resolved by priority: warning > tip > heat label.
         struct hud_pos
         {
-            int16_t score_x, score_y;
-            int16_t level_y, lines_y;          // < 0 hidden
-            int16_t heat_x, heat_y, heat_name_y;
-            int16_t icon_x[3], icon_y[3];
-            int16_t cost_dx, cost_dy;
-            int16_t status_x, status_y;
-            int16_t objective_x, objective_y;
-            int16_t warning_x, warning_y;
-            int16_t tip_x, tip_y;
+            int16_t score_x = 200, score_y = 98;
+            bool score_titled = true;               // "SCORE" title above the value, else one value line
+            align score_align = align::center;
+            int16_t level_y = 120, lines_y = 132;   // < 0 hidden
+            int16_t heat_x = 36, heat_y = 48;       // heat intensity label (MILD .. INFERNO, OVERHEAT)
+            bool middle_tiny = false;               // warning / tip / heat label in the compact font
+            int16_t icon_x[3] = { 20, 20, 20 };     // ability icon centres
+            int16_t icon_y[3] = { 66, 92, 118 };
+            int16_t cost_dx = 12, cost_dy = -4;     // cost label offset from the icon centre
+            bool cost_under = false;                // compact cost centred under the icon (red = cooldown)
+            int16_t status_x = 200, status_y = 153;
+            align status_align = align::center;
+            int16_t objective_x = 2, objective_y = 150;
+            bool objective_center = false;          // rows centred on objective_x, else starting at it
+            int16_t objective_step = -9;            // offset between objective rows (negative: bottom-up)
+            int16_t warning_x = 120, warning_y = 0;
+            int16_t settle_x = 200, settle_y = 142;
+            int16_t tip_x = 120, tip_y = 0;
+        };
+
+        constexpr hud_pos single_hud = {};
+
+        constexpr hud_pos boss_hud = {
+            .score_x = 196, .score_y = 141, .level_y = -1, .lines_y = -1, .heat_x = 128, .heat_y = 121,
+            .icon_x = { 112, 128, 144 }, .icon_y = { 138, 138, 138 }, .cost_dx = 0, .cost_dy = 10, .cost_under = true,
+            .status_x = 196, .status_y = 121, .objective_x = 196, .objective_y = 30, .objective_center = true,
+            .objective_step = 9, .settle_x = 196, .settle_y = 131
+        };
+
+        // Dual: the 64-pixel centre column holds NEXT, HOLD, score, the equipped ability, heat and goals.
+        constexpr hud_pos dual_hud = {
+            .score_x = 120, .score_y = 89, .score_titled = false, .level_y = 130, .lines_y = 139,
+            .heat_x = 120, .heat_y = 121, .icon_x = { 104, 104, 104 }, .icon_y = { 104, 104, 104 }, .cost_dx = 10,
+            .cost_dy = -4, .status_x = 120, .status_y = 148, .objective_x = 120, .objective_y = 130,
+            .objective_center = true, .objective_step = 9, .settle_x = 120, .settle_y = 148
+        };
+
+        // Dual boss: the boss owns the centre top; score / ability / status move above the boards.
+        constexpr hud_pos dual_boss_hud = {
+            .score_x = 86, .score_y = 0, .score_titled = false, .score_align = align::right, .level_y = -1,
+            .lines_y = -1, .heat_x = 120, .heat_y = 63, .middle_tiny = true, .icon_x = { 8, 8, 8 },
+            .icon_y = { 8, 8, 8 }, .cost_dx = 10, .cost_dy = -8, .status_x = 238, .status_y = 0,
+            .status_align = align::right, .objective_x = 120, .objective_y = 130, .objective_center = true,
+            .objective_step = 9, .warning_x = 120, .warning_y = 63, .settle_x = 120, .settle_y = 63, .tip_x = 120,
+            .tip_y = 63
         };
 
         const hud_pos& hud_for(layout_kind kind)
         {
-            static const hud_pos single = { 200, 98, 120, 132, 60, 47, 153, { 20, 20, 20 }, { 66, 92, 118 }, 12, -4,
-                                            200, 153, 32, 140, 200, 142, 120, 0 };
-            static const hud_pos boss_l = { 196, 141, -1, -1, 128, 121, -1, { 112, 128, 144 }, { 138, 138, 138 }, 0,
-                                            10, 196, 121, 196, 30, 196, 131, 120, 0 };
-            static const hud_pos dual = { 120, 116, -1, 136, 120, 140, 150, { 104, 104, 104 }, { 96, 96, 96 }, 12, -4,
-                                          120, 152, 120, 60, 120, 0, 120, 0 };
-            static const hud_pos dual_boss = { 48, 0, -1, -1, 120, 73, -1, { 12, 12, 12 }, { 8, 8, 8 }, 12, -4,
-                                               196, 0, 120, 60, 120, 152, 120, 152 };
             switch(kind)
             {
-            case layout_kind::boss: return boss_l;
-            case layout_kind::dual: return dual;
-            case layout_kind::dual_boss: return dual_boss;
+            case layout_kind::boss: return boss_hud;
+            case layout_kind::dual: return dual_hud;
+            case layout_kind::dual_boss: return dual_boss_hud;
             case layout_kind::single:
-            default: return single;
+            default: return single_hud;
             }
+        }
+
+        // Spice-level colour of the heat intensity label.
+        text_color heat_color(const session& s, int frame)
+        {
+            if(s.overheat_active())
+            {
+                return (frame & 8) ? text_color::red : text_color::yellow;
+            }
+            const int h = s.heat();
+            if(h >= 80) return (frame & 16) ? text_color::red : text_color::orange;
+            if(h >= 60) return text_color::red;
+            if(h >= 40) return text_color::orange;
+            if(h >= 20) return text_color::yellow;
+            return text_color::cyan;
+        }
+
+        // Objective icon frame (spr_goals is indexed by objective_kind).
+        int goal_icon(objective_kind kind)
+        {
+            const int k = int(kind);
+            return k >= 0 && k <= int(objective_kind::time_limit) ? k : 0;
         }
 
         backdrop_id backdrop_for(const app& a)
@@ -634,6 +686,18 @@ namespace bm
         }
     }
 
+    void game_scene::_show_middle(label& l, int x, int y, const bn::string_view& t, text_color c, bool tiny)
+    {
+        if(tiny)
+        {
+            l.show_tiny(x, y + 1, t, c, align::center);
+        }
+        else
+        {
+            l.show(x, y, t, c, align::center);
+        }
+    }
+
     void game_scene::_update_hud()
     {
         const view_layout& lay = _view.layout();
@@ -644,51 +708,80 @@ namespace bm
         _hold_label.show(hold_cx, lay.hold_y * 8 + 8, "HOLD", text_color::gray, align::center);
         _next_label.show(next_cx, lay.next_y * 8 + 8, "NEXT", text_color::gray, align::center);
 
+        // Score / level / rows.
         const int sx = hp.score_x;
         const int sy = hp.score_y;
-        if(lay.kind == layout_kind::dual_boss)
+        if(hp.score_titled)
         {
-            if(_s.score() != _shown_score)
+            _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
+        }
+        if(_s.score() != _shown_score)
+        {
+            _shown_score = _s.score();
+            _score_value.show(sx, hp.score_titled ? sy + 9 : sy, number(_s.score()), text_color::white, hp.score_align);
+        }
+        // Dual layouts reuse the objective rows for level / rows in endless play.
+        const bool stat_rows = ! dual || _s.objective_count() == 0;
+        if(hp.level_y >= 0 && stat_rows)
+        {
+            if(_s.level() != _shown_level || ! _level_value.shown())
             {
-                _shown_score = _s.score();
-                bn::string<20> t = "SCORE ";
-                t.append(number(_s.score()));
-                _score_value.show(sx, sy, t, text_color::white, align::center);
+                _shown_level = _s.level();
+                bn::string<16> t = "LV ";
+                t.append(number(uint32_t(_s.level())));
+                _level_value.show(sx, hp.level_y, t, text_color::green, align::center);
             }
         }
         else
         {
-            _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
-            if(_s.score() != _shown_score)
+            _level_value.hide();
+        }
+        if(hp.lines_y >= 0 && stat_rows)
+        {
+            if(_s.lines() != _shown_lines || ! _lines_value.shown())
             {
-                _shown_score = _s.score();
-                _score_value.show(sx, sy + 9, number(_s.score()), text_color::white, align::center);
+                _shown_lines = _s.lines();
+                bn::string<16> t = "ROWS ";
+                t.append(number(uint32_t(_s.lines())));
+                _lines_value.show(sx, hp.lines_y, t, text_color::cyan, align::center);
             }
         }
-        if(hp.level_y >= 0 && _s.level() != _shown_level)
+        else
         {
-            _shown_level = _s.level();
-            bn::string<16> t = "LV ";
-            t.append(number(uint32_t(_s.level())));
-            _level_value.show(sx, hp.level_y, t, text_color::green, align::center);
-        }
-        if(hp.lines_y >= 0 && _s.lines() != _shown_lines)
-        {
-            _shown_lines = _s.lines();
-            bn::string<16> t = "ROWS ";
-            t.append(number(uint32_t(_s.lines())));
-            _lines_value.show(sx, hp.lines_y, t, text_color::cyan, align::center);
+            _lines_value.hide();
         }
 
-        // Stage tips: short contextual overlays during the first seconds of a stage.
+        // Incoming attack / hazard warning with its countdown in locked pieces (top priority on its line).
+        const pending_action& ba = _s.boss_action();
+        const pending_action& ha = _s.hazard_action();
+        const pending_action* warn = ba.source ? &ba : (ha.source ? &ha : nullptr);
+        if(warn)
+        {
+            bn::string<32> t = warn->source == 2 ? attack_name(warn->kind) : hazard_name(warn->kind);
+            t.append(" IN ");
+            t.append(number(uint32_t(warn->countdown > 0 ? warn->countdown : 0)));
+            _show_middle(_warning, hp.warning_x, hp.warning_y, t,
+                         warn->countdown <= 1 ? text_color::red : text_color::orange, hp.middle_tiny);
+            _warning.set_visible(warn->countdown > 1 || (_frame & 8));
+        }
+        else
+        {
+            _warning.hide();
+        }
+
+        // Stage tips: short contextual overlays during the first seconds of a stage (they yield to warnings).
         const stage_def* st = _s.config().stage;
         if(st && _s.state() == session_state::playing && _tip_index < 3)
         {
             if(st->tips[_tip_index])
             {
-                if(_tip_timer == 0)
+                if(warn && hp.tip_y == hp.warning_y)
                 {
-                    _tip.show(hp.tip_x, hp.tip_y, st->tips[_tip_index], text_color::yellow, align::center);
+                    _tip.hide();
+                }
+                else
+                {
+                    _show_middle(_tip, hp.tip_x, hp.tip_y, st->tips[_tip_index], text_color::yellow, hp.middle_tiny);
                 }
                 if(++_tip_timer > 200)
                 {
@@ -703,52 +796,68 @@ namespace bm
                 _tip.hide();
             }
         }
-
-        // Incoming attack / hazard warning with its countdown in locked pieces.
-        const pending_action& ba = _s.boss_action();
-        const pending_action& ha = _s.hazard_action();
-        const pending_action* warn = ba.source ? &ba : (ha.source ? &ha : nullptr);
-        if(warn)
+        else if(_s.state() != session_state::playing)
         {
-            bn::string<32> t = warn->source == 2 ? attack_name(warn->kind) : hazard_name(warn->kind);
-            t.append(" IN ");
-            t.append(number(uint32_t(warn->countdown > 0 ? warn->countdown : 0)));
-            _warning.show(hp.warning_x, hp.warning_y, t, warn->countdown <= 1 ? text_color::red : text_color::orange,
-                          align::center);
-            _warning.set_visible(warn->countdown > 1 || (_frame & 8));
+            _tip.hide();
         }
-        else if(_s.config().stage)
+
+        // Status line: freeze / shield.
+        bn::string<24> status;
+        if(_s.freeze_frames() > 0)
         {
-            // Show the current settle direction in gravity stages.
-            bool settle = false;
-            for(const hazard_def& h : _s.config().stage->hazards)
+            status = "FREEZE";
+        }
+        else if(_s.shield_pieces() > 0)
+        {
+            status = "SHIELD ";
+            status.append(number(uint32_t(_s.shield_pieces())));
+        }
+        const bool heat = _s.config().heat;
+        if(! status.empty())
+        {
+            _status.show(hp.status_x, hp.status_y, status, text_color::cyan, hp.status_align);
+        }
+        else if(heat || dual)
+        {
+            _status.hide();
+        }
+
+        // Gravity stages: the current settle direction (yields when its slot is shared and busy).
+        bool settle = false;
+        if(st)
+        {
+            for(const hazard_def& h : st->hazards)
             {
                 settle = settle || h.kind == hazard_kind::settle_cycle;
             }
-            if(settle)
-            {
-                static constexpr const char* arrows[4] = { "↓", "←", "→", "↑" };
-                bn::string<16> t = "SETTLE ";
-                t.append(arrows[int(_s.settle_direction()) & 3]);
-                _warning.show(hp.warning_x, hp.warning_y, t, text_color::violet, align::center);
-                _warning.set_visible(true);
-            }
-            else
-            {
-                _warning.hide();
-            }
+        }
+        const bool settle_busy = (hp.settle_y == hp.status_y && hp.settle_x == hp.status_x && ! status.empty()) ||
+                                 (hp.settle_y == hp.warning_y && hp.settle_x == hp.warning_x && warn);
+        if(settle && ! settle_busy)
+        {
+            static constexpr const char* arrows[4] = { "↓", "←", "→", "↑" };
+            bn::string<16> t = "SETTLE ";
+            t.append(arrows[int(_s.settle_direction()) & 3]);
+            _settle.show(hp.settle_x, hp.settle_y, t, text_color::violet, align::center);
         }
         else
         {
-            _warning.hide();
+            _settle.hide();
         }
-
-        if(warn && hp.tip_y == hp.warning_y)
+        if(dual && hp.lines_y == hp.status_y && (! status.empty() || _settle.shown()))
         {
-            _tip.hide();    // the warning has priority over tutorial tips
+            _lines_value.hide();
         }
 
-        // Dual board: forced-switch countdown.
+        // Freeze tint.
+        const int want_tint = _s.freeze_frames() > 0 ? 1 : 0;
+        if(want_tint != _freeze_tint)
+        {
+            _freeze_tint = want_tint;
+            bn::bg_palettes::set_fade(bn::color(12, 20, 31), want_tint ? bn::fixed(0.18) : bn::fixed(0));
+        }
+
+        // Dual board: forced-switch countdown above the active board.
         if(dual && ! _s.board_sealed(1) && _s.state() == session_state::playing)
         {
             bn::string<16> t = "SWITCH ";
@@ -761,8 +870,7 @@ namespace bm
             _switch_label.hide();
         }
 
-        // Heat + abilities (Classic shows time and pieces instead).
-        const bool heat = _s.config().heat;
+        // Heat intensity label (Classic shows time, pieces and quads instead).
         if(! heat && ! dual)
         {
             const uint32_t secs = _s.stats().frames / 60;
@@ -784,33 +892,20 @@ namespace bm
         }
         if(heat)
         {
-            const text_color c = _s.overheat_active() ? ((_frame & 8) ? text_color::red : text_color::yellow)
-                                                      : (_s.heat() >= 60 ? text_color::red : text_color::yellow);
-            if(dual)
+            const bool shared = hp.heat_x == hp.warning_x && hp.heat_y == hp.warning_y;
+            if(shared && (_warning.shown() || _tip.shown()))
             {
-                bn::string<20> t = "HEAT ";
-                t.append(number(uint32_t(_s.overheat_active() ? 100 : _s.heat())));
-                t.append(" ");
-                t.append(heat_label(_s.heat(), _s.overheat_active()));
-                _heat_title.show(hp.heat_x, hp.heat_y, t, c, align::center);
-                _heat_name.hide();
-            }
-            else if(lay.kind == layout_kind::boss)
-            {
-                // Boss layout: the horizontal bar carries the value, the label names the intensity.
-                _heat_title.show(hp.heat_x, hp.heat_y, heat_label(_s.heat(), _s.overheat_active()), c, align::center);
+                _heat_title.hide();
             }
             else
             {
-                _heat_title.show(hp.heat_x, hp.heat_y, "HEAT", text_color::orange, align::center);
-                if(hp.heat_name_y >= 0)
-                {
-                    _heat_name.show(hp.heat_x - 2, hp.heat_name_y, heat_label(_s.heat(), _s.overheat_active()), c,
-                                    align::center);
-                }
+                _show_middle(_heat_title, hp.heat_x, hp.heat_y, heat_label(_s.heat(), _s.overheat_active()),
+                             heat_color(_s, _frame), hp.middle_tiny);
             }
+            _heat_name.hide();
         }
 
+        // Ability slots: icon plus cost (green = affordable) or cooldown (red).
         const int slots = _s.loadout_count();
         for(int i = 0; i < 3; ++i)
         {
@@ -834,8 +929,7 @@ namespace bm
             text_color tc = text_color::gray;
             if(_s.cooldown(ability) > 0)
             {
-                // Stacked layouts have no room for the "CD" prefix: red numbers mean cooldown.
-                t = hp.cost_dy > 0 ? "" : "CD";
+                t = hp.cost_under ? "" : "CD";
                 t.append(number(uint32_t(_s.cooldown(ability))));
                 tc = text_color::red;
             }
@@ -844,8 +938,15 @@ namespace bm
                 t = number(uint32_t(_s.ability_cost(ability)));
                 tc = _s.heat() >= _s.ability_cost(ability) ? text_color::green : text_color::gray;
             }
-            _ability_cost[i].show(ix + hp.cost_dx, iy + hp.cost_dy, t, selected ? (ready ? text_color::yellow : tc) : tc,
-                                  hp.cost_dy > 0 ? align::center : align::left);
+            const text_color shown = selected && ready ? text_color::yellow : tc;
+            if(hp.cost_under)
+            {
+                _ability_cost[i].show_tiny(ix + hp.cost_dx, iy + hp.cost_dy, t, shown, align::center);
+            }
+            else
+            {
+                _ability_cost[i].show(ix + hp.cost_dx, iy + hp.cost_dy, t, shown, align::left);
+            }
             if(selected)
             {
                 if(! _icon_frame)
@@ -861,70 +962,40 @@ namespace bm
             _icon_frame.reset();
         }
 
-        // Status line: freeze / shield / chill / surge.
-        bn::string<24> status;
-        if(_s.freeze_frames() > 0)
+        // Objectives: icon + progress (the stage card teaches the icons).
+        int visible = 0;
+        for(int i = 0; i < _s.objective_count(); ++i)
         {
-            status = "FREEZE";
+            visible += _s.objective(i).def.kind != objective_kind::boss_defeat ? 1 : 0;
         }
-        else if(_s.shield_pieces() > 0)
-        {
-            status = "SHIELD ";
-            status.append(number(uint32_t(_s.shield_pieces())));
-        }
-        if(! status.empty())
-        {
-            _status.show(hp.status_x, hp.status_y, status, text_color::cyan, align::center);
-        }
-        else if(heat || dual)
-        {
-            _status.hide();
-        }
-
-        // Freeze tint.
-        const int want_tint = _s.freeze_frames() > 0 ? 1 : 0;
-        if(want_tint != _freeze_tint)
-        {
-            _freeze_tint = want_tint;
-            bn::bg_palettes::set_fade(bn::color(12, 20, 31), want_tint ? bn::fixed(0.18) : bn::fixed(0));
-        }
-
-        // Objectives (non-endless modes).
+        int row = 0;
         for(int i = 0; i < 3; ++i)
         {
-            if(i >= _s.objective_count())
+            if(i >= _s.objective_count() || _s.objective(i).def.kind == objective_kind::boss_defeat)
             {
                 _objective[i].hide();
+                _goal_icons[i].reset();
                 continue;
             }
             const objective_state& o = _s.objective(i);
-            bn::string<24> t;
-            switch(o.def.kind)
-            {
-            case objective_kind::lines: t = "ROWS "; break;
-            case objective_kind::bombs: t = "BOMBS "; break;
-            case objective_kind::chains: t = "CHAINS "; break;
-            case objective_kind::magnets: t = "MAGNETS "; break;
-            case objective_kind::overheat_success: t = "OVERHEAT "; break;
-            case objective_kind::cross_combos: t = "CROSS "; break;
-            case objective_kind::survive_pieces: t = "PIECES "; break;
-            case objective_kind::sparks: t = "SPARKS "; break;
-            case objective_kind::fires: t = "FIRES "; break;
-            case objective_kind::ice_broken: t = "ICE "; break;
-            case objective_kind::quads: t = "QUADS "; break;
-            case objective_kind::twists: t = "TWISTS "; break;
-            default: t = "GOAL "; break;
-            }
-            t.append(number(o.value));
+            bn::string<24> t = number(o.value);
             t.append("/");
             t.append(number(o.def.target));
-            if(o.def.kind == objective_kind::boss_defeat)
+            // Rows run top-down from objective_y (positive step) or bottom-up ending at it (negative step).
+            const int y = hp.objective_step > 0 ? hp.objective_y + row * hp.objective_step
+                                                : hp.objective_y + (visible - 1 - row) * hp.objective_step;
+            int x = hp.objective_x;
+            if(hp.objective_center)
             {
-                _objective[i].hide();
-                continue;
+                x -= (10 + text::small_width(t)) / 2;
             }
-            _objective[i].show(hp.objective_x, hp.objective_y - 9 * (_s.objective_count() - 1 - i), t,
-                               o.done ? text_color::green : text_color::white, align::center);
+            if(! _goal_icons[i])
+            {
+                _goal_icons[i] = bn::sprite_items::spr_goals.create_sprite(0, 0, goal_icon(o.def.kind));
+            }
+            _goal_icons[i]->set_position(x + 4 - 120, y + 4 - 80);
+            _objective[i].show(x + 10, y, t, o.done ? text_color::green : text_color::white, align::left);
+            ++row;
         }
 
         _update_targeting_sprites();
@@ -1124,8 +1195,15 @@ namespace bm
             t.append(number(uint32_t(_s.config().boss->phase_count)));
             const bool dual_boss = _view.layout().kind == layout_kind::dual_boss;
             const bool right = ! dual_boss || _s.board_sealed(1);
-            _boss_name.show(right ? 196 : 120, right ? 17 : 9, t, _s.boss_phase() >= 2 ? text_color::red : text_color::orange,
-                            align::center);
+            const text_color c = _s.boss_phase() >= 2 ? text_color::red : text_color::orange;
+            if(right)
+            {
+                _boss_name.show(196, 17, t, c, align::center);
+            }
+            else
+            {
+                _boss_name.show_tiny(120, 9, t, c, align::center);     // compact tag between the HP bar and the boss
+            }
         }
         else
         {

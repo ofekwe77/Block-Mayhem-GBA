@@ -55,11 +55,13 @@ namespace bm
         label _boss_name;
         label _tip;
         label _switch_label;
+        label _settle;
         bn::optional<boss_view> _boss;
         int _tip_index = 0;
         int _tip_timer = 0;
         bool _board_b_shown = true;
         bn::optional<bn::sprite_ptr> _icons[3];
+        bn::optional<bn::sprite_ptr> _goal_icons[3];
         bn::optional<bn::sprite_ptr> _icon_frame;
         bn::optional<bn::sprite_ptr> _cursor;
         bn::optional<bn::sprite_ptr> _marker;
@@ -80,6 +82,7 @@ namespace bm
         void _start_session();
         void _handle_events();
         void _update_hud();
+        static void _show_middle(label& l, int x, int y, const bn::string_view& t, text_color c, bool tiny);
         void _update_targeting_sprites();
         [[nodiscard]] bn::optional<scene_id> _update_pause();
         void _show_pause(bool show);

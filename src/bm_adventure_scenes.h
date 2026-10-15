@@ -50,6 +50,7 @@ namespace bm
         label _best;
         label _hint;
         bn::optional<bn::sprite_ptr> _icons[3];
+        bn::optional<bn::sprite_ptr> _goal_icons[4];
         int _selected = 0;
         int _frame = 0;
 

@@ -2,6 +2,7 @@
 
 #include "bm_font_big.h"
 #include "bm_font_small.h"
+#include "bm_font_tiny.h"
 
 #include "bn_sprite_palette_items_pal_big_blood.h"
 #include "bn_sprite_palette_items_pal_big_fire.h"
@@ -76,6 +77,12 @@ namespace bm
             static bn::sprite_text_generator g(fonts::big);
             return g;
         }
+
+        bn::sprite_text_generator& tiny_gen()
+        {
+            static bn::sprite_text_generator g(fonts::tiny);
+            return g;
+        }
     }
 
     namespace text
@@ -96,9 +103,22 @@ namespace bm
             return g;
         }
 
+        bn::sprite_text_generator& tiny(text_color color, align a)
+        {
+            bn::sprite_text_generator& g = tiny_gen();
+            g.set_palette_item(small_palette(color));
+            apply_align(g, a);
+            return g;
+        }
+
         int small_width(const bn::string_view& s)
         {
             return small_gen().width(s);
+        }
+
+        int tiny_width(const bn::string_view& s)
+        {
+            return tiny_gen().width(s);
         }
 
         int big_width(const bn::string_view& s)
@@ -107,23 +127,18 @@ namespace bm
         }
     }
 
-    void label::show(int x, int y, const bn::string_view& s, text_color color, align a, int bg_priority)
+    void label::_generate(bn::sprite_text_generator& g, int x, int y, const bn::string_view& s, int color, align a,
+                          int font, int bg_priority, int y_offset)
     {
-        if(! _big && _x == x && _y == y && _color == uint8_t(color) && _align == uint8_t(a) && _text == s &&
-           ! _sprites.empty())
-        {
-            return;
-        }
         _sprites.clear();
         _text = s.size() > 32 ? s.substr(0, 32) : s;
         _x = x;
         _y = y;
         _color = uint8_t(color);
         _align = uint8_t(a);
-        _big = false;
-        bn::sprite_text_generator& g = text::small(color, a);
+        _font = uint8_t(font);
         g.set_bg_priority(bg_priority);
-        g.generate(x - 120, y - 80 + 4, _text, _sprites);
+        g.generate(x - 120, y - 80 + y_offset, _text, _sprites);
         for(bn::sprite_ptr& sp : _sprites)
         {
             sp.set_visible(_visible);
@@ -134,31 +149,34 @@ namespace bm
         }
     }
 
-    void label::show_big(int x, int y, const bn::string_view& s, big_color color, align a, int bg_priority)
+    void label::show(int x, int y, const bn::string_view& s, text_color color, align a, int bg_priority)
     {
-        if(_big && _x == x && _y == y && _color == uint8_t(color) && _align == uint8_t(a) && _text == s &&
+        if(_font == 0 && _x == x && _y == y && _color == uint8_t(color) && _align == uint8_t(a) && _text == s &&
            ! _sprites.empty())
         {
             return;
         }
-        _sprites.clear();
-        _text = s.size() > 32 ? s.substr(0, 32) : s;
-        _x = x;
-        _y = y;
-        _color = uint8_t(color);
-        _align = uint8_t(a);
-        _big = true;
-        bn::sprite_text_generator& g = text::big(color, a);
-        g.set_bg_priority(bg_priority);
-        g.generate(x - 120, y - 80 + 8, _text, _sprites);
-        for(bn::sprite_ptr& sp : _sprites)
+        _generate(text::small(color, a), x, y, s, int(color), a, 0, bg_priority, 4);
+    }
+
+    void label::show_big(int x, int y, const bn::string_view& s, big_color color, align a, int bg_priority)
+    {
+        if(_font == 1 && _x == x && _y == y && _color == uint8_t(color) && _align == uint8_t(a) && _text == s &&
+           ! _sprites.empty())
         {
-            sp.set_visible(_visible);
-            if(_camera)
-            {
-                sp.set_camera(*_camera);
-            }
+            return;
         }
+        _generate(text::big(color, a), x, y, s, int(color), a, 1, bg_priority, 8);
+    }
+
+    void label::show_tiny(int x, int y, const bn::string_view& s, text_color color, align a, int bg_priority)
+    {
+        if(_font == 2 && _x == x && _y == y && _color == uint8_t(color) && _align == uint8_t(a) && _text == s &&
+           ! _sprites.empty())
+        {
+            return;
+        }
+        _generate(text::tiny(color, a), x, y, s, int(color), a, 2, bg_priority, 4);
     }
 
     void label::hide()

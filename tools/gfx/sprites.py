@@ -383,6 +383,63 @@ def arrows():
     return [down, left, right, up]
 
 
+GOAL_ART = [
+    # 0 generic / none: star
+    ["...YY...", "...YY...", "YYYYYYYY", ".YYOOYY.", "..YYYY..", ".YY..YY.", "YO....OY", "........"],
+    # 1 lines: stacked rows
+    ["CCCCCCCC", "BBBBBBBB", "........", "CCCCCCCC", "BBBBBBBB", "........", "CCCCCCCC", "BBBBBBBB"],
+    # 2 bombs
+    ["......Y.", ".....O..", "..kkkk..", ".kLddddk", ".kLddddk", ".kddddgk", ".kddddgk", "..kkkk.."],
+    # 3 chains: two linked rings
+    [".OOO....", "O...O...", "O..YOOO.", "O..O.O.O", ".OOO.O.O", "...O...O", "....OOO.", "........"],
+    # 4 magnets
+    ["LL....LL", "RR....RR", "RR....RR", "RR....RR", "RRR..RRR", ".RRRRRR.", "..rRRr..", "........"],
+    # 5 overheat mastered: thermometer
+    ["...WW...", "...WR...", "...WR...", "...WR...", "...RR...", "..RRRR..", "..RRRR..", "...RR..."],
+    # 6 cross over combos
+    ["VV....VV", "VPV..VPV", ".VPVVPV.", "..VPPV..", "..VPPV..", ".VPVVPV.", "VPV..VPV", "VV....VV"],
+    # 7 survive pieces: T piece
+    ["........", "........", "WVWVWV..", "VVVVVV..", "..WV....", "..VV....", "........", "........"],
+    # 8 boss
+    ["..WWWW..", ".WWWWWW.", "WkkWWkkW", "WkkWWkkW", "WWWWWWWW", ".WWkkWW.", "..WWWW..", "..WkWk.."],
+    # 9 sparks: lightning bolt
+    ["....YY..", "...YY...", "..YW....", ".YYYYYY.", "....WY..", "...YY...", "..YY....", ".Y......"],
+    # 10 fires: flame
+    ["....R...", "...RR...", "..RORR..", "..ROOR.R", ".ROYOORR", ".ROYYOR.", ".RROYOR.", "..RRRR.."],
+    # 11 ice broken: cracked cube
+    ["IIIIIII.", "ICCkCCB.", "ICCkCCB.", "ICkCCCB.", "ICCkkCB.", "ICCCkCB.", "IBBBkBB.", "........"],
+    # 12 quads: a bold four
+    ["...YO...", "..YOO...", ".YO.O...", "YO..O...", "OOOOOO..", "....O...", "....O...", "........"],
+    # 13 twists: rotation arrow
+    ["..PPP...", ".P...P..", "P.....P.", "P....PPP", "P.....P.", ".P......", "..PPP...", "........"],
+    # 14 max height: limit line with a downward arrow
+    ["RRRRRRRR", "........", "...GG...", "...GG...", ".GGGGGG.", "..GGGG..", "...GG...", "........"],
+    # 15 no garbage: shield
+    [".BBBBBB.", "BWWBBBBB", "BWBBBBBB", "BBBBBBBB", ".BBBBBB.", ".BBBBBB.", "..BBBB..", "...BB..."],
+    # 16 time limit: clock
+    ["..kkkk..", ".kWWWWk.", "kWWkWWWk", "kWWkWWWk", "kWWkkkWk", "kWWWWWWk", ".kWWWWk.", "..kkkk.."],
+]
+
+GOAL_COLORS = {".": 0, "W": 1, "Y": 2, "O": 3, "R": 4, "r": 5, "C": 6, "B": 7, "V": 8, "G": 9, "L": 10,
+               "g": 11, "d": 12, "k": 13, "P": 14, "I": 15}
+
+
+def goals():
+    """8x8 objective icons indexed by objective_kind (drop shadow for busy backgrounds)."""
+    frames = []
+    for art in GOAL_ART:
+        f = blank(8, 8)
+        for y, row in enumerate(art):
+            for x, ch in enumerate(row):
+                f[y][x] = GOAL_COLORS[ch]
+        for y in range(7, -1, -1):
+            for x in range(7, -1, -1):
+                if f[y][x] and f[y][x] != 13 and y + 1 < 8 and x + 1 < 8 and f[y + 1][x + 1] == 0:
+                    f[y + 1][x + 1] = 13
+        frames.append(f)
+    return frames
+
+
 def generate(gfx_dir, write_bmp, write_json):
     import os
 
@@ -400,3 +457,4 @@ def generate(gfx_dir, write_bmp, write_json):
     save("spr_cursor", cursor(), 16, 16)
     save("spr_icons", icons(), 16, 16)
     save("spr_arrows", arrows(), 16, 16)
+    save("spr_goals", goals(), 8, 8)

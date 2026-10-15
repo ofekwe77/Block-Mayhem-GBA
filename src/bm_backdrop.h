@@ -6,13 +6,17 @@
 
 #include "bm_bg_cycles.h"
 
+#include "bn_array.h"
 #include "bn_bg_palette_ptr.h"
 #include "bn_camera_ptr.h"
 #include "bn_color.h"
+#include "bn_display.h"
 #include "bn_fixed.h"
 #include "bn_optional.h"
+#include "bn_regular_bg_position_hbe_ptr.h"
 #include "bn_regular_bg_ptr.h"
 #include "bn_span.h"
+#include "bn_sprite_ptr.h"
 
 namespace bm
 {
@@ -50,15 +54,31 @@ namespace bm
             int steps[8] = {};
         };
 
+        struct ambient
+        {
+            bn::optional<bn::sprite_ptr> sprite;
+            bn::fixed x, y, vx, vy;
+            int16_t phase = 0;
+        };
+
+        static constexpr int ambient_count = 8;
+
         layer _layers[2];
+        ambient _ambient[ambient_count];
+        bn::array<bn::fixed, bn::display::height()> _deltas;
+        bn::optional<bn::regular_bg_position_hbe_ptr> _hbe;
+        bn::optional<bn::camera_ptr> _camera;
         backdrop_id _id;
         int _frame = 0;
         int _excite_frames = 0;
         int _excite_level = 0;
+        int _glitch = 0;
         uint32_t _noise = 12345;
 
-        void _setup(layer& l, int index);
         void _animate(layer& l);
+        void _spawn_ambient(ambient& a, bool initial);
+        void _update_ambient();
+        void _update_hbe();
     };
 }
 

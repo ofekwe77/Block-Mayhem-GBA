@@ -32,8 +32,10 @@ namespace bm
     {
         bn::sprite_text_generator& small(text_color color = text_color::white, align a = align::left);
         bn::sprite_text_generator& big(big_color color = big_color::fire, align a = align::center);
+        bn::sprite_text_generator& tiny(text_color color = text_color::white, align a = align::left);
         [[nodiscard]] int small_width(const bn::string_view& s);
         [[nodiscard]] int big_width(const bn::string_view& s);
+        [[nodiscard]] int tiny_width(const bn::string_view& s);
     }
 
     // A piece of on-screen text that is only regenerated when it changes.
@@ -46,6 +48,9 @@ namespace bm
                   align a = align::left, int bg_priority = 0);
         void show_big(int x, int y, const bn::string_view& s, big_color color = big_color::fire,
                       align a = align::center, int bg_priority = 0);
+        // Compact 3x5 HUD font (same colours as the small font).
+        void show_tiny(int x, int y, const bn::string_view& s, text_color color = text_color::white,
+                       align a = align::left, int bg_priority = 0);
         void hide();
         void set_visible(bool visible);
         void move(int x, int y);
@@ -60,8 +65,11 @@ namespace bm
         int _y = -1000;
         uint8_t _color = 255;
         uint8_t _align = 0;
-        bool _big = false;
+        uint8_t _font = 0;      // 0 small, 1 big, 2 tiny
         bool _visible = true;
+
+        void _generate(bn::sprite_text_generator& g, int x, int y, const bn::string_view& s, int color, align a,
+                       int font, int bg_priority, int y_offset);
     };
 }
 

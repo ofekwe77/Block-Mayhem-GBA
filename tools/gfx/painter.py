@@ -61,6 +61,7 @@ class Layer:
 
     def rect(self, x0, y0, x1, y1, c):
         ci = self.pal[c]
+        x0, y0, x1, y1 = int(x0), int(y0), int(x1), int(y1)
         for y in range(max(0, y0), min(self.h, y1)):
             row = self.px[y]
             for x in range(x0, x1):
@@ -91,6 +92,14 @@ class Layer:
         for y in range(int(cy - r - 1), int(cy + r + 2)):
             for x in range(int(cx - r - 1), int(cx + r + 2)):
                 if (x - cx) ** 2 + (y - cy) ** 2 <= r * r:
+                    self.set(x, y, c)
+
+    def ellipse(self, cx, cy, rx, ry, c):
+        if rx <= 0 or ry <= 0:
+            return
+        for y in range(int(cy - ry - 1), int(cy + ry + 2)):
+            for x in range(int(cx - rx - 1), int(cx + rx + 2)):
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0:
                     self.set(x, y, c)
 
     def ring(self, cx, cy, r, width, c):

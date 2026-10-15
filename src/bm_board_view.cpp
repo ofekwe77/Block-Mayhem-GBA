@@ -37,19 +37,23 @@ namespace bm
                 break;
 
             case layout_kind::dual:
+                // Centre column (map x 11..18): NEXT, HOLD, score, ability, heat bar, goals.
                 l.boards[0] = { 2, 3 };
                 l.boards[1] = { 20, 3 };
-                l.next_x = 12; l.next_y = 1; l.next_count = 2;
-                l.hold_x = 12; l.hold_y = 9;
-                l.meter_x = 14; l.meter_y = 15; l.meter_tiles = 2;
+                l.next_x = 12; l.next_y = 1; l.next_count = 1;
+                l.hold_x = 12; l.hold_y = 6;
+                l.meter_x = -1; l.meter_y = 0; l.meter_tiles = 0;
+                l.heat_bar_x = 12; l.heat_bar_y = 14; l.heat_bar_tiles = 4;
                 break;
 
             case layout_kind::dual_boss:
+                // Boss on top of the centre column, heat bar under it, then NEXT and HOLD.
                 l.boards[0] = { 2, 3 };
                 l.boards[1] = { 20, 3 };
                 l.next_x = 12; l.next_y = 10; l.next_count = 1;
                 l.hold_x = 12; l.hold_y = 15;
-                l.meter_x = 14; l.meter_y = 15; l.meter_tiles = 2;
+                l.meter_x = -1; l.meter_y = 0; l.meter_tiles = 0;
+                l.heat_bar_x = 12; l.heat_bar_y = 9; l.heat_bar_tiles = 4;
                 l.hp_x = 11; l.hp_y = 0; l.hp_tiles = 6;
                 l.boss_x = 120; l.boss_y = 40;
                 break;
@@ -528,13 +532,13 @@ namespace bm
         const int x = _layout.meter_x;
         const int top = _layout.meter_y;
         const int n = _layout.meter_tiles;
-        if(_layout.kind == layout_kind::dual || _layout.kind == layout_kind::dual_boss || ! s.config().heat)
+        if(! s.config().heat)
         {
-            return;     // dual layouts show heat as text; Classic has no heat at all
+            return;     // Classic has no heat at all
         }
         if(_layout.heat_bar_x >= 0)
         {
-            // Horizontal bar (boss layout).
+            // Horizontal bar (boss and dual layouts).
             const int hx = _layout.heat_bar_x;
             const int hy = _layout.heat_bar_y;
             const int hn = _layout.heat_bar_tiles;

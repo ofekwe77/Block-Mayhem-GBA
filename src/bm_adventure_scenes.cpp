@@ -7,6 +7,7 @@
 
 #include "bn_sprite_items_spr_cursor.h"
 #include "bn_sprite_items_spr_icons.h"
+#include "bn_sprite_items_spr_goals.h"
 #include "bn_sprite_items_spr_particles.h"
 
 namespace bm
@@ -202,38 +203,54 @@ namespace bm
 
         const stage_def& st = stage(w, _selected + 1);
         _idea.show(120, 82, st.idea, text_color::cyan, align::center);
+        // Each goal line carries the same icon the in-game HUD uses for it.
+        auto goal_line = [this](int slot, label& l, int y, const bn::string_view& text, text_color c, objective_kind kind)
+        {
+            const int width = text::small_width(text) + 10;
+            const int x = 120 - width / 2;
+            l.show(x + 10, y, text, c, align::left);
+            if(! _goal_icons[slot])
+            {
+                _goal_icons[slot] = bn::sprite_items::spr_goals.create_sprite(0, 0, int(kind));
+            }
+            _goal_icons[slot]->set_tiles(bn::sprite_items::spr_goals.tiles_item(), int(kind));
+            _goal_icons[slot]->set_position(x + 4 - 120, y + 4 - 80);
+        };
         int g = 0;
         for(const objective_def& o : st.objectives)
         {
-            if(o.kind == objective_kind::none || g >= 3)
+            if(o.kind == objective_kind::none || o.kind == objective_kind::boss_defeat || g >= 3)
             {
                 continue;
             }
-            bn::string<40> line = "GOAL: ";
+            bn::string<40> line;
             objective_text(o, line);
-            _goals[g].show(120, 92 + g * 10, line, text_color::white, align::center);
+            goal_line(g, _goals[g], 92 + g * 10, line, text_color::white, o.kind);
             ++g;
         }
-        if(st.boss)
+        if(st.boss && g < 3)
         {
-            bn::string<40> line = "GOAL: DEFEAT ";
+            bn::string<40> line = "DEFEAT ";
             line.append(boss(st.boss).name);
-            _goals[g++].show(120, 92, line, text_color::red, align::center);
+            goal_line(g, _goals[g], 92 + g * 10, line, text_color::red, objective_kind::boss_defeat);
+            ++g;
         }
         const int bonus_y = 94 + g * 10;
         for(; g < 3; ++g)
         {
             _goals[g].hide();
+            _goal_icons[g].reset();
         }
         if(st.secondary.kind != objective_kind::none)
         {
             bn::string<40> line = "BONUS: ";
             objective_text(st.secondary, line);
-            _extra.show(120, bonus_y, line, text_color::green, align::center);
+            goal_line(3, _extra, bonus_y, line, text_color::green, st.secondary.kind);
         }
         else
         {
             _extra.hide();
+            _goal_icons[3].reset();
         }
         const stage_record& rec = a.save.stages[stage_number(w, _selected + 1)];
         if(rec.cleared)

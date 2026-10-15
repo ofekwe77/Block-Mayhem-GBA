@@ -83,6 +83,11 @@ def gen_fonts():
     write_header("bm_font_small.h", font_header("BM_FONT_SMALL_H", "font_small", "small", widths, extra, 8))
     write_header("bm_font_big.h", font_header("BM_FONT_BIG_H", "font_big", "big", bwidths, extra, 16))
 
+    tpx, twidths, _ = font.tiny_font()
+    write_bmp(out("font_tiny.bmp"), 8, len(tpx), tpx, pal, bpp=4)
+    write_json(out("font_tiny.json"), {"type": "sprite", "height": 8})
+    write_header("bm_font_tiny.h", font_header("BM_FONT_TINY_H", "font_tiny", "tiny", twidths, extra, 8))
+
     # Text colour palettes (index 1 = text, index 2 = shadow/outline).
     text_colors = {
         "white": [(248, 248, 248), (16, 16, 48)],
