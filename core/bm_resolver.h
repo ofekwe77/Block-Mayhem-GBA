@@ -40,6 +40,7 @@ namespace bm
         int8_t rainbow_targets = cfg::rainbow_targets; // RAINBOW MASTER: 3
         int8_t coat_bonus = 0;          // CRYSTAL BREAKER: +1 damage against ice/armor
         bool double_spark = false;      // DOUBLE SPARK
+        bool disable_new_specials = false;  // Electric surge: specials locked now arrive disabled
         gravity_dir settle_dir = gravity_dir::down;
     };
 
@@ -73,6 +74,7 @@ namespace bm
         int ice_broken = 0;
         int armor_broken = 0;
         int garbage_rows_cleared = 0;
+        uint8_t line_wave_rows[8] = {};     // rows cleared by each line wave (first 8 waves)
         bool perfect_clear = false;
         bool any_line = false;
     };

@@ -345,6 +345,10 @@ namespace bm
             if(m == _piece.special_mino)
             {
                 c.special = _piece.special;
+                if(_mods.disable_new_specials && c.special != special_kind::none)
+                {
+                    c.flags = flag_disabled;
+                }
             }
             _board.set(p.x, p.y, c);
         }
@@ -387,9 +391,18 @@ namespace bm
         _delay = cfg::settle_delay;
     }
 
-    bool player::transform_active(piece_type type)
+    void player::revive()
     {
-        if(_state != player_state::falling || type == _piece.type)
+        if(_state == player_state::topped_out)
+        {
+            _piece.type = piece_type::none;
+            _state = player_state::waiting_spawn;
+        }
+    }
+
+    bool player::transform_active(piece_type type, bool apply)
+    {
+        if(_state != player_state::falling || type == _piece.type || type == piece_type::none)
         {
             return false;
         }
@@ -403,6 +416,10 @@ namespace bm
             p.y = int8_t(_piece.y + o[1]);
             if(_board.fits(p))
             {
+                if(! apply)
+                {
+                    return true;
+                }
                 _piece = p;
                 _last_rotate = false;
                 if(_piece.y > _lowest_y)

@@ -182,6 +182,10 @@ namespace bm
             _result.extra_rows += count;
         }
         _result.rows_total += count;
+        if(_result.line_waves <= 8)
+        {
+            _result.line_wave_rows[_result.line_waves - 1] = uint8_t(count);
+        }
         if(_result.waves > 1)
         {
             events.push(event_type::chain_wave, board_index, _result.waves);

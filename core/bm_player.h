@@ -112,7 +112,10 @@ namespace bm
         void set_topped_out();
 
         // Replaces the active piece's shape (Shape Shift). Returns false if illegal.
-        bool transform_active(piece_type type);
+        bool transform_active(piece_type type, bool apply = true);
+
+        // SECOND CHANCE: leaves the topped-out state; the caller has cleared space on the board.
+        void revive();
 
         // Combo / back-to-back bookkeeping (per board).
         int combo = 0;          // consecutive clearing locks (0 = none yet)
