@@ -1,0 +1,16 @@
+# Build output
+build/
+tests/build/
+tools/harness/build/
+*.elf
+*.map
+*.sav
+*.ss[0-9]
+BlockMayhem.gba
+!release/BlockMayhem.gba
+
+# Local tool state
+.claude/
+__pycache__/
+*.pyc
+screenshots/tmp/
