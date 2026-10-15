@@ -194,6 +194,8 @@ namespace bm
         t.rush_index = flow.boss_rush_index;
         t.rush_state = flow.boss_rush_state;
         t.rush_frames = flow.boss_rush_frames;
+        t.save_sequence = save.sequence;
+        t.setting_difficulty = save.settings.difficulty;
         const int v = s.validate();
         if(v && ! t.error_code)
         {

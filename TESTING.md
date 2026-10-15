@@ -30,7 +30,9 @@ Optional filter: `.\build.ps1 tests bomb`.
 
 | achievements.* | definitions; nothing unlocks without events; live play unlocks + progress without double counting after merge; campaign / run / rush flags; MASTER OF MAYHEM and ARSENAL accumulation |
 
-Latest run (2026-10-15): **73 passed, 0 failed.**
+| save.* | 512-byte layout, CRC-32 check value, blank SRAM = first launch, every flipped byte detected, version mismatch / impossible values reset, newest valid slot wins, interrupted write keeps the previous slot, full-completion round trip |
+
+Latest run (2026-10-15): **79 passed, 0 failed.**
 
 Every simulated frame also calls `session::validate()` (board/heat/cooldown/boss invariants).
 
@@ -48,10 +50,10 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 | worlds.txt — first stage of every world + dual stage 4-3, music RMS per world | PASS (RMS 4244..6041) |
 | chaos_run.txt — run map, encounters under autoplay, results, upgrade choice, act 1 boss, act 2 map | PASS (4 cleared, 4 upgrades, error_code 0) |
 | boss_rush.txt — diagnostic unlock, rush card, all six bosses in sequence (HP cut after each intro), summary | PASS (6/6, complete, error_code 0) |
+| save.txt (`--save` file) — fresh boot, option change, stage 1-1 clear, console reset: settings, clear and achievements restored | PASS |
 | menus.txt — full main menu, options + volume, sound test (audio), credits, achievements, records pages, loadout setup, Chaos Arcade with the live achievement banner | PASS |
 
 Screenshots from the latest runs: `screenshots/tmp/`.
 
 ## Not yet tested
-See TASKS.md entries without `TESTED` status (save persistence across restarts, stress/performance
-runs).
+See TASKS.md entries without `TESTED` status (stress/performance runs, balance runner).

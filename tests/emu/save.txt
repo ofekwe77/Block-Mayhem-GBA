@@ -1,0 +1,32 @@
+# Save persistence on the real ROM (run with --save FILE pointing to a deleted file):
+# fresh boot -> change an option -> clear stage 1-1 -> console reset -> everything is still there.
+# session_state: 3 won. Scenes: 4 main_menu, 8 results, 9 options.
+frames 30
+expect save_loaded == 2
+tap START
+frames 40
+expect scene == 4
+tap UP
+tap A
+frames 30
+expect scene == 9
+tap RIGHT
+tap B
+frames 30
+expect scene == 4
+expect save_writes >= 1
+expect setting_difficulty == 2
+cmd 1 1 1 5 1
+wait session_state == 3 9000
+wait scene == 8 2000
+expect stages_cleared >= 1
+expect achievements >= 1
+print save_writes save_sequence stages_cleared achievements
+reset
+frames 90
+expect save_loaded == 1
+expect setting_difficulty == 2
+expect stages_cleared >= 1
+expect achievements >= 1
+print save_loaded save_sequence stages_cleared achievements setting_difficulty error_code
+expect error_code == 0

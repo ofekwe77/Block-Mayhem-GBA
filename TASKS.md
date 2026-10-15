@@ -16,7 +16,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-01 | TESTED | EMU | Real GBA toolchain: MSYS2 + devkitARM (gba-dev) + Butano 21.9.0 | 2.2 | - | README.md | ROM builds; `sprites` example + BlockMayhem.gba built |
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
-| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 73/73 |
+| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 79/79 |
 | ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
 | ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
@@ -260,10 +260,10 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | PROG-03 | NOT STARTED | - | Rewards: abilities, modes, cosmetics, sound test, modifiers | 27.3 | PROG-01 | | |
 | ACH-01 | TESTED | UNIT | 30 achievements (5 hidden): real triggers, progress, saved bits | 28, 35.2 | - | core/bm_achievements.* | 5 achievements.* tests |
 | ACH-02 | TESTED | EMU | Unlock notifications (banner + sound, waits for warnings) | 28 | ACH-01 | src/bm_game_scene.cpp | achievement_banner.png (menus.txt) |
-| SAVE-01 | IMPLEMENTED | - | Save format: magic, version, size, CRC-32, two slots, sequence | 29.1 | - | core/bm_save.* | needs unit tests |
+| SAVE-01 | TESTED | UNIT | Save format: magic, version, size, CRC-32, two slots, sequence | 29.1 | - | core/bm_save.* | save.* (6 tests) |
 | SAVE-02 | IMPLEMENTED | EMU | SRAM read/write with read-back verification | 29 | SAVE-01 | src/bm_app.cpp | save_writes counter |
-| SAVE-03 | NOT STARTED | - | Save tests: first launch, invalid, version mismatch, full completion | 29.2, 39.7 | SAVE-01 | | |
-| SAVE-04 | NOT STARTED | - | Emulator persistence across ROM restarts | 57.6 | SAVE-02 | | |
+| SAVE-03 | TESTED | UNIT | Save tests: first launch, invalid, version mismatch, interrupted write, full completion | 29.2, 39.7 | SAVE-01 | tests/test_save.cpp | save.* 6/6 |
+| SAVE-04 | TESTED | EMU | Emulator persistence across console resets | 57.6 | SAVE-02 | tests/emu/save.txt | PASS: option, stage clear, achievements restored after reset |
 
 ## BAL / SIM — Balance and simulation (PART 30, 31, 54)
 
