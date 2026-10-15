@@ -668,6 +668,25 @@ namespace bm
         };
     }
 
+    const stage_def& arcade_stage()
+    {
+        static constexpr stage_def d = []() {
+            stage_def s;
+            s.world = 1;
+            s.index = 1;
+            s.name = "CHAOS ARCADE";
+            s.idea = "ENDLESS SCORE ATTACK";
+            s.base_level = 1;
+            s.level_cap = uint8_t(cfg::max_level);
+            s.specials = specials(40, 24, 24, 8, 4, cfg::special_interval_normal_min, cfg::special_interval_normal_max);
+            s.hazards[0] = haz(hazard_kind::mixed, cfg::arcade_event_interval, 1, 3, 1);
+            s.tips[0] = "ENVIRONMENT EVENTS GET FASTER";
+            s.tips[1] = "WATCH THE TOP LINE FOR WARNINGS";
+            return s;
+        }();
+        return d;
+    }
+
     const stage_def& stage(int world, int index)
     {
         return table.s[stage_number(world, index)];

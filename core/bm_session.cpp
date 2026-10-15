@@ -1611,10 +1611,16 @@ namespace bm
             }
             else if(h.interval)
             {
-                const int telegraph = h.telegraph + (_config.diff == difficulty::beginner ? 1 : 0);
-                if(_hazard_counter[i] >= h.interval - telegraph)
+                int interval = h.interval;
+                if(_config.mode == game_mode::arcade)
                 {
-                    due = maxi(h.interval - _hazard_counter[i], 0);
+                    // Chaos Arcade: events come one lock sooner per level, down to a floor.
+                    interval = maxi(cfg::arcade_event_min_interval, interval - (_level - 1));
+                }
+                const int telegraph = h.telegraph + (_config.diff == difficulty::beginner ? 1 : 0);
+                if(_hazard_counter[i] >= interval - telegraph)
+                {
+                    due = maxi(interval - _hazard_counter[i], 0);
                 }
             }
             if(due < 0)
@@ -1633,7 +1639,16 @@ namespace bm
             {
                 static constexpr hazard_kind cycle[4] = { hazard_kind::freeze_cells, hazard_kind::molten_rain,
                                                           hazard_kind::gravity_shift, hazard_kind::surge };
-                a.kind = uint8_t(cycle[_hazard_cycle % 4]);
+                // param 1 (Chaos Arcade): six event kinds, including garbage and armor plates.
+                static constexpr hazard_kind arcade_cycle[6] = {
+                    hazard_kind::garbage_drip, hazard_kind::freeze_cells, hazard_kind::surge, hazard_kind::molten_rain,
+                    hazard_kind::armor_plates, hazard_kind::gravity_shift
+                };
+                a.kind = uint8_t(h.param == 1 ? arcade_cycle[_hazard_cycle % 6] : cycle[_hazard_cycle % 4]);
+                if(h.param == 1)
+                {
+                    a.param = 0;        // arcade gravity events alternate left / right
+                }
             }
             _hazard_counter[i] = -a.countdown;     // the period is measured from activation to activation
             _prepare_action(a, _players[a.board]);

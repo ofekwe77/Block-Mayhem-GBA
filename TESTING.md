@@ -32,7 +32,9 @@ Optional filter: `.\build.ps1 tests bomb`.
 
 | save.* | 512-byte layout, CRC-32 check value, blank SRAM = first launch, every flipped byte detected, version mismatch / impossible values reset, newest valid slot wins, interrupted write keeps the previous slot, full-completion round trip |
 
-Latest run (2026-10-15): **79 passed, 0 failed.**
+| arcade.* | Chaos Arcade events: >= 10 events in 6 minutes, >= 5 kinds, always telegraphed, gap shrinks to the floor, never "won", no invalid state |
+
+Latest run (2026-10-15): **80 passed, 0 failed.**
 
 Every simulated frame also calls `session::validate()` (board/heat/cooldown/boss invariants).
 

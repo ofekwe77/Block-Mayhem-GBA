@@ -1033,6 +1033,16 @@ namespace bm
             _app.pending_achievements |= update_achievements(_app.save, in);
         }
         const bool warning = _s.boss_action().source || _s.hazard_action().source;
+        if(_ach_timer > 0 && warning && _s.state() == session_state::playing)
+        {
+            // An attack warning needs the top line: put the banner back in the queue and show it later.
+            _app.pending_achievements |= 1u << _ach_current;
+            _ach_timer = 0;
+            _ach_title.hide();
+            _ach_name.hide();
+            _ach_icon.reset();
+            return;
+        }
         if(_ach_timer > 0)
         {
             --_ach_timer;
@@ -1063,6 +1073,7 @@ namespace bm
             ++id;
         }
         _app.pending_achievements &= ~(1u << id);
+        _ach_current = id;
         const achievement_def& d = achievement(id);
         _ach_title.show_tiny(120, -20, "ACHIEVEMENT UNLOCKED", text_color::yellow, align::center);
         _ach_name.show(124, -12, d.name, text_color::white, align::center);

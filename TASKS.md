@@ -16,7 +16,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-01 | TESTED | EMU | Real GBA toolchain: MSYS2 + devkitARM (gba-dev) + Butano 21.9.0 | 2.2 | - | README.md | ROM builds; `sprites` example + BlockMayhem.gba built |
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
-| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 79/79 |
+| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 80/80 |
 | ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
 | ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
@@ -198,7 +198,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 |----|--------|--------|------|------|------|-------|----------|
 | MODE-01 | TESTED | EMU | CLASSIC: no powers/specials/hazards, speed-up, high scores | 22.1 | CORE-* | src/bm_flow.cpp | smoke.txt classic |
 | MODE-02 | IMPLEMENTED | EMU | CHAOS ARCADE endless with specials/heat/abilities | 22.2 | HEAT-*, ABIL-* | src/bm_flow.cpp | smoke.txt arcade autoplay 20 rows |
-| MODE-03 | NOT STARTED | - | CHAOS ARCADE controlled environmental events | 22.2 | ADV-06..09 | | |
+| MODE-03 | TESTED | SIM | CHAOS ARCADE controlled environmental events (6 kinds, telegraphed, 16 -> 6 locks apart as the level rises) | 22.2 | ADV-06..09 | core/bm_stages.cpp, core/bm_session.cpp | arcade.events_rotate_escalate_and_stay_valid; arcade_event_warning.png |
 | MODE-04 | IMPLEMENTED | - | DUAL BOARD RELAY endless mode in menu | 22.5 | DUAL-* | src/bm_flow.cpp | needs emulator test |
 | MODE-05 | IMPLEMENTED | EMU | ADVENTURE mode flow (map, card, stage, results, next stage) | 22.3 | ADV-* | src/bm_adventure_scenes.cpp, src/main.cpp | adventure.txt PASS |
 | MODE-06 | TESTED | EMU | CHAOS RUN mode flow | 22.4 | RUN-* | src/bm_run_scenes.cpp, src/main.cpp | tests/emu/chaos_run.txt PASS |

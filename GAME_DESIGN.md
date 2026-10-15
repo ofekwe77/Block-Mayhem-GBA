@@ -54,7 +54,9 @@ Phase changes are a visible, non-interactive transition with all timers frozen.
   per-stage objectives, bonus goals, hazards, layouts and ranks C..S+.
 - **Chaos Run** — the roguelite (below).
 - **Classic** — no specials, heat, abilities or hazards; speed-up and high scores.
-- **Chaos Arcade** — endless score attack with specials, heat, Overheat and three abilities.
+- **Chaos Arcade** — endless score attack with specials, heat, Overheat and up to three abilities chosen
+  on the loadout screen; telegraphed environmental events rotate through six kinds and speed up with
+  the level.
 - **Dual Board Relay** — two 8x16 boards, SELECT switches, one equipped ability.
 - **Boss Rush** — unlocked by the World 3 boss. Every boss already defeated in Adventure, in world
   order, with the score carried between fights. Two recoveries: a lost fight is retried until they

@@ -153,6 +153,10 @@ namespace bm::cfg
     constexpr int special_interval_advanced_min = 3;
     constexpr int special_interval_advanced_max = 5;
 
+    // ---------------------------------------------------------------- CHAOS ARCADE events (PART 22.2)
+    constexpr int arcade_event_interval = 16;       // locks between events at level 1
+    constexpr int arcade_event_min_interval = 6;    // floor reached as the level rises (1 lock faster per level)
+
     // ---------------------------------------------------------------- CHAOS RUN (PART 21.6 stacking caps)
     constexpr int run_heat_gain_percent_max = 140;      // HEAT ENGINE
     constexpr int run_chain_score_percent_max = 200;    // CHAIN KING (+ DEMOLITION)

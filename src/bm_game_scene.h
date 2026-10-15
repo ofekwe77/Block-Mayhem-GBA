@@ -61,6 +61,7 @@ namespace bm
         bn::optional<bn::sprite_ptr> _ach_icon;
         int _ach_timer = 0;
         int _ach_icon_x = 0;
+        int _ach_current = -1;
         bn::optional<boss_view> _boss;
         int _tip_index = 0;
         int _tip_timer = 0;

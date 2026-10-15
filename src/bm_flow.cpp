@@ -28,6 +28,7 @@ namespace bm
             c.loadout[2] = a.flow.arcade_loadout[2];
             c.loadout_count = uint8_t(a.flow.arcade_count >= 1 && a.flow.arcade_count <= 3 ? a.flow.arcade_count : 3);
             c.endless = true;
+            c.stage = &arcade_stage();      // controlled environmental events
             break;
 
         case game_mode::dual_relay:

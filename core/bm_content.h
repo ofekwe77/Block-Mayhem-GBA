@@ -189,6 +189,10 @@ namespace bm
     [[nodiscard]] const boss_def& boss(int id);                     // 1..6
     [[nodiscard]] const char* world_name(int world);
     [[nodiscard]] int stage_number(int world, int index);           // 0..29
+
+    // CHAOS ARCADE environment (PART 22.2): endless, no objectives, telegraphed environmental events
+    // that rotate through six kinds and arrive more often as the level rises.
+    [[nodiscard]] const stage_def& arcade_stage();
 }
 
 #endif

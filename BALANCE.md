@@ -81,6 +81,13 @@ Forced switch after 4 locks; CROSS OVER = rows on both boards within 4 locks (+1
 2+ rows on one board: +6 heat and one row removed from the other board's pending garbage;
 4 rows: cancels up to 2 pending garbage rows on the other board.
 
+## Chaos Arcade events (PART 22.2)
+
+Endless, no objectives. A telegraphed environmental event (3 locks of warning) rotates through garbage
+drip, freeze cells, surge, molten rain, armor plates and a left/right gravity shift. The first event comes
+16 locks in; every level brings events one lock sooner, down to 6 locks apart (`arcade_event_interval`,
+`arcade_event_min_interval`). Shield Matrix blocks an event like any hazard.
+
 ## Chaos Run (PART 21.6 stacking caps — `core/bm_config.h` `run_*`, enforced in `build_modifiers()`)
 
 | Upgrade effect | Per stack | Cap (incl. synergy) |
