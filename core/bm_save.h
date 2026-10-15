@@ -85,7 +85,8 @@ namespace bm
         uint16_t runs_started = 0;
         uint16_t runs_completed = 0;
         uint8_t run_best_act = 0;
-        uint8_t reserved8[3] = {};
+        uint8_t intros_seen = 0;        // bit per world whose introduction was shown
+        uint8_t reserved8[2] = {};
         uint32_t achievements = 0;      // unlocked bits
         uint16_t achievement_progress[achievement_count] = {};
         lifetime_stats stats;

@@ -30,7 +30,8 @@ namespace bm
         mode_setup,
         diagnostic,
         run_map,
-        boss_rush
+        boss_rush,
+        world_intro
     };
 
     class scene

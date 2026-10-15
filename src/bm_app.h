@@ -46,6 +46,7 @@ namespace bm
         uint8_t arcade_loadout[3] = { 0, 1, 5 };
         uint8_t arcade_count = 3;
         uint8_t dual_ability = 0;
+        bool credits_from_ending = false;   // the credits roll after the final ending returns to the title
     };
 
     class app

@@ -1,6 +1,11 @@
 # Menu extras on the real ROM: full main menu, options (volume change), sound test, credits,
 # achievements, records pages, ability loadout setup, then Chaos Arcade with the live achievement banner.
 # Scene ids: 4 main_menu, 7 gameplay, 9 options, 10 records, 11 achievements, 14 credits, 16 sound_test, 17 mode_setup.
+# First launch (no save file) opens with the intro cutscene: START skips it (after the input lock).
+frames 40
+expect scene == 2
+tap START
+wait scene == 3 120
 frames 30
 tap START
 frames 40

@@ -1,0 +1,51 @@
+# Story presentation on the real ROM (run with --save FILE pointing to a deleted file so this is a first launch):
+# intro cutscene beats -> title, first visit of World 1 -> world intro -> stage card, final ending -> credits -> title.
+# Scenes: 2 intro, 3 title, 4 main_menu, 5 world_map, 6 stage_card, 14 credits, 15 ending, 21 world_intro.
+frames 20
+expect scene == 2
+frames 100
+shot intro_1
+frames 260
+shot intro_2
+frames 170
+shot intro_3
+frames 200
+shot intro_4
+frames 260
+shot intro_5
+frames 170
+shot intro_6
+wait scene == 3 400
+frames 30
+shot intro_title
+tap START
+frames 40
+expect scene == 4
+tap A
+frames 40
+expect scene == 5
+tap A
+frames 40
+expect scene == 21
+frames 120
+shot world_intro_1
+wait scene == 6 600
+cmd 5
+cmd 4 15
+frames 30
+expect scene == 15
+frames 150
+shot ending_1
+frames 300
+shot ending_2
+frames 240
+shot ending_3
+frames 260
+shot ending_4
+wait scene == 14 600
+frames 200
+shot ending_credits
+cmd 3 1
+wait scene == 3 6000
+print scene error_code
+expect error_code == 0

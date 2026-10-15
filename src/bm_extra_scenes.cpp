@@ -609,18 +609,27 @@ namespace bm
         ++_frame;
         _input.update();
         _backdrop.update();
+        app& a = the_app();
+        const scene_id exit_to = a.flow.credits_from_ending ? scene_id::title : scene_id::options;
         if(_input.back() || _input.start())
         {
             audio::sfx(audio::sfx_id::menu_back);
-            return scene_id::options;
+            a.flow.credits_from_ending = false;
+            return exit_to;
         }
-        const bool fast = _input.ok();
+        const bool fast = _input.ok() || a.flow.autoplay;
         _frame += fast ? 3 : 0;
         _place();
-        // Loop back to the options after the last line leaves the screen.
-        if(168 + credit_count * 12 - _frame / 2 < -40)
+        const int end = 168 + credit_count * 12 - _frame / 2;
+        if(a.flow.credits_from_ending && end < 40)
         {
-            return scene_id::options;
+            _the_end.show_big(120, 60, "THE END", big_color::gold, align::center);
+        }
+        // Leave after the last line scrolled away (the ending holds THE END a little longer).
+        if(end < (a.flow.credits_from_ending ? -160 : -40))
+        {
+            a.flow.credits_from_ending = false;
+            return exit_to;
         }
         return bn::nullopt;
     }

@@ -160,7 +160,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | W6-ART | IMPLEMENTED | EMU | World 6 final meltdown layers + animation (glitch HBE, debris) | 19 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world6_stage.png |
 | W-FRAME | IMPLEMENTED | - | World-specific board frame tints | 49.3 | - | src/bm_board_view.cpp | tints for 6 worlds; decor tiles missing |
 | W-MATRIX | NOT STARTED | - | WORLD_PRODUCTION_MATRIX.md | 49.4 | - | | |
-| W-INTRO | NOT STARTED | - | World introductions + world-complete celebrations | 49.3 | ADV-03 | | |
+| W-INTRO | IMPLEMENTED | EMU | World introductions + world-complete celebrations | 49.3 | ADV-03 | src/bm_story_scenes.cpp, src/bm_adventure_scenes.cpp | world_intro_1.png; WORLD CLEAR! map banner |
 
 ## BOSS — Boss framework and encounters (PART 20, 51)
 
@@ -176,7 +176,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | BOSS-3 | IMPLEMENTED | EMU | Magma Hydra (multi-head) | 16 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss3_fight.png; stage sim wins |
 | BOSS-4 | IMPLEMENTED | EMU | Electric Emperor (dual board) | 17 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss4_fight.png; stage sim wins |
 | BOSS-5 | IMPLEMENTED | EMU | Gravity King | 18 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss5_fight.png; stage sim wins |
-| BOSS-6 | IN PROGRESS | EMU | Core of Mayhem (5 phases, sealed second board, final victory sequence) | 19 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss6_fight.png, boss6_dual.png; ending sequence missing (STORY-03) |
+| BOSS-6 | IMPLEMENTED | EMU | Core of Mayhem (5 phases, sealed second board, final victory sequence) | 19 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp, src/bm_story_scenes.cpp | boss6_fight.png, boss6_dual.png, ending_1.png |
 | BOSS-MATRIX | NOT STARTED | - | BOSS_PRODUCTION_MATRIX.md | 51.6 | - | | |
 | BOSS-VAL | NOT STARTED | - | Six boss validation entries (sim + emulator) | 51.5, 56.5 | BOSS-1..6 | | |
 
@@ -290,9 +290,9 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| STORY-01 | NOT STARTED | - | Intro cutscene | 36.1 | - | | |
-| STORY-02 | IN PROGRESS | EMU | World intros, boss entrances, dialogue cards | 36 | ADV-* | src/bm_game_scene.cpp | boss entrance card done; world intros missing |
-| STORY-03 | NOT STARTED | - | Final ending + credits roll + statistics | 19, 36 | BOSS-6 | | |
+| STORY-01 | TESTED | EMU | Intro cutscene (factory, signal, overload, falling blocks, the eye opens, emergency, system online), skippable, attract mode | 36.1 | - | src/bm_story_scenes.cpp | tests/emu/story.txt intro_1..6.png |
+| STORY-02 | TESTED | EMU | World intro cards on first visit, boss entrance cards | 36 | ADV-* | src/bm_story_scenes.cpp, src/bm_game_scene.cpp | world_intro_1.png; adventure.txt |
+| STORY-03 | TESTED | EMU | Final ending (core collapse, factory restored, campaign statistics) + credits roll + THE END | 19, 36 | BOSS-6 | src/bm_story_scenes.cpp, src/bm_extra_scenes.cpp | ending_1..4.png, ending_credits.png |
 | SECRET-01 | NOT STARTED | - | Secret events, easter eggs, unlockable cosmetics | 35 | - | | |
 
 ## DOC — Documentation and release (PART 41, 42, 59, 63)

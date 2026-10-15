@@ -1,4 +1,9 @@
 # Adventure flow: menu -> world map -> stage card -> stage 1-1, then every boss via the autoplay test path.
+# First launch (no save file) opens with the intro cutscene: START skips it (after the input lock).
+frames 40
+expect scene == 2
+tap START
+wait scene == 3 120
 frames 30
 tap START
 frames 30
@@ -8,6 +13,10 @@ frames 40
 expect scene == 5
 shot worldmap
 tap A
+frames 40
+# First visit of World 1: the world introduction card, skipped with START.
+expect scene == 21
+tap START
 frames 40
 expect scene == 6
 shot stagecard

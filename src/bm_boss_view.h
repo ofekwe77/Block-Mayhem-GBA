@@ -56,6 +56,8 @@ namespace bm
 
         void on_event(const event& e, fx& effects);
         void update(const session& s, int frame, fx& effects);
+        // Session-free animation (cutscenes): 'telegraph' keeps the attack wind-up pose.
+        void update(bool telegraph, int frame, fx& effects);
         void move_to(int center_x, int center_y, int frames);
 
         [[nodiscard]] boss_anim state() const { return _state; }

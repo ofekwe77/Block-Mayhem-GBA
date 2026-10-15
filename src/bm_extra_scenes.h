@@ -88,11 +88,12 @@ namespace bm
         [[nodiscard]] bn::optional<scene_id> update() override;
 
     private:
-        static constexpr int slots = 14;
+        static constexpr int slots = 16;
 
         backdrop _backdrop;
         menu_input _input;
         label _lines[slots];
+        label _the_end;
         int _line_of_slot[slots] = {};
         int _scroll = 0;            // pixels scrolled (x2 for half-speed)
         int _frame = 0;

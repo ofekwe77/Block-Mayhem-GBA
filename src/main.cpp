@@ -9,6 +9,7 @@
 #include "bm_menu_scenes.h"
 #include "bm_extra_scenes.h"
 #include "bm_run_scenes.h"
+#include "bm_story_scenes.h"
 
 #include "bn_bg_palettes.h"
 #include "bn_color.h"
@@ -40,6 +41,12 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::run_summary_scene());
         case bm::scene_id::boss_rush:
             return bn::unique_ptr<bm::scene>(new bm::boss_rush_scene());
+        case bm::scene_id::intro:
+            return bn::unique_ptr<bm::scene>(new bm::story_scene(bm::story_kind::intro));
+        case bm::scene_id::ending:
+            return bn::unique_ptr<bm::scene>(new bm::story_scene(bm::story_kind::ending));
+        case bm::scene_id::world_intro:
+            return bn::unique_ptr<bm::scene>(new bm::story_scene(bm::story_kind::world_intro));
         case bm::scene_id::options:
             return bn::unique_ptr<bm::scene>(new bm::options_scene());
         case bm::scene_id::records:
@@ -143,8 +150,10 @@ int main()
     a.load_save();
     bm::audio::apply_volumes();
 
-    bn::unique_ptr<bm::scene> current = make_scene(bm::scene_id::title);
-    a.test->scene = uint32_t(bm::scene_id::title);
+    // First launch opens with the intro cutscene; afterwards the title comes straight up.
+    const bm::scene_id first = a.save_status == int(bm::save_status::empty) ? bm::scene_id::intro : bm::scene_id::title;
+    bn::unique_ptr<bm::scene> current = make_scene(first);
+    a.test->scene = uint32_t(first);
     constexpr int fade_steps = 8;
     int fade_in = fade_steps;
 

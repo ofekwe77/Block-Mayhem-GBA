@@ -104,6 +104,10 @@ namespace bm
             audio::sfx(audio::sfx_id::menu_ok);
             return scene_id::main_menu;
         }
+        if(_frame > 60 * 25 && ! the_app().flow.diagnostic)
+        {
+            return scene_id::intro;     // attract mode
+        }
         return bn::nullopt;
     }
 
@@ -419,6 +423,10 @@ namespace bm
                 {
                     ++a.flow.stage;
                     return scene_id::stage_card;
+                }
+                if(a.flow.world == 6)
+                {
+                    return scene_id::ending;    // the Core of Mayhem is down
                 }
                 return scene_id::world_map;     // world cleared: celebration on the map
             }

@@ -1,6 +1,11 @@
 # Save persistence on the real ROM (run with --save FILE pointing to a deleted file):
 # fresh boot -> change an option -> clear stage 1-1 -> console reset -> everything is still there.
 # session_state: 3 won. Scenes: 4 main_menu, 8 results, 9 options.
+# First launch (no save file) opens with the intro cutscene: START skips it (after the input lock).
+frames 40
+expect scene == 2
+tap START
+wait scene == 3 120
 frames 30
 expect save_loaded == 2
 tap START

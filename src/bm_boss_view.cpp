@@ -310,6 +310,11 @@ namespace bm
 
     void boss_view::update(const session& s, int frame, fx& effects)
     {
+        update(s.boss_action().source != 0, frame, effects);
+    }
+
+    void boss_view::update(bool telegraph, int frame, fx& effects)
+    {
         if(_move_frames > 0)
         {
             _cx += (_tx - _cx) / _move_frames;
@@ -328,7 +333,7 @@ namespace bm
                 case boss_anim::hit:
                 case boss_anim::recover:
                 case boss_anim::phase_change:
-                    _set_state(s.boss_action().source ? boss_anim::telegraph : boss_anim::idle, 0);
+                    _set_state(telegraph ? boss_anim::telegraph : boss_anim::idle, 0);
                     break;
                 case boss_anim::attack:
                     _set_state(boss_anim::recover, 16);
@@ -344,7 +349,7 @@ namespace bm
                 }
             }
         }
-        if(_state == boss_anim::telegraph && ! s.boss_action().source)
+        if(_state == boss_anim::telegraph && ! telegraph)
         {
             _set_state(boss_anim::idle, 0);     // attack cancelled (shield / phase change)
         }

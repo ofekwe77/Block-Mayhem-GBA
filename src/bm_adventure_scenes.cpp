@@ -149,6 +149,13 @@ namespace bm
                     break;
                 }
             }
+            const uint8_t bit = uint8_t(1u << a.flow.world);
+            if(! (a.save.intros_seen & bit))
+            {
+                a.save.intros_seen = uint8_t(a.save.intros_seen | bit);
+                a.write_save();
+                return scene_id::world_intro;
+            }
             return scene_id::stage_card;
         }
         else if(_input.back())

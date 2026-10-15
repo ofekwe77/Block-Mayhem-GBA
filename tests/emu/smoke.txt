@@ -1,4 +1,9 @@
 # Smoke test: boot -> title -> menu -> Classic gameplay -> pause -> Arcade autoplay.
+# First launch (no save file) opens with the intro cutscene: START skips it (after the input lock).
+frames 40
+expect scene == 2
+tap START
+wait scene == 3 120
 frames 30
 expect scene == 3
 audio_begin

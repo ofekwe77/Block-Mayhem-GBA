@@ -51,8 +51,10 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 | chaos_run.txt — run map, encounters under autoplay, results, upgrade choice, act 1 boss, act 2 map | PASS (4 cleared, 4 upgrades, error_code 0) |
 | boss_rush.txt — diagnostic unlock, rush card, all six bosses in sequence (HP cut after each intro), summary | PASS (6/6, complete, error_code 0) |
 | save.txt (`--save` file) — fresh boot, option change, stage 1-1 clear, console reset: settings, clear and achievements restored | PASS |
+| story.txt (`--save` file, first launch) — intro cutscene beats, title, World 1 introduction, final ending, credits roll back to the title | PASS |
 | menus.txt — full main menu, options + volume, sound test (audio), credits, achievements, records pages, loadout setup, Chaos Arcade with the live achievement banner | PASS |
 
+Scenarios that boot without a save file see the first-launch intro and skip it with START.
 Screenshots from the latest runs: `screenshots/tmp/`.
 
 ## Not yet tested
