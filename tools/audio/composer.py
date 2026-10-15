@@ -15,6 +15,7 @@ Melody notation (space separated tokens, 1 unit = one 16th note row):
 """
 import math
 import random
+import zlib
 
 from xm import Instrument, Module, Pattern, KEY_OFF
 
@@ -98,7 +99,7 @@ def tonal(name, kind, duty=0.5, env=None, volume=64, octave_shift=0, length=32):
 
 def drum(name, kind, volume=64):
     rate = 16726
-    rnd = random.Random(hash(name) & 0xFFFF)
+    rnd = random.Random(zlib.crc32(name.encode()) & 0xFFFF)   # stable across runs (str hash is salted)
     out = []
     if kind == "kick":
         n = int(0.16 * rate)
