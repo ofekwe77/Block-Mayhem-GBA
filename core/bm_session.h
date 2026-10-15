@@ -163,6 +163,8 @@ namespace bm
         [[nodiscard]] int target_option() const { return _target_option; }
         [[nodiscard]] int targeting_timer() const { return _targeting_timer; }
         [[nodiscard]] bool shape_option_legal(int option) const;
+        // Where the active piece would end up if transformed into the option's shape (false = illegal).
+        [[nodiscard]] bool shape_option_preview(int option, piece_state& out) const;
         [[nodiscard]] piece_type shape_option(int option) const;
         [[nodiscard]] int shield_pieces() const { return _shield_pieces; }
         [[nodiscard]] int freeze_frames() const { return _freeze_frames; }

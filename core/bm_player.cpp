@@ -400,7 +400,7 @@ namespace bm
         }
     }
 
-    bool player::transform_active(piece_type type, bool apply)
+    bool player::transform_active(piece_type type, bool apply, piece_state* preview)
     {
         if(_state != player_state::falling || type == _piece.type || type == piece_type::none)
         {
@@ -416,6 +416,10 @@ namespace bm
             p.y = int8_t(_piece.y + o[1]);
             if(_board.fits(p))
             {
+                if(preview)
+                {
+                    *preview = p;
+                }
                 if(! apply)
                 {
                     return true;

@@ -32,13 +32,12 @@ if (-not (Test-Path $bash)) {
     exit 2
 }
 
-# Map the project to an ASCII-only drive letter if it is not mapped already.
+# Map the project to an ASCII-only drive letter if it is not mapped already. (subst prints non-ASCII
+# path characters as '?', so the existing mapping is recognised by comparing this script's content.)
 $mapped = $false
-foreach ($line in (subst)) {
-    if ($line -match "^$([regex]::Escape($drive))\\: => (.*)$") {
-        if ($Matches[1].TrimEnd('\') -ieq $root.TrimEnd('\')) { $mapped = $true }
-        else { Write-Error "$drive is already mapped to $($Matches[1]). Set BM_DRIVE to a free letter."; exit 2 }
-    }
+if (Test-Path "$drive\build.ps1") {
+    if ((Get-FileHash "$drive\build.ps1").Hash -eq (Get-FileHash $PSCommandPath).Hash) { $mapped = $true }
+    else { Write-Error "$drive is mapped to another folder. Set BM_DRIVE to a free letter."; exit 2 }
 }
 if (-not $mapped) {
     if (Test-Path "$drive\") { Write-Error "$drive is in use. Set BM_DRIVE to a free letter."; exit 2 }

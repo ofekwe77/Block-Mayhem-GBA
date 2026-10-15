@@ -445,6 +445,12 @@ namespace bm
         return p.transform_active(shape_option(option), false);
     }
 
+    bool session::shape_option_preview(int option, piece_state& out) const
+    {
+        player& p = const_cast<player&>(_players[_active]);
+        return p.transform_active(shape_option(option), false, &out);
+    }
+
     void session::_handle_ability_input(const input_frame& input)
     {
         if(input.hit(key_select))

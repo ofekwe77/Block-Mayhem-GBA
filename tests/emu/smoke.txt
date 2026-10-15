@@ -1,0 +1,38 @@
+# Smoke test: boot -> title -> menu -> Classic gameplay -> pause -> Arcade autoplay.
+frames 30
+expect scene == 3
+audio_begin
+frames 90
+audio_end title_music
+shot title
+tap START
+frames 40
+expect scene == 4
+shot menu
+tap A
+frames 60
+expect scene == 7
+shot classic_intro
+frames 120
+shot classic_play
+# Move and rotate a piece, then hard drop.
+tap LEFT
+tap A
+tap UP
+frames 30
+expect pieces >= 1
+tap START
+frames 20
+shot pause
+tap START
+frames 20
+# Arcade with the diagnostic autoplay bot.
+cmd 2 1 4242 1
+frames 200
+expect scene == 7
+expect mode == 1
+frames 1200
+shot arcade_autoplay
+print score lines pieces heat max_chain cpu_max cpu_avg error_code
+expect lines >= 1
+expect error_code == 0
