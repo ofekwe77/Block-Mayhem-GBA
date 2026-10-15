@@ -122,9 +122,11 @@ namespace bm
     struct boss_def
     {
         const char* name = "";
+        const char* title = "";         // short epithet shown on the boss entrance card
         uint16_t hp = 100;
         uint8_t phase_count = 1;
         bool dual = false;
+        uint8_t dual_phase = 0;         // dual fights: board B unseals when this phase starts (0 = from the start)
         boss_phase_def phases[5];
     };
 
@@ -141,7 +143,9 @@ namespace bm
         bool level_progression = true;
         bool dual = false;
         bool heat = true;
-        uint8_t abilities = 0;          // bitmask of abilities usable in the stage
+        uint8_t loadout[3] = { 0, 0, 0 };   // designed ability loadout for the stage
+        uint8_t loadout_count = 0;
+        uint8_t start_heat = 0;
         special_config specials;
         objective_def objectives[3];
         objective_def secondary;
@@ -174,6 +178,16 @@ namespace bm
         int8_t iron_defense = 0;                    // IRON DEFENSE (garbage severity reductions)
         int8_t reactive_armor = 0;                  // REACTIVE ARMOR (environmental absorbs per encounter)
     };
+
+    // ------------------------------------------------------------------ content access (bm_stages.cpp / bm_bosses.cpp)
+
+    constexpr int world_count = 6;
+    constexpr int stages_per_world = 5;
+
+    [[nodiscard]] const stage_def& stage(int world, int index);     // world 1..6, index 1..5
+    [[nodiscard]] const boss_def& boss(int id);                     // 1..6
+    [[nodiscard]] const char* world_name(int world);
+    [[nodiscard]] int stage_number(int world, int index);           // 0..29
 }
 
 #endif

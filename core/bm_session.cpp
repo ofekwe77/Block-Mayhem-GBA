@@ -38,16 +38,42 @@ namespace bm
                    k == attack_kind::fire_breath || k == attack_kind::frozen_wall;
         }
 
-        // Final boss combo table: two previously learned attacks executed together.
+        // Combination attacks: two previously learned attacks executed together.
         constexpr attack_kind core_combos[4][2] = {
             { attack_kind::garbage, attack_kind::ice_inject },
-            { attack_kind::molten_rain, attack_kind::surge },
+            { attack_kind::molten_rain, attack_kind::fire_breath },
             { attack_kind::gravity_flip, attack_kind::crystal_shards },
-            { attack_kind::armor_inject, attack_kind::fire_breath },
+            { attack_kind::armor_inject, attack_kind::surge },
         };
     }
 
     // ================================================================== setup
+
+    session_config make_stage_config(const stage_def& st, difficulty diff, uint32_t seed)
+    {
+        session_config c;
+        c.mode = game_mode::adventure;
+        c.diff = diff;
+        c.seed = seed;
+        c.stage = &st;
+        c.start_level = st.base_level;
+        c.dual = st.dual;
+        c.heat = st.heat;
+        c.specials = true;
+        c.start_heat = st.start_heat;
+        c.loadout_count = st.loadout_count;
+        for(int i = 0; i < 3; ++i)
+        {
+            c.loadout[i] = st.loadout[i];
+        }
+        if(st.boss)
+        {
+            c.boss = &boss(st.boss);
+            c.boss_id = st.boss;
+            c.dual = c.boss->dual || st.dual;
+        }
+        return c;
+    }
 
     void session::start(const session_config& config)
     {
@@ -77,7 +103,7 @@ namespace bm
         default: _gravity_percent = cfg::standard_gravity_percent; break;
         }
 
-        _heat = 0;
+        _heat = _config.heat ? mini(_config.start_heat, cfg::heat_max - 1) : 0;
         _overheat_timer = 0;
         _overheat_rows = 0;
         _overheat_secured = false;
@@ -1321,7 +1347,7 @@ namespace bm
                 }
             }
             const int left = cfg::dual_forced_switch_locks - _locks_on_board;
-            if(left > 0 && left <= 2)
+            if(left > 0 && left <= 2 && ! board_sealed(1))
             {
                 _events.push(event_type::forced_switch_warn, _active, left);
             }
@@ -1553,7 +1579,7 @@ namespace bm
         {
             --a.strength;   // slightly more forgiving hazards
         }
-        if(_config.dual && atk.kind == attack_kind::cross_garbage)
+        if(_config.dual && atk.kind == attack_kind::cross_garbage && ! board_sealed(1 - _active))
         {
             a.board = int8_t(1 - _active);
         }
@@ -2064,6 +2090,7 @@ namespace bm
             }
             _boss_action = pending_action();
             _boss_countdown = maxi(int(boss.phases[phase].interval), 3);
+            _locks_on_board = 0;    // a newly unsealed board never forces an immediate switch
             _state = session_state::transition;
             _transition_timer = cfg::boss_phase_transition_frames;
             _events.push(event_type::boss_phase, 0, phase);
@@ -2275,9 +2302,18 @@ namespace bm
 
     // ================================================================== dual board
 
+    bool session::board_sealed(int board) const
+    {
+        if(! _config.dual || board == 0 || ! _config.boss || ! _config.boss->dual_phase)
+        {
+            return false;
+        }
+        return _boss_phase + 1 < _config.boss->dual_phase && ! _boss_defeated;
+    }
+
     void session::_switch_board(bool forced)
     {
-        if(! _config.dual)
+        if(! _config.dual || board_sealed(1))
         {
             return;
         }

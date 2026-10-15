@@ -51,10 +51,14 @@ namespace bm
         bool heat = true;
         modifiers mods;
         uint32_t start_score = 0;               // carried score (Chaos Run / Boss Rush)
+        uint8_t start_heat = 0;
         bool endless = false;                   // Arcade / Dual relay endless variants
         uint16_t lines_goal = 0;                // optional line target for non-stage modes (0 = none)
         bool skip_intro = false;
     };
+
+    // Builds the configuration for an Adventure stage (also used by host-side stage validation).
+    [[nodiscard]] session_config make_stage_config(const stage_def& st, difficulty diff, uint32_t seed);
 
     // Telegraphed action shared by hazards and boss attacks.
     struct pending_action
@@ -188,6 +192,8 @@ namespace bm
         [[nodiscard]] int lava_pressure() const { return _lava; }
         [[nodiscard]] gravity_dir settle_direction() const { return _settle_dir; }
         [[nodiscard]] int forced_switch_locks() const { return _locks_on_board; }
+        // Final boss: the second board stays sealed until the boss reaches its dual phase.
+        [[nodiscard]] bool board_sealed(int board) const;
         [[nodiscard]] int cross_window(int board) const { return _cross_window[board]; }
 
         // Objectives.
