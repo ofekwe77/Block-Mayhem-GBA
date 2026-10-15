@@ -7,6 +7,7 @@
 #include "bm_flow.h"
 #include "bm_game_scene.h"
 #include "bm_menu_scenes.h"
+#include "bm_extra_scenes.h"
 #include "bm_run_scenes.h"
 
 #include "bn_bg_palettes.h"
@@ -39,6 +40,18 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::run_summary_scene());
         case bm::scene_id::boss_rush:
             return bn::unique_ptr<bm::scene>(new bm::boss_rush_scene());
+        case bm::scene_id::options:
+            return bn::unique_ptr<bm::scene>(new bm::options_scene());
+        case bm::scene_id::records:
+            return bn::unique_ptr<bm::scene>(new bm::records_scene());
+        case bm::scene_id::achievements:
+            return bn::unique_ptr<bm::scene>(new bm::achievements_scene());
+        case bm::scene_id::credits:
+            return bn::unique_ptr<bm::scene>(new bm::credits_scene());
+        case bm::scene_id::sound_test:
+            return bn::unique_ptr<bm::scene>(new bm::sound_test_scene());
+        case bm::scene_id::mode_setup:
+            return bn::unique_ptr<bm::scene>(new bm::mode_setup_scene());
         case bm::scene_id::title:
         default:
             return bn::unique_ptr<bm::scene>(new bm::title_scene());

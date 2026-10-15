@@ -56,6 +56,11 @@ namespace bm
         label _tip;
         label _switch_label;
         label _settle;
+        label _ach_title;
+        label _ach_name;
+        bn::optional<bn::sprite_ptr> _ach_icon;
+        int _ach_timer = 0;
+        int _ach_icon_x = 0;
         bn::optional<boss_view> _boss;
         int _tip_index = 0;
         int _tip_timer = 0;
@@ -82,6 +87,7 @@ namespace bm
         void _start_session();
         void _handle_events();
         void _update_hud();
+        void _update_achievements();
         static void _show_middle(label& l, int x, int y, const bn::string_view& t, text_color c, bool tiny);
         void _update_targeting_sprites();
         [[nodiscard]] bn::optional<scene_id> _update_pause();

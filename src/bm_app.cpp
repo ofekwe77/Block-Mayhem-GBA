@@ -68,6 +68,7 @@ namespace bm
         _sequence = _slot >= 0 ? save.sequence : 0;
         save_status = int(st);
         test->save_loaded = st == bm::save_status::ok ? 1 : 2;
+        save.abilities_unlocked = uint8_t(save.abilities_unlocked | 0x23);     // starter abilities (older saves)
         test->worlds_unlocked = save.worlds_unlocked;
     }
 

@@ -227,6 +227,20 @@ namespace bm::audio
         return current_track;
     }
 
+    const char* sfx_name(sfx_id id)
+    {
+        static constexpr const char* names[int(sfx_id::count)] = {
+            "MOVE", "ROTATE", "HOLD", "HARD DROP", "LOCK", "SINGLE", "DOUBLE", "TRIPLE", "QUAD BLAST", "BOMB",
+            "FIRE", "SPARK", "ICE", "ARMOR", "MAGNET", "RAINBOW", "LASER BEAM", "TIME FREEZE", "GRAVITY PULSE",
+            "NUCLEAR BURST", "SHIELD MATRIX", "EMERGENCY VENT", "SHAPE SHIFT", "CHAIN", "BIG CHAIN",
+            "OVERHEAT", "OVERHEAT SUCCESS", "OVERHEAT FAIL", "BOSS HIT", "BOSS ATTACK", "BOSS CHARGE",
+            "BOSS DEFEAT", "STAGE CLEAR", "MENU MOVE", "MENU OK", "MENU BACK", "UNLOCK", "GAME OVER", "DENIED",
+            "GARBAGE", "DANGER", "LEVEL UP", "PAUSE", "BOARD SWITCH"
+        };
+        const int i = int(id);
+        return i >= 0 && i < int(sfx_id::count) ? names[i] : "";
+    }
+
     const char* track_name(music_id id)
     {
         switch(id)

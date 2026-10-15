@@ -1,0 +1,96 @@
+# Menu extras on the real ROM: full main menu, options (volume change), sound test, credits,
+# achievements, records pages, ability loadout setup, then Chaos Arcade with the live achievement banner.
+# Scene ids: 4 main_menu, 7 gameplay, 9 options, 10 records, 11 achievements, 14 credits, 16 sound_test, 17 mode_setup.
+frames 30
+tap START
+frames 40
+expect scene == 4
+shot menu_full
+tap UP
+tap A
+frames 30
+expect scene == 9
+tap DOWN
+tap DOWN
+tap DOWN
+tap DOWN
+tap LEFT
+frames 10
+shot options
+tap DOWN
+tap DOWN
+tap A
+frames 30
+expect scene == 16
+tap RIGHT
+tap RIGHT
+tap A
+frames 60
+shot sound_test
+audio_begin
+frames 60
+audio_end sound_test_music
+tap B
+frames 30
+expect scene == 9
+tap DOWN
+tap A
+frames 30
+expect scene == 14
+frames 400
+shot credits
+tap B
+frames 30
+expect scene == 9
+tap B
+frames 30
+expect scene == 4
+tap UP
+tap UP
+tap A
+frames 30
+expect scene == 11
+tap DOWN
+tap DOWN
+frames 10
+shot achievements
+tap B
+frames 30
+tap UP
+tap UP
+tap UP
+tap A
+frames 30
+expect scene == 10
+shot records_1
+tap RIGHT
+tap RIGHT
+frames 10
+shot records_3
+tap LEFT
+tap LEFT
+tap LEFT
+frames 10
+shot records_5
+tap B
+frames 30
+expect scene == 4
+tap DOWN
+tap DOWN
+tap A
+frames 30
+expect scene == 17
+tap RIGHT
+tap A
+frames 10
+shot loadout
+tap START
+frames 30
+expect scene == 7
+cmd 3 1
+wait achievements >= 1 3000
+frames 20
+shot achievement_banner
+expect achievements >= 1
+print achievements lines error_code
+expect error_code == 0

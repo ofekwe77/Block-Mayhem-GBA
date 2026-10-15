@@ -72,7 +72,7 @@ namespace bm
         uint8_t worlds_unlocked = 1;    // 1..6
         uint8_t campaign_complete = 0;
         uint8_t boss_rush_unlocked = 0;
-        uint8_t abilities_unlocked = 0x01;     // bitmask of cfg::ability_id
+        uint8_t abilities_unlocked = 0x23;     // bitmask of cfg::ability_id (laser, freeze, shield at start)
         uint32_t cosmetics_unlocked = 0;
         uint32_t music_unlocked = 0x3;
         stage_record stages[stage_count];

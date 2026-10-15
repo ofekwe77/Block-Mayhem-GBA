@@ -1,5 +1,6 @@
 #include "bm_flow.h"
 
+#include "bm_achievements.h"
 #include "bm_run.h"
 
 namespace bm
@@ -25,7 +26,7 @@ namespace bm
             c.loadout[0] = a.flow.arcade_loadout[0];
             c.loadout[1] = a.flow.arcade_loadout[1];
             c.loadout[2] = a.flow.arcade_loadout[2];
-            c.loadout_count = 3;
+            c.loadout_count = uint8_t(a.flow.arcade_count >= 1 && a.flow.arcade_count <= 3 ? a.flow.arcade_count : 3);
             c.endless = true;
             break;
 
@@ -89,6 +90,59 @@ namespace bm
     {
         static constexpr const char* names[] = { "LASER", "FREEZE", "GRAVITY", "SHIFT", "NUKE", "SHIELD", "SPARK", "VENT" };
         return ability >= 0 && ability < cfg::ability_count ? names[ability] : "";
+    }
+
+    const char* ability_desc(int ability)
+    {
+        static constexpr const char* descs[] = {
+            "BEAM THROUGH ONE COLUMN", "3 SECONDS WITHOUT GRAVITY", "COMPACT THE BOARD ONE WAY",
+            "CHANGE THE FALLING PIECE", "5X5 POWER-2 BLAST", "BLOCK THE NEXT ATTACK", "CHARGE A CELL TO PULSE",
+            "REMOVE THE 8 HIGHEST CELLS"
+        };
+        return ability >= 0 && ability < cfg::ability_count ? descs[ability] : "";
+    }
+
+    int ability_unlock_stage(int ability)
+    {
+        for(int w = 1; w <= 6; ++w)
+        {
+            for(int i = 1; i <= 5; ++i)
+            {
+                const stage_def& st = stage(w, i);
+                for(int k = 0; k < st.loadout_count; ++k)
+                {
+                    if(st.loadout[k] == ability)
+                    {
+                        return stage_number(w, i);
+                    }
+                }
+            }
+        }
+        return -1;
+    }
+
+    bool track_unlocked(const save_data& sv, int music_id)
+    {
+        int cleared = 0;
+        for(const stage_record& r : sv.stages)
+        {
+            cleared += r.cleared ? 1 : 0;
+        }
+        switch(music_id)
+        {
+        case 3: case 4: case 5: case 6: case 7: case 8:     // world themes: once the world is open
+            return sv.worlds_unlocked >= music_id - 2;
+        case 9:     // boss theme: after the first boss
+            return sv.stages[stage_number(1, 5)].cleared != 0;
+        case 10:    // final boss: once World 6 is open
+            return sv.worlds_unlocked >= 6;
+        case 11:    // stage clear: after any cleared stage
+            return cleared > 0;
+        case 13:    // ending: campaign complete
+            return sv.campaign_complete != 0;
+        default:    // title, menu, game over, classic
+            return music_id >= 1 && music_id <= 14;
+        }
     }
 
     const char* heat_label(int heat, bool overheat)
@@ -325,6 +379,13 @@ namespace bm
         sv.stats.cross_combos += st.cross_combos;
         sv.stats.abilities_used += st.abilities_used;
         a.flow.new_record = record;
+
+        achievement_input in;
+        in.live = &s;
+        in.merged = true;
+        in.session_over = true;
+        in.stage_rank = s.config().mode == game_mode::adventure ? a.flow.rank : 0;
+        a.pending_achievements |= update_achievements(sv, in);
         return record;
     }
 

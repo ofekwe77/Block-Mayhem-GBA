@@ -122,21 +122,26 @@ namespace bm
         _count = 0;
         _entries[_count++] = { "ADVENTURE", "6 WORLDS, 30 STAGES, 6 BOSSES", game_mode::adventure, scene_id::world_map,
                                false, "" };
+        _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic, scene_id::gameplay, false, "" };
+        _entries[_count++] = { "CHAOS ARCADE", "ENDLESS SCORE ATTACK WITH POWERS", game_mode::arcade, scene_id::mode_setup,
+                               false, "" };
         _entries[_count++] = { "CHAOS RUN", "3 ACTS, 12 FIGHTS, 31 UPGRADES", game_mode::chaos_run, scene_id::run_map,
                                false, "" };
-        _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic, scene_id::gameplay, false, "" };
-        _entries[_count++] = { "CHAOS ARCADE", "ENDLESS SCORE ATTACK WITH POWERS", game_mode::arcade, scene_id::gameplay,
-                               false, "" };
-        _entries[_count++] = { "DUAL BOARD", "TWO BOARDS, ONE HEAT METER", game_mode::dual_relay, scene_id::gameplay,
+        _entries[_count++] = { "DUAL BOARD", "TWO BOARDS, ONE HEAT METER", game_mode::dual_relay, scene_id::mode_setup,
                                false, "" };
         _entries[_count++] = { "BOSS RUSH", "EVERY DEFEATED BOSS IN A ROW", game_mode::boss_rush, scene_id::boss_rush,
                                boss_rush_available(a.save) == 0, "DEFEAT THE WORLD 3 BOSS TO UNLOCK" };
+        _entries[_count++] = { "RECORDS", "HIGH SCORES AND STATISTICS", game_mode::count, scene_id::records, false, "" };
+        _entries[_count++] = { "ACHIEVEMENTS", "30 FEATS, SOME OF THEM SECRET", game_mode::count, scene_id::achievements,
+                               false, "" };
+        _entries[_count++] = { "OPTIONS", "DIFFICULTY, SOUND, ACCESSIBILITY", game_mode::count, scene_id::options, false,
+                               "" };
         (void) a;
         if(_index >= _count)
         {
             _index = 0;
         }
-        _title.show_big(120, 14, "BLOCK MAYHEM", big_color::fire, align::center);
+        _title.show_big(120, 8, "BLOCK MAYHEM", big_color::fire, align::center);
         for(int i = 0; i < 9; ++i)
         {
             if(i >= _count)
@@ -152,7 +157,7 @@ namespace bm
                 t = "> ";
             }
             t.append(e.name);
-            _items[i].show(120, 50 + i * 13, t, c, align::center);
+            _items[i].show(120, 32 + i * 12, t, c, align::center);
         }
         const entry& sel = _entries[_index];
         _info.show(120, 146, sel.locked ? sel.lock_reason : sel.info, sel.locked ? text_color::red : text_color::cyan,
@@ -186,7 +191,10 @@ namespace bm
             }
             audio::sfx(audio::sfx_id::menu_ok);
             app& a = the_app();
-            a.flow.mode = e.mode;
+            if(e.mode != game_mode::count)
+            {
+                a.flow.mode = e.mode;
+            }
             a.flow.seed = a.frame * 2654435761u + 12345u;
             if(e.mode == game_mode::chaos_run)
             {

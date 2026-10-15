@@ -12,7 +12,7 @@ No percentages are claimed; see each task's evidence column.
 | CHAIN — Chain reaction engine (PART 6) | 5 | 0 | 0 | 1 | 4 | 0 | 0 |
 | SCORE — Scoring (PART 7) | 7 | 0 | 0 | 5 | 2 | 0 | 0 |
 | HEAT — Heat meter and Overheat (PART 8, 9, 61) | 9 | 0 | 0 | 4 | 5 | 0 | 0 |
-| ABIL — Active abilities (PART 10, 11) | 14 | 2 | 0 | 9 | 3 | 0 | 0 |
+| ABIL — Active abilities (PART 10, 11) | 14 | 0 | 0 | 10 | 4 | 0 | 0 |
 | CTRL — Controls and input (PART 11, 32) | 4 | 0 | 0 | 3 | 1 | 0 | 0 |
 | DUAL — Dual Board Relay (PART 12) | 7 | 0 | 1 | 6 | 0 | 0 | 0 |
 | ADV — Adventure mode and stages (PART 13-19, 50) | 12 | 1 | 1 | 5 | 5 | 0 | 0 |
@@ -22,13 +22,13 @@ No percentages are claimed; see each task's evidence column.
 | MODE — Modes (PART 22) | 7 | 1 | 0 | 3 | 3 | 0 | 0 |
 | VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62) | 12 | 2 | 0 | 10 | 0 | 0 | 0 |
 | AUD — Audio (PART 25, 53) | 6 | 2 | 0 | 4 | 0 | 0 | 0 |
-| UI — User interface (PART 26) | 14 | 5 | 1 | 7 | 1 | 0 | 0 |
-| PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 5 | 0 | 4 | 0 | 0 | 0 |
+| UI — User interface (PART 26) | 14 | 0 | 0 | 7 | 7 | 0 | 0 |
+| PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 3 | 0 | 4 | 2 | 0 | 0 |
 | BAL / SIM — Balance and simulation (PART 30, 31, 54) | 8 | 5 | 0 | 2 | 1 | 0 | 0 |
 | HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 2 | 0 | 1 | 0 | 0 | 0 |
 | STORY / SECRET (PART 35, 36) | 4 | 3 | 1 | 0 | 0 | 0 | 0 |
 | DOC — Documentation and release (PART 41, 42, 59, 63) | 9 | 1 | 2 | 6 | 0 | 0 | 0 |
-| **All** | **190** | 35 | 8 | 96 | 51 | 0 | 0 |
+| **All** | **190** | 26 | 7 | 97 | 60 | 0 | 0 |
 <!-- TASKS:END -->
 
 ## Summary by area

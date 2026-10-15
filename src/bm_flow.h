@@ -18,6 +18,11 @@ namespace bm
     [[nodiscard]] const char* mode_name(game_mode mode);
     [[nodiscard]] const char* ability_name(int ability);
     [[nodiscard]] const char* ability_short(int ability);
+    [[nodiscard]] const char* ability_desc(int ability);
+    // First Adventure stage (0..29) whose loadout teaches the ability, -1 if none.
+    [[nodiscard]] int ability_unlock_stage(int ability);
+    // Sound test: a track is listed once the player has reached the place it plays.
+    [[nodiscard]] bool track_unlocked(const save_data& sv, int music_id);
     [[nodiscard]] const char* heat_label(int heat, bool overheat);
 
     // Applies the finished session to the save (records, unlocks, statistics). Returns true if a record was set.

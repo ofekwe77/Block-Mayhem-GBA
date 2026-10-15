@@ -44,6 +44,7 @@ namespace bm
         bool autoplay = false;          // diagnostic test path only
         bool diagnostic = false;
         uint8_t arcade_loadout[3] = { 0, 1, 5 };
+        uint8_t arcade_count = 3;
         uint8_t dual_ability = 0;
     };
 
@@ -72,6 +73,9 @@ namespace bm
 
         // Per-frame bookkeeping (frame counter, CPU statistics, test mailbox).
         void tick();
+
+        // Achievements unlocked but not yet announced (bit per achievement_id).
+        uint32_t pending_achievements = 0;
 
         // Mailbox command waiting for the current scene to act on (diagnostics).
         uint32_t pending_command = 0;

@@ -1,5 +1,6 @@
 #include "bm_game_scene.h"
 
+#include "bm_achievements.h"
 #include "bm_audio.h"
 #include "bm_flow.h"
 #include "bm_run.h"
@@ -795,9 +796,9 @@ namespace bm
         {
             if(st->tips[_tip_index])
             {
-                if(warn && hp.tip_y == hp.warning_y)
+                if((warn && hp.tip_y == hp.warning_y) || (_ach_timer > 0 && hp.tip_y < 20))
                 {
-                    _tip.hide();
+                    _tip.hide();        // warnings and achievement banners own the top line
                 }
                 else
                 {
@@ -1012,6 +1013,7 @@ namespace bm
             if(! _goal_icons[i])
             {
                 _goal_icons[i] = bn::sprite_items::spr_goals.create_sprite(0, 0, goal_icon(o.def.kind));
+                _goal_icons[i]->set_bg_priority(0);
             }
             _goal_icons[i]->set_position(x + 4 - 120, y + 4 - 80);
             _objective[i].show(x + 10, y, t, o.done ? text_color::green : text_color::white, align::left);
@@ -1019,6 +1021,58 @@ namespace bm
         }
 
         _update_targeting_sprites();
+    }
+
+    void game_scene::_update_achievements()
+    {
+        // Live checks twice a second; the final check happens in record_session when the session ends.
+        if(_s.state() == session_state::playing && _frame % 30 == 0)
+        {
+            achievement_input in;
+            in.live = &_s;
+            _app.pending_achievements |= update_achievements(_app.save, in);
+        }
+        const bool warning = _s.boss_action().source || _s.hazard_action().source;
+        if(_ach_timer > 0)
+        {
+            --_ach_timer;
+            // Slide in from above, hold, slide out.
+            const int t = 150 - _ach_timer;
+            const int dy = t < 10 ? (t - 10) * 2 : (_ach_timer < 10 ? (_ach_timer - 10) * 2 : 0);
+            _ach_title.move(120, dy);
+            _ach_name.move(124, 8 + dy);
+            if(_ach_icon)
+            {
+                _ach_icon->set_position(_ach_icon_x - 120, 8 + dy + 4 - 80);
+            }
+            if(! _ach_timer)
+            {
+                _ach_title.hide();
+                _ach_name.hide();
+                _ach_icon.reset();
+            }
+            return;
+        }
+        if(! _app.pending_achievements || (warning && _s.state() == session_state::playing))
+        {
+            return;     // never cover an incoming-attack warning; the banner waits for it to resolve
+        }
+        int id = 0;
+        while(id < 32 && ! ((_app.pending_achievements >> id) & 1))
+        {
+            ++id;
+        }
+        _app.pending_achievements &= ~(1u << id);
+        const achievement_def& d = achievement(id);
+        _ach_title.show_tiny(120, -20, "ACHIEVEMENT UNLOCKED", text_color::yellow, align::center);
+        _ach_name.show(124, -12, d.name, text_color::white, align::center);
+        const int w = text::small_width(d.name);
+        _ach_icon_x = 124 - w / 2 - 8;
+        _ach_icon = bn::sprite_items::spr_goals.create_sprite(_ach_icon_x - 120, -12 + 4 - 80, d.icon);
+        _ach_icon->set_bg_priority(0);
+        _ach_timer = 150;
+        _tip.hide();
+        audio::sfx(audio::sfx_id::unlock);
     }
 
     void game_scene::_show_pause(bool show)
@@ -1206,6 +1260,7 @@ namespace bm
             _boss->update(_s, _frame, _fx);
         }
         _update_hud();
+        _update_achievements();
 
         // Final boss: the sealed second board opens at its dual phase and the boss moves to the centre.
         const bool want_b = ! _s.board_sealed(1);

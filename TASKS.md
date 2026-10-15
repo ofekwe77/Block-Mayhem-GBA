@@ -16,7 +16,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-01 | TESTED | EMU | Real GBA toolchain: MSYS2 + devkitARM (gba-dev) + Butano 21.9.0 | 2.2 | - | README.md | ROM builds; `sprites` example + BlockMayhem.gba built |
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
-| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 68/68 |
+| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 73/73 |
 | ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
 | ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
@@ -107,8 +107,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ABIL-10 | TESTED | UNIT | Targeting state, A confirm / B cancel / 5 s timeout without cost | 10, 11.1 | - | core/bm_session.cpp | abilities.targeting_timeout_cancels_without_cost |
 | ABIL-11 | IMPLEMENTED | EMU | Cost / cooldown / disabled state shown in HUD (all four layouts) | 8.3 | - | src/bm_game_scene.cpp | world4_stage.png, boss2_fight.png, world4_dual.png |
 | ABIL-12 | IMPLEMENTED | EMU | Ability animations (beam, nuke blast, freeze tint, arrows, sparks, vent steam) | 10 | VIS-04 | src/bm_game_scene.cpp | needs screenshots |
-| ABIL-13 | NOT STARTED | - | Ability unlocks through Adventure progression | 27.3 | ADV-01 | | |
-| ABIL-14 | NOT STARTED | - | Arcade loadout selection screen | 22.2 | UI-02 | | |
+| ABIL-13 | IMPLEMENTED | EMU | Ability unlocks through Adventure progression (starter: laser, freeze, shield) | 27.3 | ADV-01 | src/bm_flow.cpp, src/bm_extra_scenes.cpp | loadout.png shows locked abilities with the stage that teaches them |
+| ABIL-14 | TESTED | EMU | Arcade / Dual loadout selection screen | 22.2 | UI-02 | src/bm_extra_scenes.cpp | tests/emu/menus.txt (loadout.png, arcade start) |
 
 ## CTRL — Controls and input (PART 11, 32)
 
@@ -237,18 +237,18 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | UI-01 | IMPLEMENTED | EMU | Title screen | 26.1 | - | src/bm_menu_scenes.cpp | title.png |
-| UI-02 | IN PROGRESS | EMU | Main menu with all modes; locked entries explain why | 26.2 | MODE-* | src/bm_menu_scenes.cpp | Adventure, Chaos Run, Classic, Arcade, Dual listed; Boss Rush/Options/Records missing |
+| UI-02 | TESTED | EMU | Main menu with all modes (spec order + achievements); locked entries explain why | 26.2 | MODE-* | src/bm_menu_scenes.cpp | menu_full.png; Boss Rush locked with reason |
 | UI-03 | IMPLEMENTED | EMU | Gameplay HUD single layout | 26.3 | - | src/bm_game_scene.cpp | screenshots |
 | UI-04 | IMPLEMENTED | EMU | Boss HUD layout (HP bar, phase tag, compact costs) | 34.2 | BOSS-1 | src/bm_game_scene.cpp, src/bm_board_view.cpp | boss1..5_fight.png |
 | UI-05 | IMPLEMENTED | EMU | Dual HUD layouts (relay + dual boss), no overlaps | 34.3 | DUAL-* | src/bm_game_scene.cpp, src/bm_board_view.cpp | world4_dual.png, boss4_fight.png, boss6_dual.png |
 | UI-06 | TESTED | EMU | Original pixel fonts (small, large, compact 3x5 HUD) | 26.4 | - | tools/gfx/font.py | text renders in screenshots |
 | UI-07 | IMPLEMENTED | - | Danger indicators (frame pulse, alarm) | 26.5 | - | src/bm_board_view.cpp | |
 | UI-08 | IMPLEMENTED | EMU | Pause menu RESUME/RESTART/CONTROLS/GHOST/QUIT(confirm) | 26.6 | - | src/bm_game_scene.cpp | pause.png |
-| UI-09 | NOT STARTED | - | Options screen (difficulty, ghost, shake, flash, volumes) | 34.4 | - | | |
-| UI-10 | NOT STARTED | - | Records screen | 26.2 | SAVE-* | | |
-| UI-11 | NOT STARTED | - | Achievements screen | 28 | ACH-* | | |
-| UI-12 | NOT STARTED | - | Credits screen | 37 | - | | |
-| UI-13 | NOT STARTED | - | Sound test (unlockable) | 27.3 | AUD-02 | | |
+| UI-09 | TESTED | EMU | Options screen (difficulty, ghost, shake, flash, music and SFX volume, sound test, credits) | 34.4 | - | src/bm_extra_scenes.cpp | menus.txt (options.png, volume change) |
+| UI-10 | TESTED | EMU | Records screen (5 pages: high scores, rush, adventure, run, lifetime) | 26.2 | SAVE-* | src/bm_extra_scenes.cpp | records_1/3/5.png |
+| UI-11 | TESTED | EMU | Achievements screen (progress, hidden entries) | 28 | ACH-* | src/bm_extra_scenes.cpp | achievements.png |
+| UI-12 | TESTED | EMU | Credits screen (scrolling, original content + licences) | 37 | - | src/bm_extra_scenes.cpp | credits.png |
+| UI-13 | TESTED | EMU | Sound test (tracks unlock with progress, all SFX) | 27.3 | AUD-02 | src/bm_extra_scenes.cpp | sound_test.png, audio RMS 4737 |
 | UI-14 | IMPLEMENTED | EMU | Results screen | 37 | - | src/bm_menu_scenes.cpp | |
 
 ## PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29)
@@ -258,8 +258,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | PROG-01 | IMPLEMENTED | - | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | src/bm_flow.cpp | needs save/emulator test |
 | PROG-02 | IMPLEMENTED | - | Rank formula (score, time, garbage, secondary objective) | 27.2 | ADV-01 | src/bm_flow.cpp | needs test |
 | PROG-03 | NOT STARTED | - | Rewards: abilities, modes, cosmetics, sound test, modifiers | 27.3 | PROG-01 | | |
-| ACH-01 | NOT STARTED | - | 25+ achievements incl. hidden ones, triggers + progress | 28, 35.2 | - | | |
-| ACH-02 | NOT STARTED | - | Unlock notifications | 28 | ACH-01 | | |
+| ACH-01 | TESTED | UNIT | 30 achievements (5 hidden): real triggers, progress, saved bits | 28, 35.2 | - | core/bm_achievements.* | 5 achievements.* tests |
+| ACH-02 | TESTED | EMU | Unlock notifications (banner + sound, waits for warnings) | 28 | ACH-01 | src/bm_game_scene.cpp | achievement_banner.png (menus.txt) |
 | SAVE-01 | IMPLEMENTED | - | Save format: magic, version, size, CRC-32, two slots, sequence | 29.1 | - | core/bm_save.* | needs unit tests |
 | SAVE-02 | IMPLEMENTED | EMU | SRAM read/write with read-back verification | 29 | SAVE-01 | src/bm_app.cpp | save_writes counter |
 | SAVE-03 | NOT STARTED | - | Save tests: first launch, invalid, version mismatch, full completion | 29.2, 39.7 | SAVE-01 | | |

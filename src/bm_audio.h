@@ -42,6 +42,7 @@ namespace bm::audio
     [[nodiscard]] music_id current();
     [[nodiscard]] bool track_has_hot_variant(music_id id);
     [[nodiscard]] const char* track_name(music_id id);
+    [[nodiscard]] const char* sfx_name(sfx_id id);
 }
 
 #endif
