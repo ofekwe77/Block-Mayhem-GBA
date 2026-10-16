@@ -145,6 +145,17 @@ namespace
             }
             return bn::nullopt;
 
+        case BM_TI_CMD_PLAY_MUSIC:
+            bm::audio::play_music(bm::audio::music_id(a.pending_args[0] < uint32_t(bm::audio::music_id::count) ?
+                                                      a.pending_args[0] : 1), a.pending_args[2] != 0);
+            bm::audio::set_intensity(a.pending_args[1] ? bm::audio::intensity::overheat : bm::audio::intensity::normal);
+            return bn::nullopt;
+
+        case BM_TI_CMD_PLAY_SFX:
+            bm::audio::sfx(bm::audio::sfx_id(a.pending_args[0] < uint32_t(bm::audio::sfx_id::count) ?
+                                             a.pending_args[0] : 0));
+            return bn::nullopt;
+
         case BM_TI_CMD_WIPE_SAVE:
             bm::reset_defaults(a.save);
             a.write_save();

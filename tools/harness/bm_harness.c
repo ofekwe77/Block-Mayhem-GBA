@@ -17,6 +17,7 @@
  *   shot NAME                   save the current frame to OUT/NAME.png
  *   audio_begin                 start accumulating audio statistics
  *   audio_end NAME              stop, print RMS/peak, write OUT/NAME.wav
+ *   audio_check NAME MIN [MAX]  stop, fail unless MIN <= RMS <= MAX (no WAV written)
  *   wait FIELD OP VALUE MAX     run frames until test-interface FIELD OP VALUE (OP: == != >= <= > <), fail after MAX frames
  *   expect FIELD OP VALUE       fail unless the condition holds now
  *   cmd ID [A0 A1 A2 A3]        post a mailbox command and wait for the ROM to acknowledge it
@@ -448,6 +449,24 @@ static int run_script(FILE* script)
             double rms = g_audio_len ? sqrt(g_audio_sumsq / (double) g_audio_len) : 0;
             printf("audio %s samples=%zu rms=%.1f peak=%d\n", argv[1], g_audio_len / 2, rms, g_audio_peak);
             write_wav(argv[1]);
+        }
+        else if (!strcmp(c, "audio_check") && argc >= 3)
+        {
+            /* audio_check NAME MIN [MAX]: stop capturing, fail unless MIN <= RMS <= MAX (no WAV written) */
+            g_audio_capturing = 0;
+            double rms = g_audio_len ? sqrt(g_audio_sumsq / (double) g_audio_len) : 0;
+            double lo = atof(argv[2]);
+            double hi = argc >= 4 ? atof(argv[3]) : 1e12;
+            if (rms < lo || rms > hi)
+            {
+                printf("FAIL line %d: audio %s rms %.1f outside %.0f..%.0f\n", line_no, argv[1], rms, lo,
+                       hi < 1e11 ? hi : 0.0);
+                return 1;
+            }
+            if (!g_quiet)
+            {
+                printf("ok audio %s rms=%.1f peak=%d\n", argv[1], rms, g_audio_peak);
+            }
         }
         else if (!strcmp(c, "wait") && argc >= 5)
         {

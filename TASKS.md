@@ -227,9 +227,9 @@ Dependencies are listed by task id. Files are relative to the repository root.
 |----|--------|--------|------|------|------|-------|----------|
 | AUD-01 | IMPLEMENTED | EMU | 44 original synthesized sound effects incl. all required events | 25.5 | - | tools/audio/sfx.py, src/bm_audio.cpp | sfx_count rises in harness |
 | AUD-02 | IMPLEMENTED | EMU | 14 original tracks (title, menu, 6 worlds, boss, final, victory, game over, ending, classic) | 25.2 | - | tools/audio/songs.py | title audio RMS 3956 |
-| AUD-03 | IMPLEMENTED | - | Dynamic music: hot arrangements switched at same position during Overheat | 25.3 | AUD-02 | src/bm_audio.cpp | needs emulator check |
+| AUD-03 | TESTED | EMU | Dynamic music: hot arrangements switched at same position during Overheat | 25.3 | AUD-02 | src/bm_audio.cpp | audio.txt plays all 8 hot arrangements |
 | AUD-04 | IMPLEMENTED | - | Volume settings applied | 34.4 | - | src/bm_audio.cpp | options screen missing |
-| AUD-05 | NOT STARTED | - | Per-track audio validation (all tracks play, loop, non-silent) | 53.5 | AUD-02 | | |
+| AUD-05 | TESTED | EMU | Per-track audio validation: every track starts, loops (or ends), hot arrangements play, every SFX audible | 53.5 | AUD-02 | tools/gen_audio_scenario.py, tests/emu/audio.txt | PASS: music RMS 3198-5900, one-shots end (RMS 0), 44 SFX RMS 210-5010 |
 | AUD-06 | NOT STARTED | HUMAN | Musical quality review | 53.3 | AUD-02 | | human judgement |
 
 ## UI — User interface (PART 26)

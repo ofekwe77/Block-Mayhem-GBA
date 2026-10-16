@@ -21,14 +21,14 @@ No percentages are claimed; see each task's evidence column.
 | RUN — Chaos Run roguelite (PART 21, 60) | 7 | 0 | 0 | 3 | 4 | 0 | 0 |
 | MODE — Modes (PART 22) | 7 | 0 | 0 | 3 | 4 | 0 | 0 |
 | VIS — Visuals and animation (PART 23, 24, 34, 43, 52, 62) | 12 | 2 | 0 | 10 | 0 | 0 | 0 |
-| AUD — Audio (PART 25, 53) | 6 | 2 | 0 | 4 | 0 | 0 | 0 |
+| AUD — Audio (PART 25, 53) | 6 | 1 | 0 | 3 | 2 | 0 | 0 |
 | UI — User interface (PART 26) | 14 | 0 | 0 | 7 | 7 | 0 | 0 |
 | PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 1 | 0 | 3 | 5 | 0 | 0 |
 | BAL / SIM — Balance and simulation (PART 30, 31, 54) | 8 | 0 | 0 | 3 | 5 | 0 | 0 |
 | HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 0 | 0 | 0 | 3 | 0 | 0 |
 | STORY / SECRET (PART 35, 36) | 4 | 1 | 0 | 0 | 3 | 0 | 0 |
 | DOC — Documentation and release (PART 41, 42, 59, 63) | 9 | 1 | 2 | 6 | 0 | 0 | 0 |
-| **All** | **190** | 12 | 5 | 97 | 76 | 0 | 0 |
+| **All** | **190** | 11 | 5 | 96 | 78 | 0 | 0 |
 <!-- TASKS:END -->
 
 ## Summary by area

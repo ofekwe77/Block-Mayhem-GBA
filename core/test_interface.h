@@ -92,7 +92,9 @@ enum bm_ti_command
     BM_TI_CMD_ADD_HEAT = 7,        /* arg0 = amount */
     BM_TI_CMD_SET_BOSS_HP = 8,     /* arg0 = hp */
     BM_TI_CMD_STRESS = 9,          /* arg0 = stress scenario id */
-    BM_TI_CMD_WIPE_SAVE = 10
+    BM_TI_CMD_WIPE_SAVE = 10,
+    BM_TI_CMD_PLAY_MUSIC = 11,     /* arg0 = music id (1..14), arg1 = 1 for the Overheat arrangement, arg2 = loop */
+    BM_TI_CMD_PLAY_SFX = 12        /* arg0 = sound effect id */
 };
 
 #endif
