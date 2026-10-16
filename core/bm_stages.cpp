@@ -228,7 +228,7 @@ namespace bm
             d->tips[0] = "D-PAD MOVES  A/B ROTATE";
             d->tips[1] = "UP HARD DROPS  L HOLDS";
             d->tips[2] = "FILL A ROW TO CLEAR IT";
-            d->par_seconds = 100; d->rank_score = 4000;
+            d->par_seconds = 50; d->rank_score = 1500;
 
             d = &t.s[1];
             d->name = "HOT WIRES";
@@ -237,11 +237,11 @@ namespace bm
             set_loadout(*d, ability_laser);
             set_layout(*d, l12);
             d->objectives[0] = obj(objective_kind::lines, 12);
-            d->secondary = obj(objective_kind::time_limit, 150);
+            d->secondary = obj(objective_kind::time_limit, 50);
             d->tips[0] = "R: LASER (COSTS 40 HEAT)";
             d->tips[1] = "BLAST THE CAP OFF THE SHAFT";
             d->tips[2] = "CLEARS CHARGE THE HEAT METER";
-            d->par_seconds = 130; d->rank_score = 9000;
+            d->par_seconds = 60; d->rank_score = 8000;
 
             d = &t.s[2];
             d->name = "BOOM FACTORY";
@@ -256,7 +256,7 @@ namespace bm
             d->tips[0] = "BOMBS BLOW UP WHEN THEIR ROW CLEARS";
             d->tips[1] = "BLASTS DESTROY THE 3X3 AROUND THEM";
             d->tips[2] = "SET BOMBS NEXT TO YOUR MESS";
-            d->par_seconds = 140; d->rank_score = 12000;
+            d->par_seconds = 90; d->rank_score = 8500;
 
             d = &t.s[3];
             d->name = "CHAIN REACTION";
@@ -268,11 +268,11 @@ namespace bm
                                special_kind::spark, 6, 8);
             d->objectives[0] = obj(objective_kind::lines, 14);
             d->objectives[1] = obj(objective_kind::chains, 1, 2);
-            d->secondary = obj(objective_kind::time_limit, 180);
+            d->secondary = obj(objective_kind::time_limit, 70);
             d->tips[0] = "FIRE AND SPARKS IGNITE OTHER SPECIALS";
             d->tips[1] = "CLUSTER SPECIALS FOR CHAIN WAVES";
             d->tips[2] = "TIME FREEZE STOPS THE FALL";
-            d->par_seconds = 160; d->rank_score = 16000;
+            d->par_seconds = 90; d->rank_score = 17000;
 
             d = &t.s[4];
             d->name = "THE BLOCK MONSTER";
@@ -284,7 +284,7 @@ namespace bm
             d->tips[0] = "EVERY CLEAR DAMAGES THE MONSTER";
             d->tips[1] = "WATCH THE WIND-UP: GARBAGE INCOMING";
             d->tips[2] = "SHIELD MATRIX BLOCKS ONE ATTACK";
-            d->par_seconds = 200; d->rank_score = 20000;
+            d->par_seconds = 90; d->rank_score = 13500;
 
             // ============================================================ WORLD 2 - FROZEN FACTORY
             d = &t.s[5];
@@ -299,7 +299,7 @@ namespace bm
             d->tips[0] = "FROZEN ROWS THAW BEFORE CLEARING";
             d->tips[1] = "FIRE MELTS ICE INSTANTLY";
             d->tips[2] = "VENT CLEARS THE TOP IN AN EMERGENCY";
-            d->par_seconds = 130; d->rank_score = 14000;
+            d->par_seconds = 50; d->rank_score = 11500;
 
             d = &t.s[6];
             d->name = "CRYSTAL PRESSURE";
@@ -314,7 +314,7 @@ namespace bm
             d->tips[0] = "EACH ROW HAS ONE GAP: READ THE WALL";
             d->tips[1] = "BREAK ICE WITH CLEARS AND FIRE";
             d->tips[2] = nullptr;
-            d->par_seconds = 170; d->rank_score = 18000;
+            d->par_seconds = 70; d->rank_score = 17000;
 
             d = &t.s[7];
             d->name = "DEEP FREEZE";
@@ -330,7 +330,7 @@ namespace bm
             d->tips[0] = "BLUE CORNERS FREEZE SOON";
             d->tips[1] = "CLEAR MARKED BLOCKS BEFORE THE FROST";
             d->tips[2] = "SHIELD BLOCKS A FREEZING EVENT";
-            d->par_seconds = 180; d->rank_score = 20000;
+            d->par_seconds = 110; d->rank_score = 15500;
 
             d = &t.s[8];
             d->name = "ZERO POINT";
@@ -342,11 +342,11 @@ namespace bm
             d->hazards[0] = haz(hazard_kind::freeze_cells, 8, 2, 2);
             d->objectives[0] = obj(objective_kind::lines, 16);
             d->objectives[1] = obj(objective_kind::chains, 2, 2);
-            d->secondary = obj(objective_kind::time_limit, 200);
+            d->secondary = obj(objective_kind::time_limit, 80);
             d->tips[0] = "SPARKS SHATTER ICE AND KEEP GOING";
             d->tips[1] = "CHAIN SPARK CHARGES A BLOCK";
             d->tips[2] = nullptr;
-            d->par_seconds = 190; d->rank_score = 24000;
+            d->par_seconds = 100; d->rank_score = 29500;
 
             d = &t.s[9];
             d->name = "THE CRYO TITAN";
@@ -358,7 +358,7 @@ namespace bm
             d->tips[0] = "FIRE AND SPARKS BEAT HIS ICE";
             d->tips[1] = "HE FREEZES YOUR LOWEST COLUMN";
             d->tips[2] = nullptr;
-            d->par_seconds = 230; d->rank_score = 26000;
+            d->par_seconds = 130; d->rank_score = 24000;
 
             // ============================================================ WORLD 3 - VOLCANO MADNESS
             d = &t.s[10];
@@ -370,11 +370,11 @@ namespace bm
             d->specials = with(specials(25, 75, 0, 0, 0, 3, 5), 0, special_kind::fire, 4, 0);
             d->objectives[0] = obj(objective_kind::lines, 12);
             d->objectives[1] = obj(objective_kind::fires, 6);
-            d->secondary = obj(objective_kind::time_limit, 140);
+            d->secondary = obj(objective_kind::time_limit, 70);
             d->tips[0] = "FIRE SPREADS TO ITS NEIGHBOURS";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 130; d->rank_score = 22000;
+            d->par_seconds = 90; d->rank_score = 20000;
 
             d = &t.s[11];
             d->name = "RISING HEAT";
@@ -389,7 +389,7 @@ namespace bm
             d->tips[0] = "LAVA PRESSURE RISES WHEN YOU DON'T CLEAR";
             d->tips[1] = "FULL PRESSURE = A ROW OF MAGMA";
             d->tips[2] = "STONE ONLY BREAKS IN FULL ROWS";
-            d->par_seconds = 160; d->rank_score = 24000;
+            d->par_seconds = 80; d->rank_score = 20500;
 
             d = &t.s[12];
             d->name = "INFERNO COMBO";
@@ -401,11 +401,11 @@ namespace bm
                                special_kind::bomb, 5, 0);
             d->objectives[0] = obj(objective_kind::lines, 16);
             d->objectives[1] = obj(objective_kind::chains, 2, 3);
-            d->secondary = obj(objective_kind::time_limit, 200);
+            d->secondary = obj(objective_kind::time_limit, 100);
             d->tips[0] = "NUCLEAR BURST: 5X5 FOR 80 HEAT";
             d->tips[1] = "3-WAVE CHAINS: FIRE INTO BOMBS";
             d->tips[2] = nullptr;
-            d->par_seconds = 190; d->rank_score = 30000;
+            d->par_seconds = 120; d->rank_score = 40500;
 
             d = &t.s[13];
             d->name = "MELTDOWN";
@@ -415,11 +415,11 @@ namespace bm
             d->specials = specials(40, 40, 20, 0, 0, 3, 5);
             d->objectives[0] = obj(objective_kind::lines, 18);
             d->objectives[1] = obj(objective_kind::overheat_success, 1);
-            d->secondary = obj(objective_kind::time_limit, 170);
+            d->secondary = obj(objective_kind::time_limit, 100);
             d->tips[0] = "AT 100 HEAT YOU OVERHEAT";
             d->tips[1] = "CLEAR 2 ROWS IN 12 SECONDS";
             d->tips[2] = "FAIL AND MAGMA ROWS RISE";
-            d->par_seconds = 170; d->rank_score = 36000;
+            d->par_seconds = 120; d->rank_score = 46500;
 
             d = &t.s[14];
             d->name = "THE MAGMA HYDRA";
@@ -431,7 +431,7 @@ namespace bm
             d->tips[0] = "EACH HEAD HAS ITS OWN ATTACK";
             d->tips[1] = "COLUMNS GLOW BEFORE THE MAGMA FALLS";
             d->tips[2] = nullptr;
-            d->par_seconds = 260; d->rank_score = 34000;
+            d->par_seconds = 150; d->rank_score = 46500;
 
             // ============================================================ WORLD 4 - ELECTRIC CITY
             d = &t.s[15];
@@ -443,26 +443,26 @@ namespace bm
             d->specials = with(specials(15, 0, 85, 0, 0, 3, 5), 0, special_kind::spark, 4, 0);
             d->objectives[0] = obj(objective_kind::lines, 14);
             d->objectives[1] = obj(objective_kind::sparks, 8);
-            d->secondary = obj(objective_kind::time_limit, 160);
+            d->secondary = obj(objective_kind::time_limit, 80);
             d->tips[0] = "SPARKS 4 APART LINK INTO CHAINS";
             d->tips[1] = "ARMOR AND STONE STOP AN ARC";
             d->tips[2] = nullptr;
-            d->par_seconds = 150; d->rank_score = 30000;
+            d->par_seconds = 100; d->rank_score = 28000;
 
             d = &t.s[16];
             d->name = "MAGNETIC STORM";
             d->idea = "PULL BLOCKS INTO PLACE";
-            d->base_level = 6; d->level_cap = 9;
+            d->base_level = 5; d->level_cap = 8;
             set_loadout(*d, ability_shape_shift, ability_laser, ability_chain_spark);
             set_layout(*d, l42);
             d->specials = with(specials(10, 0, 40, 45, 5, 3, 5), 0, special_kind::magnet, 5, 0);
-            d->objectives[0] = obj(objective_kind::lines, 16);
-            d->objectives[1] = obj(objective_kind::magnets, 3);
-            d->secondary = obj(objective_kind::time_limit, 190);
+            d->objectives[0] = obj(objective_kind::lines, 14);
+            d->objectives[1] = obj(objective_kind::magnets, 2);
+            d->secondary = obj(objective_kind::time_limit, 160);
             d->tips[0] = "MAGNETS SLIDE A BLOCK INTO A NEARBY GAP";
             d->tips[1] = "SHAPE SHIFT: CHANGE YOUR FALLING SHAPE";
             d->tips[2] = nullptr;
-            d->par_seconds = 180; d->rank_score = 32000;
+            d->par_seconds = 190; d->rank_score = 75000;
 
             d = &t.s[17];
             d->name = "SPLIT CIRCUIT";
@@ -472,11 +472,11 @@ namespace bm
             set_layout(*d, l43);
             d->specials = specials(40, 20, 40, 0, 0, 5, 7);
             d->objectives[0] = obj(objective_kind::lines, 16);
-            d->secondary = obj(objective_kind::time_limit, 200);
+            d->secondary = obj(objective_kind::time_limit, 70);
             d->tips[0] = "SELECT SWITCHES BOARDS";
             d->tips[1] = "EVERY 4 LOCKS THE BOARD SWITCHES";
             d->tips[2] = "BOTH BOARDS SHARE ONE HEAT METER";
-            d->par_seconds = 190; d->rank_score = 26000;
+            d->par_seconds = 80; d->rank_score = 45500;
 
             d = &t.s[18];
             d->name = "CROSS OVERLOAD";
@@ -492,7 +492,7 @@ namespace bm
             d->tips[0] = "ROWS ON BOTH BOARDS WITHIN 4 LOCKS";
             d->tips[1] = "= CROSS OVER BONUS";
             d->tips[2] = nullptr;
-            d->par_seconds = 230; d->rank_score = 34000;
+            d->par_seconds = 100; d->rank_score = 65000;
 
             d = &t.s[19];
             d->name = "THE ELECTRIC EMPEROR";
@@ -504,23 +504,23 @@ namespace bm
             d->tips[0] = "SURGES DISABLE YOUR SPECIALS";
             d->tips[1] = "HE ATTACKS THE BOARD YOU LEAVE";
             d->tips[2] = nullptr;
-            d->par_seconds = 280; d->rank_score = 38000;
+            d->par_seconds = 160; d->rank_score = 116000;
 
             // ============================================================ WORLD 5 - GRAVITY DIMENSION
             d = &t.s[20];
             d->name = "SIDEWAYS";
             d->idea = "BLOCKS FALL LEFT AND RIGHT";
-            d->base_level = 6; d->level_cap = 9;
+            d->base_level = 5; d->level_cap = 8;
             set_loadout(*d, ability_gravity_pulse, ability_laser, ability_shield_matrix);
             set_layout(*d, l51);
-            d->specials = with(specials(50, 0, 50, 0, 0, 4, 6), 0, special_kind::bomb, 5, 0);
-            d->hazards[0] = haz(hazard_kind::settle_cycle, 6, 0, 2, 0);
-            d->objectives[0] = obj(objective_kind::lines, 14);
-            d->secondary = obj(objective_kind::time_limit, 170);
+            d->specials = with(specials(40, 0, 40, 0, 0, 5, 7), 0, special_kind::bomb, 7, 0);
+            d->hazards[0] = haz(hazard_kind::settle_cycle, 9, 0, 2, 0);
+            d->objectives[0] = obj(objective_kind::lines, 12);
+            d->secondary = obj(objective_kind::time_limit, 70);
             d->tips[0] = "BLASTED GAPS SETTLE SIDEWAYS";
             d->tips[1] = "THE ARROW SHOWS THE NEXT DIRECTION";
             d->tips[2] = "GRAVITY PULSE: COMPACT THE BOARD";
-            d->par_seconds = 160; d->rank_score = 32000;
+            d->par_seconds = 90; d->rank_score = 20500;
 
             d = &t.s[21];
             d->name = "REVERSE FIELD";
@@ -536,7 +536,7 @@ namespace bm
             d->tips[0] = "UPWARD GRAVITY SINKS HOLES TO THE FLOOR";
             d->tips[1] = "IT NEVER RAISES YOUR STACK";
             d->tips[2] = nullptr;
-            d->par_seconds = 190; d->rank_score = 34000;
+            d->par_seconds = 100; d->rank_score = 30000;
 
             d = &t.s[22];
             d->name = "ROTATION ENGINE";
@@ -547,11 +547,11 @@ namespace bm
             d->specials = specials(40, 20, 40, 0, 0, 4, 6);
             d->hazards[0] = haz(hazard_kind::settle_cycle, 5, 0, 2, 2);
             d->objectives[0] = obj(objective_kind::lines, 18);
-            d->secondary = obj(objective_kind::time_limit, 210);
+            d->secondary = obj(objective_kind::time_limit, 100);
             d->tips[0] = "SETTLING ROTATES: LEFT, UP, RIGHT, DOWN";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 200; d->rank_score = 38000;
+            d->par_seconds = 130; d->rank_score = 29500;
 
             d = &t.s[23];
             d->name = "FRACTURED REALITY";
@@ -562,11 +562,11 @@ namespace bm
             d->specials = specials(30, 10, 60, 0, 0, 4, 6);
             d->hazards[0] = haz(hazard_kind::settle_cycle, 6, 0, 2, 0);
             d->objectives[0] = obj(objective_kind::lines, 20);
-            d->secondary = obj(objective_kind::time_limit, 260);
+            d->secondary = obj(objective_kind::time_limit, 90);
             d->tips[0] = "BOTH BOARDS FOLLOW THE SAME ARROW";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 240; d->rank_score = 34000;
+            d->par_seconds = 110; d->rank_score = 72500;
 
             d = &t.s[24];
             d->name = "THE GRAVITY KING";
@@ -578,7 +578,7 @@ namespace bm
             d->tips[0] = "ARROWS WARN BEFORE EVERY SHIFT";
             d->tips[1] = "THE FALLING PIECE IS NEVER MOVED";
             d->tips[2] = nullptr;
-            d->par_seconds = 300; d->rank_score = 42000;
+            d->par_seconds = 210; d->rank_score = 60000;
 
             // ============================================================ WORLD 6 - THE FINAL MELTDOWN
             d = &t.s[25];
@@ -591,11 +591,11 @@ namespace bm
             d->hazards[0] = haz(hazard_kind::freeze_cells, 10, 2, 2);
             d->objectives[0] = obj(objective_kind::lines, 20);
             d->objectives[1] = obj(objective_kind::chains, 2, 3);
-            d->secondary = obj(objective_kind::time_limit, 220);
+            d->secondary = obj(objective_kind::time_limit, 110);
             d->tips[0] = "ICE, ARMOR, FIRE AND SPARKS COMBINED";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 210; d->rank_score = 46000;
+            d->par_seconds = 130; d->rank_score = 60500;
 
             d = &t.s[26];
             d->name = "TOTAL INSTABILITY";
@@ -611,7 +611,7 @@ namespace bm
             d->tips[0] = "GRAVITY SHIFTS AND LAVA PRESSURE";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 240; d->rank_score = 48000;
+            d->par_seconds = 140; d->rank_score = 51500;
 
             d = &t.s[27];
             d->name = "DOUBLE TROUBLE";
@@ -624,11 +624,11 @@ namespace bm
             d->hazards[1] = haz(hazard_kind::surge, 12, 3, 2);
             d->objectives[0] = obj(objective_kind::lines, 24);
             d->objectives[1] = obj(objective_kind::cross_combos, 2);
-            d->secondary = obj(objective_kind::time_limit, 300);
+            d->secondary = obj(objective_kind::time_limit, 110);
             d->tips[0] = "SURGES DISABLE SPECIALS FOR A WHILE";
             d->tips[1] = nullptr;
             d->tips[2] = nullptr;
-            d->par_seconds = 280; d->rank_score = 44000;
+            d->par_seconds = 130; d->rank_score = 102500;
 
             d = &t.s[28];
             d->name = "POINT OF NO RETURN";
@@ -643,7 +643,7 @@ namespace bm
             d->tips[0] = "EVERY HAZARD RETURNS - ONE AT A TIME";
             d->tips[1] = "VENT AND SHIELD ARE YOUR LIFELINES";
             d->tips[2] = nullptr;
-            d->par_seconds = 330; d->rank_score = 56000;
+            d->par_seconds = 180; d->rank_score = 72500;
 
             d = &t.s[29];
             d->name = "THE CORE OF MAYHEM";
@@ -655,7 +655,7 @@ namespace bm
             d->tips[0] = "IT USES EVERYTHING YOU HAVE LEARNED";
             d->tips[1] = "PHASE 4 OPENS THE SECOND BOARD";
             d->tips[2] = nullptr;
-            d->par_seconds = 420; d->rank_score = 60000;
+            d->par_seconds = 240; d->rank_score = 115500;
 
             return t;
         }

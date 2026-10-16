@@ -25,6 +25,15 @@ namespace bm
         resource_aware
     };
 
+    // Human pacing for balance runs (PART 54): reaction time per piece, frames between button taps,
+    // and the chance of placing a piece one column off. All zero = the instant test bot.
+    struct bot_pace
+    {
+        uint8_t think_frames = 0;
+        uint8_t tap_interval = 0;
+        uint8_t error_percent = 0;
+    };
+
     struct bot_plan
     {
         bool valid = false;
@@ -38,6 +47,7 @@ namespace bm
     {
     public:
         void reset(bot_strategy strategy, uint32_t seed);
+        void set_pace(const bot_pace& pace) { _pace = pace; }
         [[nodiscard]] bot_strategy strategy() const { return _strategy; }
 
         // Chooses buttons for this frame. Call once per frame before session::update().
@@ -57,6 +67,9 @@ namespace bm
         bool _hold_done = false;
         int _wait = 0;
         int _stall = 0;
+        bot_pace _pace;
+        int _think = 0;
+        int _tap_cooldown = 0;
 
         [[nodiscard]] int _evaluate(const uint16_t* rows, int cols, int nrows, int lines_cleared, int max_drop_row) const;
         bool _try_plan(const session& s, piece_type type, bool hold, bot_plan& best) const;

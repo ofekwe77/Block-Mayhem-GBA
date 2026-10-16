@@ -34,7 +34,10 @@ Optional filter: `.\build.ps1 tests bomb`.
 
 | arcade.* | Chaos Arcade events: >= 10 events in 6 minutes, >= 5 kinds, always telegraphed, gap shrinks to the floor, never "won", no invalid state |
 
-Latest run (2026-10-15): **80 passed, 0 failed.**
+| balance.* | human-paced calibration of all 30 stages (difficulty-curve assertions) and the ability efficiency table (`balance_report.md`, `ability_report.md`) |
+| exploit.* | input spam scores nothing, special points cap, boss damage cap with a maxed build, board switching yields nothing, resource invariants under heavy play, SECOND CHANCE once per run |
+
+Latest run (2026-10-16): **88 passed, 0 failed.**
 
 Every simulated frame also calls `session::validate()` (board/heat/cooldown/boss invariants).
 

@@ -16,7 +16,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-01 | TESTED | EMU | Real GBA toolchain: MSYS2 + devkitARM (gba-dev) + Butano 21.9.0 | 2.2 | - | README.md | ROM builds; `sprites` example + BlockMayhem.gba built |
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
-| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 80/80 |
+| ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 88/88 |
 | ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
 | ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
@@ -167,7 +167,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | BOSS-FW-01 | IMPLEMENTED | - | Data-driven boss: HP, phases, piece-scheduled attacks, telegraphs | 20 | - | core/bm_session.cpp | needs tests |
-| BOSS-FW-02 | IMPLEMENTED | - | Damage table, chain bonus cap, ability damage, Overheat bonus, 40% cap | 20.2 | BOSS-FW-01 | core/bm_session.cpp | needs tests |
+| BOSS-FW-02 | TESTED | SIM | Damage table, chain bonus cap, ability damage, Overheat bonus, 40% cap | 20.2 | BOSS-FW-01 | core/bm_session.cpp | exploit.boss_damage_never_exceeds_the_per_resolution_cap |
 | BOSS-FW-03 | IMPLEMENTED | - | Phase transitions at HP thresholds, visible, timers frozen | 20.3 | BOSS-FW-01 | core/bm_session.cpp | |
 | BOSS-FW-04 | IMPLEMENTED | - | Fairness: no attacks in pause/transition, shield, freeze pauses countdown | 20.5 | BOSS-FW-01 | core/bm_session.cpp | needs tests |
 | BOSS-ANIM | IMPLEMENTED | EMU | Boss animation controller (INTRO..FINISHED states) | 51.2 | - | src/bm_boss_view.cpp | boss*_fight.png, boss1_end.png |
@@ -178,7 +178,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | BOSS-5 | IMPLEMENTED | EMU | Gravity King | 18 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss5_fight.png; stage sim wins |
 | BOSS-6 | IMPLEMENTED | EMU | Core of Mayhem (5 phases, sealed second board, final victory sequence) | 19 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp, src/bm_story_scenes.cpp | boss6_fight.png, boss6_dual.png, ending_1.png |
 | BOSS-MATRIX | NOT STARTED | - | BOSS_PRODUCTION_MATRIX.md | 51.6 | - | | |
-| BOSS-VAL | NOT STARTED | - | Six boss validation entries (sim + emulator) | 51.5, 56.5 | BOSS-1..6 | | |
+| BOSS-VAL | TESTED | SIM | Six boss validation entries (sim + emulator) | 51.5, 56.5 | BOSS-1..6 | tests/test_stages.cpp, tests/test_balance.cpp, tests/emu/adventure.txt, tests/emu/boss_rush.txt | every boss won by bots at three paces; emulator fights for all six |
 
 ## RUN — Chaos Run roguelite (PART 21, 60)
 
@@ -256,7 +256,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | PROG-01 | IMPLEMENTED | - | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | src/bm_flow.cpp | needs save/emulator test |
-| PROG-02 | IMPLEMENTED | - | Rank formula (score, time, garbage, secondary objective) | 27.2 | ADV-01 | src/bm_flow.cpp | needs test |
+| PROG-02 | IMPLEMENTED | SIM | Rank formula (score, time, garbage, secondary objective), calibrated per stage | 27.2 | ADV-01 | src/bm_flow.cpp, core/bm_stages.cpp | par / S targets from balance_report.md |
 | PROG-03 | NOT STARTED | - | Rewards: abilities, modes, cosmetics, sound test, modifiers | 27.3 | PROG-01 | | |
 | ACH-01 | TESTED | UNIT | 30 achievements (5 hidden): real triggers, progress, saved bits | 28, 35.2 | - | core/bm_achievements.* | 5 achievements.* tests |
 | ACH-02 | TESTED | EMU | Unlock notifications (banner + sound, waits for warnings) | 28 | ACH-01 | src/bm_game_scene.cpp | achievement_banner.png (menus.txt) |
@@ -270,13 +270,13 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
 | BAL-01 | IMPLEMENTED | - | Difficulty settings Beginner/Standard/Expert (gravity, telegraphs, penalties) | 30.1 | - | core/bm_session.cpp | options UI missing |
-| BAL-02 | NOT STARTED | - | BALANCE.md with every numeric rule | 30.7 | - | | |
+| BAL-02 | IMPLEMENTED | - | BALANCE.md with every numeric rule, calibration method and results | 30.7 | - | BALANCE.md | |
 | SIM-01 | TESTED | UNIT | Deterministic replay (seed + inputs) | 31.1, 55.6 | - | tests/test_session.cpp | session.deterministic_replay |
 | SIM-02 | IMPLEMENTED | UNIT | Bot strategies: random, height, hole, line-clear, resource-aware | 31.3 | - | core/bm_bot.* | bots.all_strategies_run_without_invalid_states |
-| SIM-03 | NOT STARTED | - | Balance simulation runner + metrics report (many seeds) | 31.3, 54.1 | SIM-02 | | |
-| SIM-04 | NOT STARTED | - | Exploit tests (score/heat/overheat/ability/cooldown/boss/achievement/save) | 31.4, 58.2 | SIM-02 | | |
-| BAL-03 | NOT STARTED | - | Ability efficiency analysis table | 54.2 | SIM-03 | | |
-| BAL-04 | NOT STARTED | - | Boss HP vs simulated damage evaluation | 20.1 | BOSS-*, SIM-03 | | |
+| SIM-03 | TESTED | SIM | Balance simulation runner with human-paced bots + metrics report | 31.3, 54.1 | SIM-02 | tests/test_balance.cpp, core/bm_bot.* | balance_report.md: skilled 108/120, casual 62/90; curve assertions pass |
+| SIM-04 | TESTED | SIM | Exploit tests (input spam, special cap, boss cap, dual switching, resource invariants, second chance; achievements and saves in their suites) | 31.4, 58.2 | SIM-02 | tests/test_exploits.cpp | exploit.* 6/6 |
+| BAL-03 | TESTED | SIM | Ability efficiency analysis table | 54.2 | SIM-03 | tests/test_balance.cpp, BALANCE.md | ability_report.md |
+| BAL-04 | TESTED | SIM | Boss HP vs simulated damage evaluation | 20.1 | BOSS-*, SIM-03 | tests/test_balance.cpp, BALANCE.md | boss table in balance_report.md (fights 1.4-4 min, 170-220 dmg/min) |
 
 ## HW — Hardware and performance (PART 33, 57.5, 62)
 

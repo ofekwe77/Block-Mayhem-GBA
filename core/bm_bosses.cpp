@@ -90,9 +90,9 @@ namespace bm
             d->title = "FACTORY BRUTE";
             d->hp = cfg::boss_hp[0];
             d->phase_count = 3;
-            d->phases[0] = phase(100, 7, m1);
-            d->phases[1] = phase(70, 6, m2);
-            d->phases[2] = phase(35, 5, m3);
+            d->phases[0] = phase(100, 8, m1);     // the first boss teaches: generous gaps between attacks
+            d->phases[1] = phase(70, 7, m2);
+            d->phases[2] = phase(35, 6, m3);
 
             d = &t.b[1];
             d->name = "THE CRYO TITAN";

@@ -366,15 +366,34 @@ namespace bm
             const int type = int(p.active().type);
             if(type != _last_type || p.active().y < _last_y || ! _plan.valid)
             {
+                const bool fresh_piece = type != _last_type || p.active().y < _last_y;
                 _plan = plan(s);
                 _hold_done = false;
                 _stall = 0;
+                if(fresh_piece && _pace.think_frames)
+                {
+                    _think = _pace.think_frames + _rng.below(_pace.think_frames / 2 + 1);
+                    if(_plan.valid && _rng.below(100) < _pace.error_percent)
+                    {
+                        _plan.x = int8_t(_plan.x + (_rng.below(2) ? 1 : -1));     // human imprecision
+                    }
+                }
             }
             _last_type = type;
             _last_y = p.active().y;
             ++_stall;
 
-            if(! _plan.valid || _stall > 90)
+            if(_think > 0)
+            {
+                --_think;
+                want = 0;       // still reading the board
+            }
+            else if(_tap_cooldown > 0)
+            {
+                --_tap_cooldown;
+                want = 0;
+            }
+            else if(! _plan.valid || _stall > 90 + _pace.think_frames * 2)
             {
                 want = key_up;
             }
@@ -401,6 +420,10 @@ namespace bm
         if(want & _prev)
         {
             want = 0;       // release first so the next frame registers a fresh press
+        }
+        if(want && _pace.tap_interval)
+        {
+            _tap_cooldown = _pace.tap_interval;
         }
         in.held = want;
         in.pressed = uint16_t(want & ~_prev);
