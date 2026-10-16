@@ -3,9 +3,13 @@
 #include "bm_achievements.h"
 #include "bm_audio.h"
 #include "bm_flow.h"
+#include "bm_profile.h"
 #include "bm_run.h"
+#include "bm_sprite_util.h"
 
 #include "bn_bg_palettes.h"
+#include "bn_timer.h"
+#include "bn_timers.h"
 #include "bn_color.h"
 #include "bn_sprite_palettes.h"
 #include "bn_string.h"
@@ -193,6 +197,7 @@ namespace bm
     {
         _view.bg().set_camera(_camera);
         _backdrop.set_camera(_camera);
+        _score_value.prepare(8, false);
         _fx.set_options(_app.save.settings.shake, _app.save.settings.flashes);
         _start_session();
     }
@@ -244,13 +249,76 @@ namespace bm
         sy = _view.cell_screen_y(board, y) + 4;
     }
 
+    namespace
+    {
+        bool cosmetic_event(event_type t)
+        {
+            switch(t)
+            {
+            case event_type::cell_destroyed:
+            case event_type::special_triggered:
+            case event_type::bomb_blast:
+            case event_type::fire_burst:
+            case event_type::spark_arc:
+            case event_type::magnet_pull:
+            case event_type::rainbow_link:
+            case event_type::charge_pulse:
+            case event_type::coat_hit:
+                return true;
+            default:
+                return false;
+            }
+        }
+    }
+
     void game_scene::_handle_events()
     {
+        // Structural events (row flashes, chain waves, boss and hazard events, scoring) are handled at once;
+        // cosmetic ones queue up and drain at a fixed rate (the oldest are dropped if the queue overflows).
         event e;
-        const view_layout& lay = _view.layout();
-        const int board_cols = _s.board_player(0).grid().cols();
         while(_s.events().pop(e))
         {
+            if(cosmetic_event(e.type))
+            {
+                if(_cosmetic_count == cosmetic_capacity)
+                {
+                    _cosmetic_head = (_cosmetic_head + 1) % cosmetic_capacity;
+                    --_cosmetic_count;
+                }
+                _cosmetic[(_cosmetic_head + _cosmetic_count) % cosmetic_capacity] = e;
+                ++_cosmetic_count;
+            }
+            else
+            {
+                _handle_event(e);
+            }
+        }
+        for(int n = 0; n < cosmetic_per_frame && _cosmetic_count; ++n)
+        {
+            const event c = _cosmetic[_cosmetic_head];
+            _cosmetic_head = (_cosmetic_head + 1) % cosmetic_capacity;
+            --_cosmetic_count;
+            _handle_event(c);
+        }
+    }
+
+    void game_scene::_handle_event(const event& e)
+    {
+        bn::timer event_timer;
+        _handle_event_body(e);
+        const int type = int(e.type);
+        if(type >= 0 && type < 96)
+        {
+            profile::event_ticks[type] += uint32_t(event_timer.elapsed_ticks());
+        }
+    }
+
+    void game_scene::_handle_event_body(const event& e)
+    {
+        const view_layout& lay = _view.layout();
+        const int board_cols = _s.board_player(0).grid().cols();
+        {
+            ++_events_handled;
             const int b = e.board < 0 ? 0 : (e.board > 1 ? 1 : e.board);
             int sx = 0;
             int sy = 0;
@@ -321,11 +389,15 @@ namespace bm
                     {
                         continue;
                     }
-                    for(int x = 0; x < board_cols; x += 2)
+                    for(int x = 0; x < board_cols && _fx.can_spawn(); x += 2)
                     {
+                        // Shard drift per column from small tables (no divisions in the hot path).
+                        static constexpr int8_t drift_x[5] = { -3, 2, -1, 3, -2 };
+                        static constexpr int8_t lift[5] = { 0, 1, 2, 0, 1 };
+                        const int k = x >> 1;
                         _cell_center(b, x, y, sx, sy);
-                        _fx.particle(particle_kind(int(particle_kind::shard_white) + (x / 2) % 4), sx, sy,
-                                     bn::fixed((x * 7) % 9 - 4) / 6, -bn::fixed(3) / 2 - bn::fixed(x % 3) / 4, 24,
+                        _fx.particle(particle_kind(int(particle_kind::shard_white) + (k & 3)), sx, sy,
+                                     bn::fixed(drift_x[k % 5]) / 4, -bn::fixed(3) / 2 - bn::fixed(lift[k % 5]) / 4, 24,
                                      bn::fixed(1) / 8);
                     }
                 }
@@ -352,9 +424,12 @@ namespace bm
                 break;
 
             case event_type::cell_destroyed:
-                _cell_center(b, e.a, e.b, sx, sy);
-                _fx.particle(particle_kind::debris, sx, sy, bn::fixed(sx * 13 % 7 - 3) / 4, -bn::fixed(5) / 4,
-                             22, bn::fixed(1) / 8);
+                if(_fx.can_spawn())
+                {
+                    _cell_center(b, e.a, e.b, sx, sy);
+                    _fx.particle(particle_kind::debris, sx, sy, bn::fixed((sx & 7) - 3) / 4, -bn::fixed(5) / 4,
+                                 22, bn::fixed(1) / 8);
+                }
                 break;
 
             case event_type::special_triggered:
@@ -382,13 +457,20 @@ namespace bm
                 break;
 
             case event_type::fire_burst:
-                _cell_center(b, e.a, e.b, sx, sy);
-                _fx.burst(particle_kind::ember, sx, sy, 6, 2);
-                _fx.particle(particle_kind::smoke, sx, sy - 4, 0, -bn::fixed(1) / 2, 24);
+                if(_fx.can_spawn())
+                {
+                    _cell_center(b, e.a, e.b, sx, sy);
+                    _fx.burst(particle_kind::ember, sx, sy, 6, 2);
+                    _fx.particle(particle_kind::smoke, sx, sy - 4, 0, -bn::fixed(1) / 2, 24);
+                }
                 break;
 
             case event_type::spark_arc:
             {
+                if(! _fx.can_spawn())
+                {
+                    break;
+                }
                 _cell_center(b, e.a, e.b, sx, sy);
                 static constexpr int dx[4] = { 0, 1, 0, -1 };
                 static constexpr int dy[4] = { -1, 0, 1, 0 };
@@ -425,9 +507,12 @@ namespace bm
                 break;
 
             case event_type::coat_hit:
-                _cell_center(b, e.a, e.b, sx, sy);
-                _fx.particle(coat_kind(e.c) == coat_kind::ice ? particle_kind::crystal : particle_kind::spark, sx, sy,
-                             0, -bn::fixed(1) / 2, 14);
+                if(_fx.can_spawn())
+                {
+                    _cell_center(b, e.a, e.b, sx, sy);
+                    _fx.particle(coat_kind(e.c) == coat_kind::ice ? particle_kind::crystal : particle_kind::spark, sx,
+                                 sy, 0, -bn::fixed(1) / 2, 14);
+                }
                 audio::sfx(coat_kind(e.c) == coat_kind::ice ? audio::sfx_id::ice : audio::sfx_id::armor);
                 break;
 
@@ -659,9 +744,10 @@ namespace bm
             if(! _marker)
             {
                 _marker = bn::sprite_items::spr_cursor.create_sprite(0, 0, 2);
+                _marker_shown = 2;
             }
             _marker->set_position(x - 120, _view.cell_screen_y(b, 2) - 80 - 10);
-            _marker->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), 2 + ((_frame >> 3) & 1));
+            set_frame(*_marker, bn::sprite_items::spr_cursor, 2 + ((_frame >> 3) & 1), _marker_shown);
             _target_hint.show(120, 152, "AIM LEFT/RIGHT  A:FIRE  B:CANCEL", text_color::cyan, align::center);
             break;
 
@@ -670,9 +756,10 @@ namespace bm
             if(! _cursor)
             {
                 _cursor = bn::sprite_items::spr_cursor.create_sprite(0, 0, 0);
+                _cursor_shown = 0;
             }
             _cursor->set_position(x - 120, y - 80);
-            _cursor->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), (_frame >> 3) & 1);
+            set_frame(*_cursor, bn::sprite_items::spr_cursor, (_frame >> 3) & 1, _cursor_shown);
             if(ability == cfg::ability_nuclear_burst)
             {
                 _cursor->set_scale(2 + bn::fixed((_frame >> 2) & 3) / 8);
@@ -684,10 +771,11 @@ namespace bm
             if(! _arrow)
             {
                 _arrow = bn::sprite_items::spr_arrows.create_sprite(0, 0, 0);
+                _arrow_shown = 0;
             }
             _arrow->set_position(_view.cell_screen_x(b, _s.board_player(b).grid().cols() / 2) - 120,
                                  _view.cell_screen_y(b, 10) - 80);
-            _arrow->set_tiles(bn::sprite_items::spr_arrows.tiles_item(), _s.target_option() & 3);
+            set_frame(*_arrow, bn::sprite_items::spr_arrows, _s.target_option() & 3, _arrow_shown);
             _target_hint.show(120, 152, "PICK DIRECTION  A:PULSE  B:CANCEL", text_color::violet, align::center);
             break;
 
@@ -875,7 +963,7 @@ namespace bm
         if(want_tint != _freeze_tint)
         {
             _freeze_tint = want_tint;
-            bn::bg_palettes::set_fade(bn::color(12, 20, 31), want_tint ? bn::fixed(0.18) : bn::fixed(0));
+            _fx.set_base_tint(bn::color(12, 20, 31), want_tint ? bn::fixed(0.18) : bn::fixed(0));
         }
 
         // Dual board: forced-switch countdown above the active board.
@@ -973,9 +1061,10 @@ namespace bm
                 if(! _icon_frame)
                 {
                     _icon_frame = bn::sprite_items::spr_cursor.create_sprite(0, 0, 0);
+                    _icon_frame_shown = 0;
                 }
                 _icon_frame->set_position(ix - 120, iy - 80);
-                _icon_frame->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), (_frame >> 4) & 1);
+                set_frame(*_icon_frame, bn::sprite_items::spr_cursor, (_frame >> 4) & 1, _icon_frame_shown);
             }
         }
         if(! slots)
@@ -1258,20 +1347,91 @@ namespace bm
             return bn::nullopt;
         }
 
+        // Section profiling for the emulator stress scenarios: the breakdown of the most expensive frame
+        // since the last stats reset (per mille of a frame per section).
+        bn::timer section;
+        bm_test_interface& ti = *_app.test;
+        uint32_t cost[7] = {};
+        int slot = 0;
+        (void) text::take_generated_count();
+        text::generated_ticks_ref() = 0;
+        text::generated_max_ref()[0] = 0;
+        for(uint32_t& t : profile::event_ticks)
+        {
+            t = 0;
+        }
+        _events_handled = 0;
+        auto mark = [&section, &cost, &slot]()
+        {
+            cost[slot++] = uint32_t(section.elapsed_ticks_with_restart()) * 1000u / uint32_t(bn::timers::ticks_per_frame());
+        };
         if(! _fx.hitstop_frames())
         {
             _s.update(in);
         }
+        mark();
         _handle_events();
+        mark();
         _view.update(_s, _app.save.settings.ghost, _frame);
+        mark();
         _backdrop.update();
+        mark();
         _fx.update();
+        mark();
         if(_boss)
         {
             _boss->update(_s, _frame, _fx);
         }
+        mark();
         _update_hud();
         _update_achievements();
+        mark();
+        const uint32_t total = cost[0] + cost[1] + cost[2] + cost[3] + cost[4] + cost[5] + cost[6];
+        if(total > ti.prof_sim + ti.prof_events + ti.prof_view + ti.prof_backdrop + ti.prof_fx + ti.prof_boss +
+                   ti.prof_hud)
+        {
+            ti.prof_sim = cost[0];
+            ti.prof_events = cost[1];
+            ti.prof_view = cost[2];
+            ti.prof_backdrop = cost[3];
+            ti.prof_fx = cost[4];
+            ti.prof_boss = cost[5];
+            ti.prof_hud = cost[6];
+            ti.prof_events_n = uint32_t(_events_handled);
+            ti.prof_texts = uint32_t(text::take_generated_count());
+            // Board view sub-sections: boards, telegraphs + HP, previews + meter, palette, map upload request.
+            ti.prof_view_boards = profile::slots[0];
+            ti.prof_view_marks = profile::slots[1];
+            ti.prof_view_panels = profile::slots[2];
+            ti.prof_view_palette = profile::slots[3];
+            ti.prof_view_upload = profile::slots[4];
+            uint32_t best = 0, second = 0;
+            int best_type = -1, second_type = -1;
+            for(int i = 0; i < 96; ++i)
+            {
+                const uint32_t t = profile::event_ticks[i];
+                if(t > best)
+                {
+                    second = best;
+                    second_type = best_type;
+                    best = t;
+                    best_type = i;
+                }
+                else if(t > second)
+                {
+                    second = t;
+                    second_type = i;
+                }
+            }
+            ti.prof_ev_type1 = uint32_t(best_type);
+            ti.prof_ev_cost1 = profile::per_mille(int(best));
+            ti.prof_ev_type2 = uint32_t(second_type);
+            ti.prof_ev_cost2 = profile::per_mille(int(second));
+            ti.prof_text_max = profile::per_mille(text::generated_max_ref()[0]);
+            ti.prof_text_font = uint32_t(text::generated_max_ref()[1]);
+            ti.prof_text_len = uint32_t(text::generated_max_ref()[2]);
+            ti.prof_text_cost = uint32_t(text::generated_ticks_ref()) * 1000u / uint32_t(bn::timers::ticks_per_frame());
+        }
 
         // Final boss: the sealed second board opens at its dual phase and the boss moves to the centre.
         const bool want_b = ! _s.board_sealed(1);
@@ -1337,7 +1497,17 @@ namespace bm
             }
         }
 
-        // A defeated boss finishes its destruction sequence before the stage-clear screen.
+        // A defeated boss finishes its destruction sequence before the stage-clear screen. Safety net: if the
+        // defeat event never reached the rig, start the sequence after half a second anyway.
+        if(_boss && _s.state() == session_state::won && _boss->state() != boss_anim::defeat && ! _boss->defeat_done())
+        {
+            if(++_boss_fallback > 30)
+            {
+                event fallback;
+                fallback.type = event_type::boss_defeated;
+                _boss->on_event(fallback, _fx);
+            }
+        }
         const bool boss_dying = _boss && _s.state() == session_state::won && ! _boss->defeat_done();
         if((_s.state() == session_state::won || _s.state() == session_state::lost) && ! boss_dying)
         {

@@ -1,5 +1,6 @@
 #include "bm_board_view.h"
 
+#include "bm_profile.h"
 #include "bm_tile_ids.h"
 
 #include "bn_bg_tiles.h"
@@ -14,11 +15,6 @@ namespace bm
 {
     namespace
     {
-        constexpr int bank_frame = 0;
-        constexpr int bank_garbage = 8;
-        constexpr int bank_stone = 9;
-        constexpr int bank_steel = 10;
-        constexpr int bank_meter = 11;
 
         view_layout make_layout(layout_kind kind)
         {
@@ -128,6 +124,11 @@ namespace bm
         _map_ptr(_bg.map()),
         _palette(_bg.palette())
     {
+        const bn::span<const bn::color> base = bn::bg_palette_items::board_palette.colors_ref();
+        for(int i = 0; i < _colors.size(); ++i)
+        {
+            _colors[i] = i < base.size() ? base[i] : bn::color();
+        }
         _bg.set_priority(bg_priority);
         bn::memory::clear(_map->cells);
         _draw_static(1);
@@ -137,16 +138,6 @@ namespace bm
     int board_view::cell_screen_y(int board, int y) const
     {
         return (_layout.boards[board].map_y + y - cfg::board_hidden_rows) * 8;
-    }
-
-    void board_view::_put(int mx, int my, int tile, int bank, bool hflip, bool vflip)
-    {
-        if(mx < 0 || mx >= 32 || my < 0 || my >= 32)
-        {
-            return;
-        }
-        _map->cells[my * 32 + mx] = bn::regular_bg_map_cell(tile | (hflip ? 1 << 10 : 0) | (vflip ? 1 << 11 : 0) |
-                                                            (bank << 12));
     }
 
     void board_view::_draw_panel(int x, int y, int w, int h)
@@ -193,6 +184,8 @@ namespace bm
     void board_view::_draw_static(int world)
     {
         bn::memory::clear(_map->cells);
+        _drawn_revision[0] = _drawn_revision[1] = 0xFFFFFFFFu;
+        _overlay_count[0] = _overlay_count[1] = 0;
         const bool dual = _layout.kind == layout_kind::dual || _layout.kind == layout_kind::dual_boss;
         const int cols = dual ? cfg::dual_board_cols : cfg::board_cols;
         const int rows = dual ? cfg::dual_board_rows : cfg::board_rows;
@@ -327,22 +320,41 @@ namespace bm
         }
     }
 
+    void board_view::_set_color(int index, bn::color color)
+    {
+        if(index >= 0 && index < _colors.size() && _colors[index] != color)
+        {
+            _colors[index] = color;
+            _colors_dirty = true;
+        }
+    }
+
+    void board_view::_commit_colors()
+    {
+        if(_colors_dirty)
+        {
+            _colors_dirty = false;
+            _palette.set_colors(_colors);
+        }
+    }
+
     void board_view::set_world_tint(int world)
     {
         _world = world < 0 || world > 6 ? 0 : world;
         const world_tint& t = tints[_world];
         const bn::color black(1, 1, 3);
         const bn::color white(31, 31, 31);
-        _palette.set_color(2, mix(t.metal, black, 11, 20));
-        _palette.set_color(3, mix(t.metal, black, 5, 20));
-        _palette.set_color(4, t.metal);
-        _palette.set_color(5, mix(t.metal, white, 9, 20));
-        _palette.set_color(6, t.well);
-        _palette.set_color(7, mix(t.well, white, 3, 20));
-        _palette.set_color(8, t.panel);
-        _palette.set_color(9, mix(t.panel, white, 7, 20));
-        _palette.set_color(10, t.accent);
-        _palette.set_color(11, mix(t.accent, bn::color(31, 8, 0), 10, 20));
+        _set_color(2, mix(t.metal, black, 11, 20));
+        _set_color(3, mix(t.metal, black, 5, 20));
+        _set_color(4, t.metal);
+        _set_color(5, mix(t.metal, white, 9, 20));
+        _set_color(6, t.well);
+        _set_color(7, mix(t.well, white, 3, 20));
+        _set_color(8, t.panel);
+        _set_color(9, mix(t.panel, white, 7, 20));
+        _set_color(10, t.accent);
+        _set_color(11, mix(t.accent, bn::color(31, 8, 0), 10, 20));
+        _commit_colors();
     }
 
     void board_view::flash_rows(int board, uint32_t rows, int frames)
@@ -352,145 +364,6 @@ namespace bm
         f.board = int8_t(board);
         f.timer = int8_t(frames);
         f.length = int8_t(frames);
-    }
-
-    int board_view::_cell_tile(const cell& c, int& bank)
-    {
-        bank = c.color;
-        if(c.color == color_garbage)
-        {
-            bank = bank_garbage;
-        }
-        else if(c.color == color_stone)
-        {
-            bank = bank_stone;
-            return tile::stone;
-        }
-        if(c.coat == coat_kind::armor && c.coat_hp)
-        {
-            bank = bank_steel;
-            return c.coat_hp >= 2 ? tile::armor2 : tile::armor1;
-        }
-        const bool iced = c.coat == coat_kind::ice && c.coat_hp;
-        const bool off = c.flags & flag_disabled;
-        switch(c.special)
-        {
-        case special_kind::bomb: return iced ? tile::ice_bomb : (off ? tile::off_bomb : tile::bomb);
-        case special_kind::fire: return iced ? tile::ice_fire : (off ? tile::off_fire : tile::fire);
-        case special_kind::spark: return iced ? tile::ice_spark : (off ? tile::off_spark : tile::spark);
-        case special_kind::magnet: return iced ? tile::ice_magnet : (off ? tile::off_magnet : tile::magnet);
-        case special_kind::rainbow: return iced ? tile::ice_rainbow : (off ? tile::off_rainbow : tile::rainbow);
-        case special_kind::none:
-        default:
-            break;
-        }
-        if(iced)
-        {
-            return tile::ice;
-        }
-        if(c.flags & flag_charged)
-        {
-            return tile::charged;
-        }
-        if(c.flags & flag_frost_mark)
-        {
-            return tile::frost_mark;
-        }
-        if(c.flags & flag_armor_mark)
-        {
-            return tile::armor_mark;
-        }
-        return c.color == color_garbage ? tile::garbage : tile::block;
-    }
-
-    void board_view::_draw_board(const session& s, int b, bool ghost_enabled, int frame)
-    {
-        const player& p = s.board_player(b);
-        const board& g = p.grid();
-        const board_slot& slot = _layout.boards[b];
-        const int hidden = g.hidden();
-        clear_flash& fl = _flash[b];
-        const bool flashing = fl.timer > 0;
-        const int phase = flashing ? (fl.length - fl.timer) * 3 / (fl.length ? fl.length : 1) : 0;
-
-        for(int y = hidden - 1; y < g.rows(); ++y)
-        {
-            const int my = slot.map_y + y - hidden;
-            for(int x = 0; x < g.cols(); ++x)
-            {
-                const int mx = slot.map_x + x;
-                if(flashing && ((fl.rows >> y) & 1) && y >= hidden)
-                {
-                    const int t = phase == 0 ? tile::flash1 : (phase == 1 ? tile::flash2 : tile::flash3);
-                    _put(mx, my, t, bank_frame);
-                    continue;
-                }
-                const cell& c = g.at(x, y);
-                if(c.empty())
-                {
-                    _put(mx, my, y < hidden ? tile::chute : tile::well, bank_frame);
-                }
-                else
-                {
-                    int bank = 0;
-                    const int t = _cell_tile(c, bank);
-                    _put(mx, my, t, bank);
-                }
-            }
-        }
-
-        if(p.state() != player_state::falling)
-        {
-            return;
-        }
-        piece_state shifted;
-        const bool active = b == s.active_board();
-        const bool shape_preview = active && s.targeting() && s.targeting_ability() == cfg::ability_shape_shift &&
-                                   s.shape_option_preview(s.target_option(), shifted);
-        const piece_state& piece = shape_preview ? shifted : p.active();
-        if(ghost_enabled && active)
-        {
-            piece_state ghost = piece;
-            ghost.y = int8_t(piece.y + g.drop_distance(piece));
-            if(ghost.y != piece.y)
-            {
-                for(int m = 0; m < 4; ++m)
-                {
-                    const point c = ghost.cell(m);
-                    if(c.y >= hidden)
-                    {
-                        _put(slot.map_x + c.x, slot.map_y + c.y - hidden, tile::ghost, int(piece.type));
-                    }
-                }
-            }
-        }
-        for(int m = 0; m < 4; ++m)
-        {
-            const point c = piece.cell(m);
-            if(c.y < hidden - 1)
-            {
-                continue;
-            }
-            cell pc;
-            pc.color = uint8_t(piece.type);
-            if(m == piece.special_mino)
-            {
-                pc.special = piece.special;
-            }
-            int bank = 0;
-            int t = _cell_tile(pc, bank);
-            // The paused piece of the inactive board is drawn as a hollow outline.
-            if(! active)
-            {
-                t = tile::ghost;
-            }
-            // Lock-delay pulse: the piece glints while it is about to lock.
-            if(active && p.grounded() && p.lock_timer() > cfg::lock_delay_frames - 8 && (frame & 2))
-            {
-                t = tile::flash2;
-            }
-            _put(slot.map_x + c.x, slot.map_y + c.y - hidden, t, bank);
-        }
     }
 
     void board_view::_draw_preview(int mx, int my, const queued_piece& piece, bool dim)
@@ -590,19 +463,20 @@ namespace bm
 
     void board_view::_animate_palette(const session& s, int frame)
     {
-        if(frame & 1)
+        // Special-cell cores pulse, sparks crackle, rainbows cycle: every value changes on a fixed beat,
+        // and all edits of a frame reach the hardware in one palette upload.
         {
             const bn::color core = hot_core[(frame >> 2) & 7];
             const bn::color bright = (frame & 8) ? bn::color(31, 31, 31) : bn::color(31, 30, 15);
-            uint32_t h = uint32_t(frame >> 1) * 2654435761u;
+            const uint32_t h = uint32_t(frame >> 2) * 2654435761u;
             const bn::color elec = electric[(h >> 28) & 3];
             const bn::color rb = rainbow[(frame / 6) % 12];
             for(int b = 1; b <= 10; ++b)
             {
-                _palette.set_color(b * 16 + 7, core);
-                _palette.set_color(b * 16 + 8, bright);
-                _palette.set_color(b * 16 + 10, elec);
-                _palette.set_color(b * 16 + 13, rb);
+                _set_color(b * 16 + 7, core);
+                _set_color(b * 16 + 8, bright);
+                _set_color(b * 16 + 10, elec);
+                _set_color(b * 16 + 13, rb);
             }
         }
 
@@ -623,8 +497,8 @@ namespace bm
                 bn::color(16, 28, 10), bn::color(28, 28, 6), bn::color(31, 20, 4), bn::color(31, 12, 3),
                 bn::color(31, 5, 3), bn::color(31, 5, 3), bn::color(31, 31, 31), bn::color(31, 10, 4)
             };
-            _palette.set_color(bank_meter * 16 + 5, fills[heat_color]);
-            _palette.set_color(bank_meter * 16 + 6, mix(fills[heat_color], bn::color(0, 0, 0), 7, 20));
+            _set_color(bank_meter * 16 + 5, fills[heat_color]);
+            _set_color(bank_meter * 16 + 6, mix(fills[heat_color], bn::color(0, 0, 0), 7, 20));
         }
 
         // Danger: the frame pulses red.
@@ -637,18 +511,20 @@ namespace bm
         if(danger)
         {
             const int k = 6 + ((frame >> 2) & 7);
-            _palette.set_color(4, mix(t.metal, bn::color(31, 4, 4), k, 20));
-            _palette.set_color(5, mix(mix(t.metal, bn::color(31, 31, 31), 9, 20), bn::color(31, 10, 8), k, 20));
+            _set_color(4, mix(t.metal, bn::color(31, 4, 4), k, 20));
+            _set_color(5, mix(mix(t.metal, bn::color(31, 31, 31), 9, 20), bn::color(31, 10, 8), k, 20));
         }
         else
         {
-            _palette.set_color(4, t.metal);
-            _palette.set_color(5, mix(t.metal, bn::color(31, 31, 31), 9, 20));
+            _set_color(4, t.metal);
+            _set_color(5, mix(t.metal, bn::color(31, 31, 31), 9, 20));
         }
+        _commit_colors();
     }
 
     void board_view::update(const session& s, bool ghost_enabled, int frame)
     {
+        bn::timer t;
         for(int b = 0; b < s.board_count(); ++b)
         {
             if(b == 1 && ! _board_b_visible)
@@ -661,8 +537,10 @@ namespace bm
                 --_flash[b].timer;
             }
         }
+        profile::slots[0] = profile::per_mille(t.elapsed_ticks_with_restart());
         _draw_telegraphs(s, frame);
         _draw_hp(s);
+        profile::slots[1] = profile::per_mille(t.elapsed_ticks_with_restart());
 
         // Hold (the active board's hold slot) and next previews.
         const player& p = s.board_player(s.active_board());
@@ -672,7 +550,10 @@ namespace bm
             _draw_preview(_layout.next_x + 1, _layout.next_y + 2 + i * 3, s.queue().peek(i), false);
         }
         _draw_meter(s, frame);
+        profile::slots[2] = profile::per_mille(t.elapsed_ticks_with_restart());
         _animate_palette(s, frame);
+        profile::slots[3] = profile::per_mille(t.elapsed_ticks_with_restart());
         _map_ptr.reload_cells_ref();
+        profile::slots[4] = profile::per_mille(t.elapsed_ticks_with_restart());
     }
 }

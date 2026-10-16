@@ -206,6 +206,9 @@ namespace bm
         // Diagnostics / test interface.
         void debug_add_heat(int amount) { _gain_heat_raw(amount); }
         void debug_set_boss_hp(int hp);
+        // Stress test path (emulator diagnostics only): a board packed with specials, then a detonation.
+        void debug_fill_stress(int board);
+        void debug_detonate(int board);
         [[nodiscard]] int validate() const;
 
     private:

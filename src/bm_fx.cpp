@@ -16,6 +16,37 @@ namespace bm
         {
             p.text.set_camera(camera);
         }
+        // Pre-create the pooled sprites (hidden) so a chain reaction only moves and reveals them.
+        for(particle_slot& p : _particles)
+        {
+            p.sprite = bn::sprite_items::spr_particles.create_sprite(0, 0, 0);
+            p.sprite->set_camera(_camera);
+            p.sprite->set_bg_priority(0);
+            p.sprite->set_visible(false);
+            p.shown = 0;
+        }
+        for(explosion_slot& e : _explosions)
+        {
+            e.sprite = bn::sprite_items::spr_explosion.create_sprite(0, 0, 0);
+            e.sprite->set_camera(_camera);
+            e.sprite->set_bg_priority(0);
+            e.sprite->set_visible(false);
+            e.shown = 0;
+        }
+        // Glyphs of the chain call-outs and score pop-ups exist before the first chain (creating them
+        // mid-chain was the most expensive moment of a big reaction).
+        glyph_label::warm("ABCDEFGHIKLMNOPRSTUVWXYZ!", true);
+        glyph_label::warm("+0123456789COMBx", false);
+        _callout.text.prepare(15, true);
+        for(popup_slot& p : _popups)
+        {
+            p.text.prepare(7, false);
+        }
+    }
+
+    fx::~fx()
+    {
+        glyph_label::release_cache();
     }
 
     void fx::set_options(int shake_setting, int flash_setting)
@@ -27,11 +58,37 @@ namespace bm
     int fx::_rand(int n)
     {
         _seed = _seed * 1664525u + 1013904223u;
-        return n > 0 ? int((_seed >> 16) % uint32_t(n)) : 0;
+        // Multiply-shift instead of a modulo: no division on the GBA's divider-less CPU.
+        return n > 0 ? int(((_seed >> 16) * uint32_t(n)) >> 16) : 0;
+    }
+
+    const bn::sprite_tiles_ptr& fx::_particle_frame(int index)
+    {
+        index = index < 0 ? 0 : (index > 31 ? 31 : index);
+        if(! _particle_tiles[index])
+        {
+            _particle_tiles[index] = bn::sprite_items::spr_particles.tiles_item().create_tiles(index);
+        }
+        return *_particle_tiles[index];
+    }
+
+    const bn::sprite_tiles_ptr& fx::_explosion_frame(int index)
+    {
+        index = index < 0 ? 0 : (index > 5 ? 5 : index);
+        if(! _explosion_tiles[index])
+        {
+            _explosion_tiles[index] = bn::sprite_items::spr_explosion.tiles_item().create_tiles(index);
+        }
+        return *_explosion_tiles[index];
     }
 
     void fx::particle(particle_kind kind, int x, int y, bn::fixed vx, bn::fixed vy, int life, bn::fixed gravity)
     {
+        if(_particle_budget <= 0)
+        {
+            return;     // this frame already spawned its share; the effect still reads as dense
+        }
+        --_particle_budget;
         particle_slot& p = _particles[_next_particle];
         _next_particle = (_next_particle + 1) % max_particles;
         p.x = x;
@@ -66,10 +123,15 @@ namespace bm
             p.sprite = bn::sprite_items::spr_particles.create_sprite(x - 120 + 4, y - 80 + 4, p.first);
             p.sprite->set_camera(_camera);
             p.sprite->set_bg_priority(0);
+            p.shown = int8_t(p.first);
         }
         else
         {
-            p.sprite->set_tiles(bn::sprite_items::spr_particles.tiles_item(), p.first);
+            if(p.shown != p.first)
+            {
+                p.sprite->set_tiles(_particle_frame(p.first));
+                p.shown = int8_t(p.first);
+            }
             p.sprite->set_position(x - 120 + 4, y - 80 + 4);
             p.sprite->set_visible(true);
         }
@@ -77,7 +139,7 @@ namespace bm
 
     void fx::burst(particle_kind kind, int x, int y, int count, int speed)
     {
-        for(int i = 0; i < count; ++i)
+        for(int i = 0; i < count && _particle_budget > 0; ++i)
         {
             const bn::fixed vx = bn::fixed(_rand(speed * 32) - speed * 16) / 16;
             const bn::fixed vy = bn::fixed(_rand(speed * 32) - speed * 20) / 16;
@@ -87,6 +149,11 @@ namespace bm
 
     void fx::explosion(int x, int y)
     {
+        if(_explosion_budget <= 0)
+        {
+            return;
+        }
+        --_explosion_budget;
         for(explosion_slot& e : _explosions)
         {
             if(e.timer <= 0)
@@ -101,9 +168,13 @@ namespace bm
                 else
                 {
                     e.sprite->set_position(x - 120, y - 80);
-                    e.sprite->set_tiles(bn::sprite_items::spr_explosion.tiles_item(), 0);
+                    if(e.shown != 0)
+                    {
+                        e.sprite->set_tiles(_explosion_frame(0));
+                    }
                     e.sprite->set_visible(true);
                 }
+                e.shown = 0;
                 return;
             }
         }
@@ -141,6 +212,23 @@ namespace bm
 
     void fx::popup(int x, int y, const bn::string_view& text, text_color color, int life)
     {
+        if(_popup_cooldown > 0)
+        {
+            // Coalesce: only the latest pop-up of a burst is shown once the cooldown ends.
+            _deferred_popup.text = text.size() > 24 ? text.substr(0, 24) : text;
+            _deferred_popup.x = int16_t(x);
+            _deferred_popup.y = int16_t(y);
+            _deferred_popup.life = int16_t(life);
+            _deferred_popup.color = uint8_t(color);
+            _deferred_popup.pending = true;
+            return;
+        }
+        _show_popup(x, y, text, color, life);
+    }
+
+    void fx::_show_popup(int x, int y, const bn::string_view& text, text_color color, int life)
+    {
+        _popup_cooldown = popup_cooldown_frames;
         const int half = text::small_width(text) / 2 + 2;
         x = x < half ? half : (x > 240 - half ? 240 - half : x);
         int best = 0;
@@ -162,6 +250,23 @@ namespace bm
 
     void fx::callout(int x, int y, const bn::string_view& text, big_color color, int life)
     {
+        if(_callout_cooldown > 0)
+        {
+            // A chain announces every wave: show the newest tier once the previous call-out had a moment.
+            _deferred_callout.text = text.size() > 24 ? text.substr(0, 24) : text;
+            _deferred_callout.x = int16_t(x);
+            _deferred_callout.y = int16_t(y);
+            _deferred_callout.life = int16_t(life);
+            _deferred_callout.color = uint8_t(color);
+            _deferred_callout.pending = true;
+            return;
+        }
+        _show_callout(x, y, text, color, life);
+    }
+
+    void fx::_show_callout(int x, int y, const bn::string_view& text, big_color color, int life)
+    {
+        _callout_cooldown = callout_cooldown_frames;
         // Keep call-outs fully on screen.
         const int half = text::big_width(text) / 2 + 10;    // generous margin: glyph outlines extend past widths
         x = half >= 120 ? 120 : (x < half ? half : (x > 240 - half ? 240 - half : x));
@@ -170,7 +275,6 @@ namespace bm
         _callout.y = int16_t(y);
         _callout.big = true;
         _callout.text.show_big(x, y, text, color, align::center);
-        _callout.text.set_visible(true);
     }
 
     void fx::shake(shake_profile profile)
@@ -214,17 +318,39 @@ namespace bm
         _flash_length = frames;
     }
 
+    void fx::_callout_hide()
+    {
+        _callout.text.hide();
+    }
+
+    void fx::_callout_visible(bool visible)
+    {
+        _callout.text.set_visible(visible);
+    }
+
+    void fx::set_base_tint(bn::color color, bn::fixed intensity)
+    {
+        _base_color = color;
+        _base_intensity = intensity;
+    }
+
     void fx::clear()
     {
         for(particle_slot& p : _particles)
         {
             p.life = 0;
-            p.sprite.reset();
+            if(p.sprite)
+            {
+                p.sprite->set_visible(false);   // pooled sprites stay allocated
+            }
         }
         for(explosion_slot& e : _explosions)
         {
             e.timer = 0;
-            e.sprite.reset();
+            if(e.sprite)
+            {
+                e.sprite->set_visible(false);
+            }
         }
         for(popup_slot& p : _popups)
         {
@@ -232,7 +358,7 @@ namespace bm
             p.text.hide();
         }
         _callout.life = 0;
-        _callout.text.hide();
+        _callout_hide();
         for(beam_slot& b : _beam)
         {
             b.timer = 0;
@@ -248,6 +374,20 @@ namespace bm
         if(_hitstop > 0)
         {
             --_hitstop;
+        }
+        _particle_budget = particles_per_frame;
+        _explosion_budget = explosions_per_frame;
+        if(_popup_cooldown > 0 && --_popup_cooldown == 0 && _deferred_popup.pending)
+        {
+            _deferred_popup.pending = false;
+            _show_popup(_deferred_popup.x, _deferred_popup.y, _deferred_popup.text, text_color(_deferred_popup.color),
+                        _deferred_popup.life);
+        }
+        if(_callout_cooldown > 0 && --_callout_cooldown == 0 && _deferred_callout.pending)
+        {
+            _deferred_callout.pending = false;
+            _show_callout(_deferred_callout.x, _deferred_callout.y, _deferred_callout.text,
+                          big_color(_deferred_callout.color), _deferred_callout.life);
         }
 
         for(particle_slot& p : _particles)
@@ -268,7 +408,12 @@ namespace bm
             const int age = p.max_life - p.life;
             const int frame = p.frames > 1 ? (age * p.frames / (p.max_life ? p.max_life : 1)) : 0;
             p.sprite->set_position(p.x - 120 + 4, p.y - 80 + 4);
-            p.sprite->set_tiles(bn::sprite_items::spr_particles.tiles_item(), p.first + (frame < p.frames ? frame : p.frames - 1));
+            const int wanted = p.first + (frame < p.frames ? frame : p.frames - 1);
+            if(wanted != p.shown)
+            {
+                p.sprite->set_tiles(_particle_frame(wanted));
+                p.shown = int8_t(wanted);
+            }
             if(p.life < 6)
             {
                 p.sprite->set_visible(p.life & 1);
@@ -289,7 +434,11 @@ namespace bm
                 e.timer = 0;
                 continue;
             }
-            e.sprite->set_tiles(bn::sprite_items::spr_explosion.tiles_item(), frame);
+            if(frame != e.shown)
+            {
+                e.sprite->set_tiles(_explosion_frame(frame));
+                e.shown = int8_t(frame);
+            }
         }
 
         for(beam_slot& b : _beam)
@@ -334,11 +483,11 @@ namespace bm
             --_callout.life;
             if(_callout.life <= 0)
             {
-                _callout.text.hide();
+                _callout_hide();
             }
             else if(_callout.life < 12)
             {
-                _callout.text.set_visible(_callout.life & 2);
+                _callout_visible(_callout.life & 2);
             }
         }
 
@@ -353,16 +502,32 @@ namespace bm
             }
         }
 
+        // Screen flashes tint the background palettes only, in sixteenth steps: the engine re-processes every
+        // palette whenever the fade changes, so sprites stay untouched and unchanged levels are not re-sent.
         if(_flash_timer > 0)
         {
             --_flash_timer;
-            const bn::fixed intensity = bn::fixed(_flash_percent * _flash_timer) / (100 * (_flash_length ? _flash_length : 1));
-            bn::bg_palettes::set_fade(_flash_color, intensity);
-            bn::sprite_palettes::set_fade(_flash_color, intensity);
-            if(! _flash_timer)
+            const int level = _flash_percent * _flash_timer * 16 / (100 * (_flash_length ? _flash_length : 1));
+            if(level > 0)
             {
-                bn::bg_palettes::set_fade_intensity(0);
-                bn::sprite_palettes::set_fade_intensity(0);
+                if(level + 1000 != _applied_fade)
+                {
+                    _applied_fade = level + 1000;
+                    bn::bg_palettes::set_fade(_flash_color, bn::fixed(level) / 16);
+                }
+            }
+            else
+            {
+                _flash_timer = 0;
+            }
+        }
+        if(_flash_timer <= 0)
+        {
+            const int base = (_base_intensity * 16).round_integer();
+            if(base != _applied_fade)
+            {
+                _applied_fade = base;
+                bn::bg_palettes::set_fade(_base_color, bn::fixed(base) / 16);
             }
         }
     }

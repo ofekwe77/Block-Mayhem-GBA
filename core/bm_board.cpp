@@ -4,6 +4,7 @@ namespace bm
 {
     void board::init(int cols, int rows, int hidden)
     {
+        ++_revision;
         _cols = cols;
         _rows = rows;
         _hidden = hidden;
@@ -13,6 +14,7 @@ namespace bm
 
     void board::set(int x, int y, const cell& c)
     {
+        ++_revision;
         _cells[y][x] = c;
         if(c.occupied())
         {
@@ -27,12 +29,14 @@ namespace bm
 
     void board::clear(int x, int y)
     {
+        ++_revision;
         _cells[y][x].reset();
         _bits[y] = uint16_t(_bits[y] & ~(1u << x));
     }
 
     void board::clear_all()
     {
+        ++_revision;
         for(int y = 0; y < max_rows; ++y)
         {
             _bits[y] = 0;
@@ -159,6 +163,7 @@ namespace bm
 
     bool board::push_garbage(int count, const int8_t* gap_columns, coat_kind coat)
     {
+        ++_revision;
         if(count <= 0)
         {
             return true;
@@ -213,6 +218,7 @@ namespace bm
 
     void board::remove_rows(uint32_t row_mask)
     {
+        ++_revision;
         int write = _rows - 1;
         for(int read = _rows - 1; read >= 0; --read)
         {

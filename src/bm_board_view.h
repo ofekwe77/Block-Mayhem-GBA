@@ -12,6 +12,9 @@
 #include "bm_session.h"
 
 #include "bn_bg_palette_ptr.h"
+#include "bn_array.h"
+#include "bn_common.h"
+#include "bn_color.h"
 #include "bn_optional.h"
 #include "bn_regular_bg_map_cell.h"
 #include "bn_regular_bg_map_item.h"
@@ -21,6 +24,13 @@
 
 namespace bm
 {
+    // Board palette banks shared by the renderer translation units.
+    constexpr int bank_frame = 0;
+    constexpr int bank_garbage = 8;
+    constexpr int bank_stone = 9;
+    constexpr int bank_steel = 10;
+    constexpr int bank_meter = 11;
+
     enum class layout_kind : uint8_t
     {
         single,     // board centred, panels on both sides
@@ -87,22 +97,36 @@ namespace bm
         bn::regular_bg_ptr _bg;
         bn::regular_bg_map_ptr _map_ptr;
         bn::bg_palette_ptr _palette;
+        // CPU-side mirror of the board palette: animation edits it and uploads once per frame at most
+        // (each palette change makes the engine re-process the whole palette).
+        alignas(4) bn::array<bn::color, 192> _colors;     // the engine hashes palettes as words
+        bool _colors_dirty = false;
+        // Incremental board drawing: static cells are repainted only when the board's revision changes;
+        // otherwise only the cells covered by last frame's piece and ghost are restored.
+        uint32_t _drawn_revision[2] = { 0xFFFFFFFFu, 0xFFFFFFFFu };
+        bool _flash_drawn[2] = {};
+        int8_t _overlay_x[2][8] = {};
+        int8_t _overlay_y[2][8] = {};
+        int8_t _overlay_count[2] = {};
         clear_flash _flash[2];
         int _world = 1;
         int _last_heat_color = -1;
 
-        void _put(int mx, int my, int tile, int bank, bool hflip = false, bool vflip = false);
+        // Hot per-cell rendering runs as ARM code from IWRAM (bm_board_view_draw.bn_iwram.cpp).
+        BN_CODE_IWRAM void _put(int mx, int my, int tile, int bank, bool hflip = false, bool vflip = false);
         void _draw_static(int world);
         void _draw_telegraphs(const session& s, int frame);
         void _draw_hp(const session& s);
         bool _board_b_visible = true;
         void _draw_panel(int x, int y, int w, int h);
         void _draw_frame(int board, int cols, int rows);
-        void _draw_board(const session& s, int board, bool ghost_enabled, int frame);
+        BN_CODE_IWRAM void _draw_board(const session& s, int board, bool ghost_enabled, int frame);
         void _draw_preview(int mx, int my, const queued_piece& piece, bool dim);
         void _draw_meter(const session& s, int frame);
         void _animate_palette(const session& s, int frame);
-        [[nodiscard]] static int _cell_tile(const cell& c, int& bank);
+        void _set_color(int index, bn::color color);
+        void _commit_colors();
+        [[nodiscard]] BN_CODE_IWRAM static int _cell_tile(const cell& c, int& bank);
     };
 }
 

@@ -800,6 +800,52 @@ namespace bm
         _events.push(event_type::ability_fired, _active, cfg::ability_nuclear_burst, cx, cy);
     }
 
+    void session::debug_fill_stress(int board_index)
+    {
+        player& p = _players[board_index >= 0 && board_index < board_count() ? board_index : 0];
+        board& b = p.grid();
+        const int cols = b.cols();
+        for(int y = b.hidden() + 4; y < b.rows(); ++y)
+        {
+            const int gap = (y * 3) % cols;     // one gap per row: nothing clears by itself
+            for(int x = 0; x < cols; ++x)
+            {
+                cell c;
+                if(x != gap)
+                {
+                    c.color = color_garbage;
+                    const int k = (x + y * 2) % 6;
+                    c.special = k == 0 ? special_kind::bomb : (k == 2 ? special_kind::fire :
+                                                               (k == 4 ? special_kind::spark : special_kind::none));
+                }
+                b.set(x, y, c);
+            }
+        }
+    }
+
+    void session::debug_detonate(int board_index)
+    {
+        player& p = _players[board_index >= 0 && board_index < board_count() ? board_index : 0];
+        if(p.state() != player_state::falling)
+        {
+            return;
+        }
+        board& b = p.grid();
+        resolver& r = p.resolution();
+        const effect_mods m = _effect_mods();
+        r.begin_external(m);
+        const int y = b.rows() - 1;
+        for(int x = 0; x < b.cols(); ++x)
+        {
+            if(b.at(x, y).special != special_kind::none)
+            {
+                r.hit(b, x, y, 2, cause_nuke, _events, p.index());
+                break;
+            }
+        }
+        p.start_external_resolution(m);
+    }
+
     void session::_fire_vent()
     {
         player& p = _players[_active];
@@ -2114,9 +2160,9 @@ namespace bm
 
     void session::debug_set_boss_hp(int hp)
     {
-        if(! _config.boss)
+        if(! _config.boss || _state == session_state::won || _state == session_state::lost)
         {
-            return;
+            return;     // a finished session is never brought back
         }
         _boss_hp = clampi(hp, 1, _boss_max_hp);
         _update_boss_phase();

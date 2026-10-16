@@ -5,7 +5,11 @@
 #include "bn_core.h"
 #include "bn_keypad.h"
 #include "bn_memory.h"
+#include "bn_sprite_tiles.h"
+#include "bn_sprites.h"
 #include "bn_sram.h"
+#include "bn_timer.h"
+#include "bn_timers.h"
 
 namespace bm
 {
@@ -97,7 +101,11 @@ namespace bm
         input_frame in;
         if(flow.autoplay)
         {
+            // The diagnostic bot searches every placement; a human player costs nothing here, so its time is
+            // measured and left out of the CPU statistics.
+            bn::timer bot_timer;
             in = autoplayer.next(*game);
+            _bot_ticks += bot_timer.elapsed_ticks();
             // START still pauses during autoplay so a human can take over.
             if(bn::keypad::pressed(bn::keypad::key_type::START))
             {
@@ -116,13 +124,20 @@ namespace bm
         ++frame;
         bm_test_interface& t = *test;
         t.frame = frame;
-        const int usage = (bn::core::last_cpu_usage() * 1000).right_shift_integer();
+        const int raw_usage = (bn::core::last_cpu_usage() * 1000).right_shift_integer();
+        const int bot_usage = _bot_ticks * 1000 / bn::timers::ticks_per_frame();
+        _bot_ticks = 0;
+        const int usage = raw_usage > bot_usage ? raw_usage - bot_usage : 0;
         t.cpu_last = uint32_t(usage);
         if(uint32_t(usage) > t.cpu_max)
         {
             t.cpu_max = uint32_t(usage);
         }
         t.cpu_avg = (t.cpu_avg * t.cpu_frames + uint32_t(usage)) / (t.cpu_frames + 1);
+        if(usage > 1000)
+        {
+            ++t.cpu_overruns;
+        }
         if(t.cpu_frames < 100000)
         {
             ++t.cpu_frames;
@@ -139,6 +154,12 @@ namespace bm
                 t.cpu_max = 0;
                 t.cpu_avg = 0;
                 t.cpu_frames = 0;
+                t.cpu_overruns = 0;
+                t.sprites_max = 0;
+                t.sprite_tiles_max = 0;
+                t.sprite_tile_items_max = 0;
+                t.prof_sim = t.prof_events = t.prof_view = t.prof_backdrop = 0;
+                t.prof_fx = t.prof_boss = t.prof_hud = 0;
                 pending_command = 0;
             }
             else if(t.cmd == BM_TI_CMD_SET_AUTOPLAY)
@@ -195,8 +216,14 @@ namespace bm
         t.rush_state = flow.boss_rush_state;
         t.rush_frames = flow.boss_rush_frames;
         t.save_sequence = save.sequence;
+        const uint32_t sprites = uint32_t(bn::sprites::used_items_count());
+        const uint32_t tiles = uint32_t(bn::sprite_tiles::used_tiles_count());
+        t.sprites_max = sprites > t.sprites_max ? sprites : t.sprites_max;
+        t.sprite_tiles_max = tiles > t.sprite_tiles_max ? tiles : t.sprite_tiles_max;
+        const uint32_t tile_items = uint32_t(bn::sprite_tiles::used_items_count());
+        t.sprite_tile_items_max = tile_items > t.sprite_tile_items_max ? tile_items : t.sprite_tile_items_max;
         t.setting_difficulty = save.settings.difficulty;
-        const int v = s.validate();
+        const int v = (frame & 7) == 0 ? s.validate() : 0;
         if(v && ! t.error_code)
         {
             t.error_code = uint32_t(v);

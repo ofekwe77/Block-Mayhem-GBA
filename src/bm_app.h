@@ -87,6 +87,7 @@ namespace bm
 
     private:
         int _slot = -1;
+        int _bot_ticks = 0;     // autoplay planning time of this frame (excluded from the CPU statistics)
         uint32_t _sequence = 0;
     };
 

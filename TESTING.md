@@ -57,6 +57,7 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 | boss_rush.txt — diagnostic unlock, rush card, all six bosses in sequence (HP cut after each intro), summary | PASS (6/6, complete, error_code 0) |
 | save.txt (`--save` file) — fresh boot, option change, stage 1-1 clear, console reset: settings, clear and achievements restored | PASS |
 | story.txt (`--save` file, first launch) — intro cutscene beats, title, World 1 introduction, final ending, credits roll back to the title | PASS |
+| stress.txt — 2 min Chaos Arcade, final boss + destruction, 1 min Dual Board, full-board detonations (single and dual): CPU per frame, overruns, sprite and tile-set budgets | PASS (see Performance) |
 | menus.txt — full main menu, options + volume, sound test (audio), credits, achievements, records pages, loadout setup, Chaos Arcade with the live achievement banner | PASS |
 
 Scenarios that boot without a save file see the first-launch intro and skip it with START.
@@ -64,3 +65,34 @@ Screenshots from the latest runs: `screenshots/tmp/`.
 
 ## Not yet tested
 See TASKS.md entries without `TESTED` status (stress/performance runs, balance runner).
+
+## 3. Performance (PART 33.6, 57.5) — `tests/emu/stress.txt`
+
+CPU is measured by the ROM per frame (per mille of a 16.7 ms frame; the diagnostic bot's own planning time
+is excluded because a human player costs nothing there). An *overrun* is a frame that needed more than one
+frame of CPU. Latest run (2026-10-16):
+
+| Section | Avg CPU | Worst frame | Overrun frames | Sprite items | Sprite tile sets |
+|---|---:|---:|---:|---:|---:|
+| Chaos Arcade, 2 min of fast bot play | 35% | 149% | 17 / 6048 (0.3%) | 115 | 116 |
+| Core of Mayhem fight + destruction sequence | 49% | 221% | 10 / 855 (1.2%) | 116 | 100 |
+| Dual Board Relay, 1 min | 35% | 139% | 5 / 3212 (0.2%) | 116 | 102 |
+| 16-row field of specials detonated (12-wave chain) | 40% | 127% | 2 / 443 | 113 | 89 |
+| Same on both dual boards | 37% | 96% | 0 / 445 | 108 | 82 |
+
+Engine limits: sprite items and sprite tile sets are raised to 192 (`Makefile` USERFLAGS) because exceeding
+the default 128 is fatal; the hardware still shows at most 128 sprites, and the measured peaks stay under 128.
+Sprite VRAM peaks at 521 of 1024 tiles.
+
+Optimisations made from these measurements (before: 48% average in quiet play, 6% overrun frames in arcade
+play, 160% worst frame in the detonation test):
+- Board renderer: incremental drawing keyed on a board revision counter (only the cells under last frame's
+  piece and ghost are repainted when the board is unchanged), hot loop compiled as ARM code into IWRAM.
+- Board palette animation edits a CPU-side copy and uploads once per frame at most.
+- Effects: particle and explosion tiles cached per frame (no per-frame tile lookups), pooled sprites created
+  at scene load, per-frame budgets (12 particles, 2 explosions), division-free random numbers.
+- Chain call-outs and score pop-ups use pooled glyph labels with pre-created glyph tiles (no VRAM allocation
+  mid-chain); colour-only label changes swap palettes instead of regenerating text; the HUD score is a glyph label.
+- Cosmetic events (one per destroyed cell) drain at 16 per frame; sounds start at most once per 3 frames per
+  effect and 4 per frame; the per-frame invariant validation of the diagnostics runs every 8th frame.
+- Section profiling stays in the ROM (`prof_*` fields of the test interface) for future regressions.

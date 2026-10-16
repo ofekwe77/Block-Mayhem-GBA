@@ -205,11 +205,28 @@ namespace bm::audio
     void sfx(sfx_id id)
     {
         app& a = the_app();
-        const bn::fixed volume = a.sfx_volume() * sfx_gain(id);
+        // A chain reaction can ask for the same sound dozens of times in one frame: start each sound at most
+        // once every 3 frames and at most 4 sounds per frame (stacked copies only clip and cost CPU).
+        static uint32_t last_start[int(sfx_id::count)] = {};
+        static uint32_t budget_frame = 0;
+        static int starts = 0;
+        const int i = int(id);
+        if(a.frame != budget_frame)
+        {
+            budget_frame = a.frame;
+            starts = 0;
+        }
+        if(starts >= 4 || (last_start[i] && a.frame - last_start[i] < 3))
+        {
+            return;
+        }
+        const bn::fixed volume = a.sfx_volume() * sfx_gain(id);   // computed only for sounds that really start
         if(volume <= 0)
         {
             return;
         }
+        ++starts;
+        last_start[i] = a.frame ? a.frame : 1;
         bn::sound::play_with_priority(priority(id), sound(id), volume);
         ++a.test->sfx_count;
     }

@@ -282,9 +282,9 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| HW-01 | IMPLEMENTED | EMU | CPU usage measured in ROM (bn::core) and exported to harness | 33.6 | ENV-07 | src/bm_app.cpp | cpu_avg 433 per mille (incl. loading) |
-| HW-02 | NOT STARTED | - | Stress scenarios (full board, chains, boss, particles, dual) measured | 33.6, 57.5 | HW-01 | | |
-| HW-03 | NOT STARTED | - | Sprite budget audit (<=128 OAM, scanline) | 33.3 | - | | |
+| HW-01 | TESTED | EMU | CPU usage measured in ROM (bn::core, bot time excluded), overruns and section profiling exported to the harness | 33.6 | ENV-07 | src/bm_app.cpp, src/bm_game_scene.cpp | stress.txt prints cpu_avg / cpu_max / cpu_overruns / prof_* |
+| HW-02 | TESTED | EMU | Stress scenarios (realistic arcade, final boss + destruction, dual play, full-board detonations) measured and optimised | 33.6, 57.5 | HW-01 | tests/emu/stress.txt | 0.2-0.3% overrun frames in play, 35% average CPU; see TESTING.md Performance |
+| HW-03 | TESTED | EMU | Sprite budget audit (items, tile sets, VRAM) with engine limits raised to 192 | 33.3 | - | Makefile, tests/emu/stress.txt | peaks: 116 items, 116 tile sets, 521/1024 tiles |
 
 ## STORY / SECRET (PART 35, 36)
 

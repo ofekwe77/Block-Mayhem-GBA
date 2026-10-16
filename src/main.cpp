@@ -130,6 +130,21 @@ namespace
             a.game->debug_set_boss_hp(int(a.pending_args[0]));
             return bn::nullopt;
 
+        case BM_TI_CMD_STRESS:
+            // 1: pack every board with specials, 2: detonate them (chain reactions + effects).
+            for(int b = 0; b < a.game->board_count(); ++b)
+            {
+                if(a.pending_args[0] == 1)
+                {
+                    a.game->debug_fill_stress(b);
+                }
+                else if(a.pending_args[0] == 2)
+                {
+                    a.game->debug_detonate(b);
+                }
+            }
+            return bn::nullopt;
+
         case BM_TI_CMD_WIPE_SAVE:
             bm::reset_defaults(a.save);
             a.write_save();

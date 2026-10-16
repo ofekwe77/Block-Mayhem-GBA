@@ -37,7 +37,7 @@ namespace bm
         label _hold_label;
         label _next_label;
         label _score_title;
-        label _score_value;
+        glyph_label _score_value;      // changes constantly: pooled glyphs, never regenerated
         label _level_title;
         label _level_value;
         label _lines_title;
@@ -72,8 +72,21 @@ namespace bm
         bn::optional<bn::sprite_ptr> _cursor;
         bn::optional<bn::sprite_ptr> _marker;
         bn::optional<bn::sprite_ptr> _arrow;
+        int _icon_frame_shown = -1;
+        int _cursor_shown = -1;
+        int _marker_shown = -1;
+        int _arrow_shown = -1;
 
         int _frame = 0;
+        int _events_handled = 0;
+        // Purely cosmetic events (one per destroyed cell, per triggered special...) are drained at a fixed
+        // rate so a huge chain spreads its particles and sounds over a few frames instead of one.
+        static constexpr int cosmetic_capacity = 96;
+        static constexpr int cosmetic_per_frame = 16;
+        event _cosmetic[cosmetic_capacity];
+        int _cosmetic_head = 0;
+        int _cosmetic_count = 0;
+        int _boss_fallback = 0;
         bool _paused = false;
         int _pause_index = 0;
         bool _confirm_quit = false;
@@ -87,6 +100,8 @@ namespace bm
 
         void _start_session();
         void _handle_events();
+        void _handle_event(const event& e);
+        void _handle_event_body(const event& e);
         void _update_hud();
         void _update_achievements();
         static void _show_middle(label& l, int x, int y, const bn::string_view& t, text_color c, bool tiny);

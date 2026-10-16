@@ -57,7 +57,14 @@ namespace bm
         void clear_all();
 
         // Mutable access to non-occupancy attributes (special, coat, flags). Never use it to change color.
-        [[nodiscard]] cell& attributes(int x, int y) { return _cells[y][x]; }
+        [[nodiscard]] cell& attributes(int x, int y)
+        {
+            ++_revision;
+            return _cells[y][x];
+        }
+
+        // Changes whenever any cell may have changed (renderers redraw only when it moves).
+        [[nodiscard]] uint32_t revision() const { return _revision; }
 
         [[nodiscard]] bool fits(const piece_state& p) const;
         [[nodiscard]] int drop_distance(const piece_state& p) const;
@@ -87,6 +94,7 @@ namespace bm
         int _rows = cfg::board_rows;
         int _hidden = cfg::board_hidden_rows;
         uint16_t _full_mask = (1u << cfg::board_cols) - 1;
+        uint32_t _revision = 0;
     };
 }
 

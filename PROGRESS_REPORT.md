@@ -25,10 +25,10 @@ No percentages are claimed; see each task's evidence column.
 | UI — User interface (PART 26) | 14 | 0 | 0 | 7 | 7 | 0 | 0 |
 | PROG / ACH / SAVE — Progression, achievements, persistence (PART 27-29) | 9 | 1 | 0 | 3 | 5 | 0 | 0 |
 | BAL / SIM — Balance and simulation (PART 30, 31, 54) | 8 | 0 | 0 | 3 | 5 | 0 | 0 |
-| HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 2 | 0 | 1 | 0 | 0 | 0 |
+| HW — Hardware and performance (PART 33, 57.5, 62) | 3 | 0 | 0 | 0 | 3 | 0 | 0 |
 | STORY / SECRET (PART 35, 36) | 4 | 1 | 0 | 0 | 3 | 0 | 0 |
 | DOC — Documentation and release (PART 41, 42, 59, 63) | 9 | 1 | 2 | 6 | 0 | 0 | 0 |
-| **All** | **190** | 14 | 5 | 98 | 73 | 0 | 0 |
+| **All** | **190** | 12 | 5 | 97 | 76 | 0 | 0 |
 <!-- TASKS:END -->
 
 ## Summary by area
