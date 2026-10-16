@@ -194,6 +194,7 @@ namespace bm
         t.objective_done = s.objectives_complete() ? 1 : 0;
         t.stack_height = uint32_t(s.board_player(s.active_board()).grid().stack_height());
         t.active_board = uint32_t(s.active_board());
+        t.cross_combos = s.stats().cross_combos;
         t.stage = s.config().stage ? uint32_t(s.config().stage->world * 10 + s.config().stage->index) : 0;
         int cleared = 0;
         for(const stage_record& r : save.stages)

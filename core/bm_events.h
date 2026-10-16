@@ -76,7 +76,8 @@ namespace bm
         danger_on,
         danger_off,
         perfect_clear,
-        twist_no_lines      // a = mini
+        twist_no_lines,     // a = mini
+        piece_trail         // a = column mask, b = highest landed row, c = rows dropped (hard-drop trail)
     };
 
     struct event

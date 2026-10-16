@@ -1,0 +1,31 @@
+# Presentation effects on the real ROM: hard-drop trail (PART 24.3) and the dual-board energy bridge with
+# its CROSS OVER pulse (PART 12.8). game_mode ids: 0 classic, 4 dual relay.
+frames 40
+tap START
+wait scene == 3 120
+frames 30
+# 1. Hard-drop trail: a manual hard drop in Classic, screenshot right after it lands.
+cmd 2 0 1234 0
+wait scene == 7 200
+wait session_state == 1 400
+frames 20
+tap UP 1
+shot trail_drop
+expect trail_draws >= 1
+frames 20
+shot trail_gone
+expect error_code == 0
+# 2. Dual Board Relay: the bridge between the boards at rest, then the bot plays until a cross-over combo.
+cmd 2 4 777 1
+wait scene == 7 200
+wait session_state == 1 400
+frames 30
+shot bridge_idle
+wait cross_combos >= 1 9000
+frames 6
+shot bridge_cross
+frames 8
+shot bridge_cross2
+print cross_combos bridge_draws trail_draws score
+expect bridge_draws >= 1
+expect error_code == 0

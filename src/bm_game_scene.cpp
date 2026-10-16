@@ -697,9 +697,24 @@ namespace bm
             }
 
             case event_type::cross_combo:
+            {
+                // PART 12.8: both boards flash, energy travels across the bridge, the bonus shows briefly.
                 _fx.callout(120, 40, "CROSS OVER!", big_color::neon, 70);
                 _fx.flash(bn::color(24, 12, 31), 25, 8);
+                _view.pulse_bridge(b);
+                // Sparks leap off both boards where the bridge plugs in.
+                _fx.burst(particle_kind::electric, b == 0 ? 92 : 148, 154, 4, 2);
+                _fx.burst(particle_kind::electric, b == 0 ? 148 : 92, 154, 4, 2);
+                // The cross-over bonus is 1000 x level: the multiplier lands on the board the energy reaches.
+                bn::string<16> t = "BONUS x";
+                t.append(number(uint32_t(_s.level())));
+                _fx.popup(_view.cell_screen_x(1 - b, board_cols / 2) + 4, 96, t, text_color::violet, 60);
                 audio::sfx(audio::sfx_id::chain_big);
+                break;
+            }
+
+            case event_type::piece_trail:
+                _view.start_trail(b, e.a, e.b, e.c);
                 break;
 
             case event_type::board_switched:
@@ -1432,6 +1447,8 @@ namespace bm
             ti.prof_text_len = uint32_t(text::generated_max_ref()[2]);
             ti.prof_text_cost = uint32_t(text::generated_ticks_ref()) * 1000u / uint32_t(bn::timers::ticks_per_frame());
         }
+        ti.trail_draws = profile::trail_draws;
+        ti.bridge_draws = profile::bridge_draws;
 
         // Final boss: the sealed second board opens at its dual phase and the boss moves to the centre.
         const bool want_b = ! _s.board_sealed(1);

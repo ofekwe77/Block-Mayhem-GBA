@@ -80,6 +80,12 @@ namespace bm
         [[nodiscard]] int cell_screen_x(int board, int x) const { return (_layout.boards[board].map_x + x) * 8; }
         [[nodiscard]] int cell_screen_y(int board, int y) const;
 
+        // Hard-drop trail above the landed piece (presentation only).
+        void start_trail(int board, int columns, int highest_row, int distance);
+        // Dual board CROSS OVER: energy packets run across the bridge from the board that completed it,
+        // and both board frames glow.
+        void pulse_bridge(int from_board);
+        static constexpr int bridge_pulse_frames = 48;
         void flash_rows(int board, uint32_t rows, int frames);
         void set_world_tint(int world);
         void set_board_b_visible(bool visible);
@@ -108,6 +114,21 @@ namespace bm
         int8_t _overlay_x[2][8] = {};
         int8_t _overlay_y[2][8] = {};
         int8_t _overlay_count[2] = {};
+
+        // Hard-drop trail: columns, rows [from, to) above the landed piece, frames left.
+        struct trail_state
+        {
+            uint16_t columns = 0;
+            int8_t from = 0;
+            int8_t to = 0;
+            int8_t timer = 0;
+        };
+        trail_state _trail[2];
+        int _bridge_hot = 0;
+        int _bridge_dir = 1;            // +1: energy runs from board A to board B
+        int _frame_pulse = 0;
+
+        void _draw_bridge(int frame, int active_board);
         clear_flash _flash[2];
         int _world = 1;
         int _last_heat_color = -1;

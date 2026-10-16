@@ -527,6 +527,96 @@ def build():
         "22222222",
         "11111111",
     ))
+    # Hard-drop trail (bank 0): the well with a light streak, bright near the landing point, fading upwards.
+    add("TRAIL1", T(
+        "7699f966",
+        "669ff966",
+        "669ff966",
+        "669ff966",
+        "669ff966",
+        "669ff966",
+        "669ff966",
+        "669ff966",
+    ))
+    add("TRAIL2", T(
+        "76699666",
+        "66699666",
+        "66699666",
+        "66699666",
+        "66699666",
+        "66699666",
+        "66699666",
+        "66699666",
+    ))
+    add("TRAIL3", T(
+        "76666666",
+        "66676666",
+        "66666666",
+        "66676666",
+        "66666666",
+        "66676666",
+        "66666666",
+        "66676666",
+    ))
+    # Dual-board energy bridge (bank 10 steel casing: 1 outline, 2 shadow, 4 light, 6 dark tube, 10 electric
+    # (palette-animated), 8 hot bright (animated), 14 pale, 15 white). Four flow phases shift the bright dashes
+    # by two pixels, so the energy visibly streams along the conduit.
+    for k in range(4):
+        core = ["a"] * 8
+        core[(2 * k) % 8] = "f"
+        core[(2 * k + 1) % 8] = "f"
+        core[(2 * k + 4) % 8] = "e"
+        line = "".join(core)
+        add("BRIDGE_%d" % k, T(
+            "11111111",
+            "44444444",
+            "66666666",
+            line,
+            line,
+            "66666666",
+            "22222222",
+            "11111111",
+        ))
+    add("BRIDGE_L", T(
+        "11111111",
+        "15444444",
+        "14666666",
+        "14aaaaaa",
+        "14aaaaaa",
+        "14666666",
+        "12222222",
+        "11111111",
+    ))
+    add("BRIDGE_R", T(
+        "11111111",
+        "44444451",
+        "66666641",
+        "aaaaaa41",
+        "aaaaaa41",
+        "66666641",
+        "22222221",
+        "11111111",
+    ))
+    add("BRIDGE_HOT", T(
+        "11111111",
+        "44488444",
+        "6f8ff8f6",
+        "ffffffff",
+        "ffffffff",
+        "6f8ff8f6",
+        "22288222",
+        "11111111",
+    ))
+    add("BRIDGE_GLOW", T(
+        "11111111",
+        "44444444",
+        "66e66e66",
+        "eaeaeaea",
+        "aeaeaeae",
+        "66e66e66",
+        "22222222",
+        "11111111",
+    ))
     # Boss HP bar (bank 11: 12 frame, 13 fill light, 14 fill, 1 outline, 2 empty).
     add("HP_LEFT", T(
         "11111111",

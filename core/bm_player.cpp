@@ -531,6 +531,21 @@ namespace bm
                 const point top = _piece.cell(0);
                 _events->push(event_type::hard_drop, _index, distance, _piece.x * 2 + box_size(_piece.type),
                               top.y - distance, _piece.y);
+                if(distance > 0)
+                {
+                    int mask = 0;
+                    int highest = 99;
+                    for(int m = 0; m < 4; ++m)
+                    {
+                        const point c = _piece.cell(m);
+                        if(c.x >= 0 && c.x < 16)
+                        {
+                            mask |= 1 << c.x;
+                        }
+                        highest = c.y < highest ? c.y : highest;
+                    }
+                    _events->push(event_type::piece_trail, _index, mask, highest, distance);
+                }
                 _lock(true);
                 _last_lock.hard_drop_rows = distance;
                 return false;

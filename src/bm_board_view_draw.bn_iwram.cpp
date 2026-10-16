@@ -4,6 +4,7 @@
  * the cartridge bus makes this loop several times faster.
  */
 #include "bm_board_view.h"
+#include "bm_profile.h"
 
 #include "bm_tile_ids.h"
 
@@ -80,7 +81,10 @@ namespace bm
         const bool flashing = fl.timer > 0;
         const int phase = flashing ? (fl.length - fl.timer) * 3 / (fl.length ? fl.length : 1) : 0;
 
-        const bool full = g.revision() != _drawn_revision[b] || flashing || _flash_drawn[b];
+        trail_state& tr = _trail[b];
+        const bool trail = tr.timer > 0;
+        const bool full = g.revision() != _drawn_revision[b] || flashing || _flash_drawn[b] || trail ||
+                          tr.columns != 0;
         if(full)
         {
             for(int y = hidden - 1; y < g.rows(); ++y)
@@ -131,6 +135,34 @@ namespace bm
                     _put(mx, my, t, bank);
                 }
             }
+        }
+        if(trail)
+        {
+            // Streak over the empty cells the piece fell through; it shrinks towards the landing point.
+            const int length = tr.to - tr.from;
+            const int visible_rows = length * tr.timer / 10;
+            for(int y = tr.to - visible_rows; y < tr.to; ++y)
+            {
+                if(y < hidden)
+                {
+                    continue;
+                }
+                const int depth = tr.to - y;     // 1 = right above the piece
+                const int t = depth * 3 <= length ? tile::trail1 : (depth * 3 <= length * 2 ? tile::trail2 : tile::trail3);
+                for(int x = 0; x < g.cols(); ++x)
+                {
+                    if(((tr.columns >> x) & 1) && g.at(x, y).empty())
+                    {
+                        _put(slot.map_x + x, slot.map_y + y - hidden, t, bank_frame);
+                    }
+                }
+            }
+            --tr.timer;
+            ++profile::trail_draws;
+        }
+        else
+        {
+            tr.columns = 0;     // one more full repaint after the trail ends clears it
         }
         _flash_drawn[b] = flashing;
         _overlay_count[b] = 0;

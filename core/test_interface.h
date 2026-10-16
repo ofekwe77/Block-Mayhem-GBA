@@ -24,50 +24,80 @@
     X(cpu_last)         /* CPU usage of last frame, per mille */ \
     X(cpu_max)          /* max CPU usage since last reset, per mille */ \
     X(cpu_avg)          /* average CPU usage since last reset, per mille */ \
-    X(cpu_frames)       /* frames accumulated into cpu_avg */     X(cpu_overruns)     /* frames that needed more than one frame of CPU since the last reset */ \
+    X(cpu_frames)       /* frames accumulated into cpu_avg */ \
+    X(cpu_overruns)     /* frames that needed more than one frame of CPU since the last reset */ \
     X(mode)             /* bm::game_mode of the active session */ \
     X(stage)            /* world*10+stage of the active session (0 if none) */ \
     X(session_state)    /* bm::session_state */ \
-    X(score)            \
-    X(lines)            \
-    X(level)            \
+    X(score) \
+    X(lines) \
+    X(level) \
     X(pieces)           /* locked pieces */ \
-    X(heat)             \
+    X(heat) \
     X(overheat)         /* 1 while Overheat is active */ \
     X(overheat_success) \
-    X(overheat_fail)    \
-    X(max_chain)        \
+    X(overheat_fail) \
+    X(max_chain) \
     X(bombs)            /* bombs triggered */ \
-    X(boss_hp)          \
-    X(boss_max_hp)      \
-    X(boss_phase)       \
+    X(boss_hp) \
+    X(boss_max_hp) \
+    X(boss_phase) \
     X(boss_attacks)     /* boss attacks executed */ \
     X(objective_done)   /* 1 when the stage objective is complete */ \
     X(stack_height)     /* tallest column of the active board */ \
-    X(active_board)     \
+    X(active_board) \
     X(music_id)         /* current music track id (+1, 0 = none) */ \
     X(sfx_count)        /* sound effects started since boot */ \
     X(save_writes)      /* successful SRAM writes since boot */ \
     X(save_loaded)      /* 1 = valid save loaded at boot, 2 = fresh/corrupt reset */ \
-    X(worlds_unlocked)  \
-    X(stages_cleared)   \
+    X(worlds_unlocked) \
+    X(stages_cleared) \
     X(achievements)     /* unlocked achievement count */ \
     X(autoplay)         /* 1 while the diagnostic autoplay bot drives input */ \
-    X(error_code)       /* non-zero if the ROM detected an internal error */     X(run_phase)        /* bm::run_phase of the Chaos Run */     X(run_index)        /* current Chaos Run encounter 0..11 */     X(run_cleared)      /* Chaos Run encounters cleared */     X(run_score)            X(run_upgrades)     /* distinct upgrades owned in the current run */     X(rush_index)       /* Boss Rush: bosses defeated so far */     X(rush_state)       /* Boss Rush: 0 fighting, 1 complete, 2 over */     X(rush_frames)      /* Boss Rush: total fight time */     X(save_sequence)    /* sequence number of the loaded / last written save */     X(setting_difficulty) \
+    X(error_code)       /* non-zero if the ROM detected an internal error */ \
+    X(run_phase)        /* bm::run_phase of the Chaos Run */ \
+    X(run_index)        /* current Chaos Run encounter 0..11 */ \
+    X(run_cleared)      /* Chaos Run encounters cleared */ \
+    X(run_score) \
+    X(run_upgrades)     /* distinct upgrades owned in the current run */ \
+    X(rush_index)       /* Boss Rush: bosses defeated so far */ \
+    X(rush_state)       /* Boss Rush: 0 fighting, 1 complete, 2 over */ \
+    X(rush_frames)      /* Boss Rush: total fight time */ \
+    X(save_sequence)    /* sequence number of the loaded / last written save */ \
+    X(setting_difficulty) \
     X(sprites_max)      /* most sprite items alive in one frame since the last stats reset */ \
-    X(sprite_tiles_max) /* most sprite VRAM tiles in use since the last stats reset (of 1024) */     X(sprite_tile_items_max) /* most sprite tile sets alive (engine limit 128, exceeding it is fatal) */ \
+    X(sprite_tiles_max) /* most sprite VRAM tiles in use since the last stats reset (of 1024) */ \
+    X(sprite_tile_items_max)/* most sprite tile sets alive (engine limit 128, exceeding it is fatal) */ \
     X(prof_sim)         /* gameplay profiling: worst per-mille of a frame per section since the reset */ \
-    X(prof_events)      \
-    X(prof_view)        \
-    X(prof_backdrop)    \
-    X(prof_fx)          \
-    X(prof_boss)        \
-    X(prof_hud)             X(prof_events_n)    /* events handled in that worst frame */     X(prof_texts)       /* text labels generated in that worst frame */     X(prof_text_cost)   /* per mille of that frame spent generating text */     X(prof_view_boards) /* board view sub-sections of that frame: board cells */     X(prof_view_marks)  /* telegraphs + boss HP bar */     X(prof_view_panels) /* hold / next previews + heat meter */     X(prof_view_palette) /* animated palette */     X(prof_view_upload) /* map upload request */     X(prof_ev_type1)    /* most expensive event type in that frame (bm::event_type) */     X(prof_ev_cost1)    /* its total cost, per mille */     X(prof_ev_type2)        X(prof_ev_cost2)        X(prof_text_max)    /* the most expensive single text generation of that frame, per mille */     X(prof_text_font)   /* its font (0 small, 1 big, 2 tiny) */     X(prof_text_len)    /* its length in characters */ \
+    X(prof_events) \
+    X(prof_view) \
+    X(prof_backdrop) \
+    X(prof_fx) \
+    X(prof_boss) \
+    X(prof_hud) \
+    X(prof_events_n)    /* events handled in that worst frame */ \
+    X(prof_texts)       /* text labels generated in that worst frame */ \
+    X(prof_text_cost)   /* per mille of that frame spent generating text */ \
+    X(prof_view_boards) /* board view sub-sections of that frame: board cells */ \
+    X(prof_view_marks)  /* telegraphs + boss HP bar */ \
+    X(prof_view_panels) /* hold / next previews + heat meter */ \
+    X(prof_view_palette)/* animated palette */ \
+    X(prof_view_upload) /* map upload request */ \
+    X(prof_ev_type1)    /* most expensive event type in that frame (bm::event_type) */ \
+    X(prof_ev_cost1)    /* its total cost, per mille */ \
+    X(prof_ev_type2) \
+    X(prof_ev_cost2) \
+    X(prof_text_max)    /* the most expensive single text generation of that frame, per mille */ \
+    X(prof_text_font)   /* its font (0 small, 1 big, 2 tiny) */ \
+    X(prof_text_len)    /* its length in characters */ \
+    X(cross_combos)     /* dual board cross-over combos of the active session */ \
+    X(trail_draws)      /* hard-drop trail frames drawn since boot (presentation check) */ \
+    X(bridge_draws)     /* energy bridge pulse frames drawn since boot (presentation check) */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
-    X(arg0)             \
-    X(arg1)             \
-    X(arg2)             \
-    X(arg3)             \
+    X(arg0) \
+    X(arg1) \
+    X(arg2) \
+    X(arg3) \
     X(ack)              /* mailbox: ROM copies cmd here when processed */
 
 struct bm_test_interface

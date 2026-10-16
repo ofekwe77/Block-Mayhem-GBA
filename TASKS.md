@@ -129,7 +129,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | DUAL-04 | IMPLEMENTED | - | Cross-board interactions (heat+defence, spark charge, garbage cancel) | 12.5 | DUAL-01 | core/bm_session.cpp | needs tests |
 | DUAL-05 | IMPLEMENTED | - | CROSS OVER combo within 4 locks; no switch-farming exploit | 12.6 | DUAL-04 | core/bm_session.cpp | needs tests |
 | DUAL-06 | IMPLEMENTED | - | Failure if either board tops out; warnings for both | 12.7 | DUAL-01 | core/bm_session.cpp | |
-| DUAL-07 | IN PROGRESS | - | Presentation: energy bridge, active highlight, flashes | 12.8 | DUAL-01 | src/* | layout exists, bridge missing |
+| DUAL-07 | TESTED | EMU | Presentation: animated energy bridge (conduit whose energy streams towards the waiting board), CROSS OVER: three energy packets cross the bridge from the scoring board, both frames glow, screen flash, sparks at both plugs, special sound, BONUS xN multiplier on the receiving board | 12.8 | DUAL-01 | src/bm_board_view.cpp, src/bm_game_scene.cpp | visuals.txt shots bridge_idle / bridge_cross / bridge_cross2 (cross_combos 1, bridge_draws > 0); worlds.txt world4_dual |
 
 ## ADV — Adventure mode and stages (PART 13-19, 50)
 
@@ -216,7 +216,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | VIS-06 | IMPLEMENTED | - | Hitstop (simulation paused, bounded) | 24.7 | - | src/bm_fx.cpp | |
 | VIS-07 | IMPLEMENTED | EMU | Fade transitions between scenes | 24.8 | - | src/main.cpp | |
 | VIS-08 | IMPLEMENTED | EMU | Line-clear flash + shards, quad drama | 24.4 | - | src/* | |
-| VIS-09 | NOT STARTED | - | Hard-drop trail sprite | 24.3 | - | | dust only |
+| VIS-09 | TESTED | EMU | Hard-drop trail: streak tiles over the cells the piece fell through, bright at the landing point, shrinking over 10 frames; landing dust and impact kept | 24.3 | - | tools/gfx/tiles.py, core/bm_player.cpp (piece_trail event), src/bm_board_view*.cpp | visuals.txt shot trail_drop / trail_gone, trail_draws counter; stress.txt CPU unchanged (35% avg) |
 | VIS-10 | IMPLEMENTED | - | Reduced shake / reduced flash honoured | 34.4, 52.6 | - | src/bm_fx.cpp | options screen missing |
 | VIS-11 | IMPLEMENTED | EMU | Title screen (logo, eye, gears, falling shards, PRESS START) | 26.1 | - | | title.png |
 | VIS-12 | NOT STARTED | - | Secret visual events | 35.1 | - | | |

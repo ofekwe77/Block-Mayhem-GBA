@@ -199,7 +199,74 @@ namespace bm
         }
         _draw_panel(_layout.hold_x, _layout.hold_y, 6, 5);
         _draw_panel(_layout.next_x, _layout.next_y, 6, 2 + _layout.next_count * 3);
+        _draw_bridge(0, 0);
         set_world_tint(world);
+    }
+
+    void board_view::start_trail(int board, int columns, int highest_row, int distance)
+    {
+        trail_state& t = _trail[board & 1];
+        t.columns = uint16_t(columns);
+        t.to = int8_t(highest_row);
+        t.from = int8_t(highest_row - distance);
+        t.timer = 10;
+    }
+
+    void board_view::pulse_bridge(int from_board)
+    {
+        _bridge_hot = bridge_pulse_frames;
+        _bridge_dir = from_board == 0 ? 1 : -1;
+        _frame_pulse = bridge_pulse_frames;
+    }
+
+    void board_view::_draw_bridge(int frame, int active_board)
+    {
+        // Only the relay layout has the bridge: a conduit between the boards' bottom frames.
+        if(_layout.kind != layout_kind::dual || ! _board_b_visible)
+        {
+            return;
+        }
+        const int row = _layout.boards[0].map_y + cfg::dual_board_rows - cfg::board_hidden_rows;
+        const int left = _layout.boards[0].map_x + cfg::dual_board_cols + 1;
+        const int span = _layout.boards[1].map_x - 2 - left + 1;
+
+        // At rest the energy streams towards the board that is waiting for its turn.
+        const int flow = active_board == 0 ? 1 : -1;
+        const int phase = (flow > 0 ? (frame >> 2) : -(frame >> 2)) & 3;
+
+        // CROSS OVER: three energy packets run across, two frames per segment, a glow behind each one.
+        int packet = -1;
+        if(_bridge_hot > 0)
+        {
+            const int step = ((bridge_pulse_frames - _bridge_hot) % 16) / 2;
+            packet = _bridge_dir > 0 ? step : span - 1 - step;
+            ++profile::bridge_draws;
+        }
+        for(int i = 0; i < span; ++i)
+        {
+            int t;
+            if(i == packet)
+            {
+                t = tile::bridge_hot;
+            }
+            else if(packet >= 0 && i == packet - _bridge_dir)
+            {
+                t = tile::bridge_glow;
+            }
+            else if(i == 0)
+            {
+                t = tile::bridge_l;
+            }
+            else if(i == span - 1)
+            {
+                t = tile::bridge_r;
+            }
+            else
+            {
+                t = tile::bridge_0 + phase;
+            }
+            _put(left + i, row, t, bank_steel);
+        }
     }
 
     void board_view::set_board_b_visible(bool visible)
@@ -508,7 +575,14 @@ namespace bm
             danger = danger || s.danger(b);
         }
         const world_tint& t = tints[_world];
-        if(danger)
+        if(_frame_pulse > 0)
+        {
+            // CROSS OVER: both board frames glow white-violet.
+            const int k = 8 + ((_frame_pulse >> 1) & 7);
+            _set_color(4, mix(t.metal, bn::color(28, 20, 31), k, 20));
+            _set_color(5, mix(t.metal, bn::color(31, 31, 31), k, 20));
+        }
+        else if(danger)
         {
             const int k = 6 + ((frame >> 2) & 7);
             _set_color(4, mix(t.metal, bn::color(31, 4, 4), k, 20));
@@ -550,6 +624,15 @@ namespace bm
             _draw_preview(_layout.next_x + 1, _layout.next_y + 2 + i * 3, s.queue().peek(i), false);
         }
         _draw_meter(s, frame);
+        if(_bridge_hot > 0 || (frame & 3) == 0)
+        {
+            _draw_bridge(frame, s.active_board());
+            _bridge_hot -= _bridge_hot > 0 ? 1 : 0;
+        }
+        if(_frame_pulse > 0)
+        {
+            --_frame_pulse;
+        }
         profile::slots[2] = profile::per_mille(t.elapsed_ticks_with_restart());
         _animate_palette(s, frame);
         profile::slots[3] = profile::per_mille(t.elapsed_ticks_with_restart());
