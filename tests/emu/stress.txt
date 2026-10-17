@@ -78,3 +78,4 @@ print max_chain cpu_max cpu_avg cpu_overruns cpu_frames sprites_max sprite_tiles
 expect error_code == 0
 expect sprites_max <= 128
 expect sprite_tile_items_max <= 128
+expect text_failures == 0

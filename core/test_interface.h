@@ -97,6 +97,7 @@
     X(secrets_found)    /* save_data::secrets_found */ \
     X(cosmetics)        /* save_data::cosmetics_unlocked */ \
     X(challenges)       /* challenge modifiers of the active session (bit per bm::challenge_id) */ \
+    X(text_failures)    /* texts shown without their colour because every sprite palette was taken */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0) \
     X(arg1) \

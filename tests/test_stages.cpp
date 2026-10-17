@@ -165,3 +165,49 @@ BM_TEST(stages, all_thirty_stages_have_a_route_to_completion)
         std::fclose(report);
     }
 }
+
+BM_TEST(stages, every_stage_can_be_lost_and_idling_never_wins)
+{
+    // PART 56.4: failure must be able to trigger in every stage, and doing nothing must never clear one.
+    constexpr int max_frames = 60 * 60 * 20;
+    for(int w = 1; w <= 6; ++w)
+    {
+        for(int i = 1; i <= 5; ++i)
+        {
+            static session s;
+            const stage_def& st = stage(w, i);
+            s.start(make_stage_config(st, difficulty::standard, uint32_t(w * 100 + i)));
+            const input_frame idle;
+            int f = 0;
+            int invalid = 0;
+            for(; f < max_frames && s.state() != session_state::won && s.state() != session_state::lost; ++f)
+            {
+                s.update(idle);
+                event e;
+                while(s.events().pop(e))
+                {
+                }
+                if(s.validate() && ! invalid)
+                {
+                    invalid = s.validate();
+                }
+            }
+            const bool idle_won = s.state() == session_state::won;
+            bool lost = s.state() == session_state::lost;
+            int random_frames = 0;
+            if(! lost)
+            {
+                // Idling timed out: a careless player must still be able to fail.
+                const stage_run r = run_stage(w, i, bot_strategy::random_legal, uint32_t(w * 100 + i), max_frames);
+                lost = r.lost;
+                random_frames = int(r.frames);
+            }
+            bmtest::note("stage %d-%d idle: %s after %ds%s", w, i, idle_won ? "WON" : (s.state() == session_state::lost ?
+                         "lost" : "timeout"), f / 60, lost && s.state() != session_state::lost ? " (random play loses)" : "");
+            (void) random_frames;
+            CHECK(! idle_won);
+            CHECK(lost);
+            CHECK_EQ(invalid, 0);
+        }
+    }
+}

@@ -147,6 +147,12 @@ namespace bm
             return max;
         }
 
+        int& failures_ref()
+        {
+            static int failures = 0;
+            return failures;
+        }
+
         int take_generated_count()
         {
             const int n = generated_count_ref();
@@ -173,7 +179,20 @@ namespace bm
         ++text::generated_count_ref();
         bn::timer timer;
         g.set_bg_priority(bg_priority);
-        g.generate(x - 120, y - 80 + y_offset, _text, _sprites);
+        if(! g.generate_optional(x - 120, y - 80 + y_offset, _text, _sprites))
+        {
+            // Out of sprite palettes or tiles: fall back to the always-present white text rather than fail.
+            _sprites.clear();
+            ++text::failures_ref();
+            if(font != 1)
+            {
+                g.set_palette_item(small_palette(text_color::white));
+                if(! g.generate_optional(x - 120, y - 80 + y_offset, _text, _sprites))
+                {
+                    _sprites.clear();
+                }
+            }
+        }
         const int spent = timer.elapsed_ticks();
         text::generated_ticks_ref() += spent;
         int* worst = text::generated_max_ref();
@@ -217,25 +236,18 @@ namespace bm
             return *slot;
         }
 
-        const bn::sprite_palette_ptr& glyph_palette(bool big, int color)
+        // Text palettes are not cached: a colour's palette lives only while some sprite shows it, so a scene
+        // that has used every text colour once does not keep all fifteen of the sixteen sprite palettes.
+        // When every palette is taken, the text keeps its previous colour instead of failing.
+        bn::optional<bn::sprite_palette_ptr> glyph_palette(bool big, int color)
         {
-            static bn::optional<bn::sprite_palette_ptr> small_cache[8];
-            static bn::optional<bn::sprite_palette_ptr> big_cache[7];
             if(big)
             {
                 const int c = color >= 0 && color < 7 ? color : 0;
-                if(! big_cache[c])
-                {
-                    big_cache[c] = big_palette(big_color(c)).create_palette();
-                }
-                return *big_cache[c];
+                return big_palette(big_color(c)).create_palette_optional();
             }
             const int c = color >= 0 && color < 8 ? color : 0;
-            if(! small_cache[c])
-            {
-                small_cache[c] = small_palette(text_color(c)).create_palette();
-            }
-            return *small_cache[c];
+            return small_palette(text_color(c)).create_palette_optional();
         }
 
         int glyph_width(bool big, char ch)
@@ -258,7 +270,11 @@ namespace bm
         }
         int left = a == align::center ? x - width / 2 : (a == align::right ? x - width : x);
         const int half = big ? 8 : 4;
-        const bn::sprite_palette_ptr& palette = glyph_palette(big, color);
+        const bn::optional<bn::sprite_palette_ptr> palette = glyph_palette(big, color);
+        if(! palette)
+        {
+            ++text::failures_ref();
+        }
         int n = 0;
         for(char ch : s)
         {
@@ -277,7 +293,10 @@ namespace bm
                     }
                 }
                 g->set_tiles(glyph_tiles(big, index));
-                g->set_palette(palette);
+                if(palette)
+                {
+                    g->set_palette(*palette);
+                }
                 g->set_position(left + half - 120, y + half - 80);
                 g->set_visible(_visible);
                 ++n;
@@ -396,10 +415,15 @@ namespace bm
 
     void label::_recolor(const bn::sprite_palette_item& palette, int color)
     {
-        const bn::sprite_palette_ptr ptr = palette.create_palette();
+        const bn::optional<bn::sprite_palette_ptr> ptr = palette.create_palette_optional();
+        if(! ptr)
+        {
+            ++text::failures_ref();     // no free palette: the text keeps its colour
+            return;
+        }
         for(bn::sprite_ptr& sp : _sprites)
         {
-            sp.set_palette(ptr);
+            sp.set_palette(*ptr);
         }
         _color = uint8_t(color);
     }

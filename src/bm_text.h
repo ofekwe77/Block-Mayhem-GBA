@@ -43,9 +43,11 @@ namespace bm
         int& generated_ticks_ref();
         // The most expensive generation since the last reset: ticks, font, length.
         int* generated_max_ref();
+        // Text that could not get its palette (all sixteen sprite palettes taken) since boot.
+        int& failures_ref();
     }
 
-    // Text drawn as one sprite per glyph from glyph tiles and palettes that are created once and cached.
+    // Text drawn as one sprite per glyph from glyph tiles that are created once and cached.
     // Updating it never allocates VRAM, so it is safe in the busiest gameplay frames (score pop-ups,
     // chain call-outs). Plain ASCII only; the sprites are pooled and reused.
     class glyph_label

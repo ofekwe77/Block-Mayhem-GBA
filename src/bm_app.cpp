@@ -2,6 +2,7 @@
 
 #include "bm_cosmetics.h"
 #include "bm_profile.h"
+#include "bm_text.h"
 
 #include "bm_run.h"
 
@@ -203,6 +204,7 @@ namespace bm
         t.secrets_seen = profile::secrets_seen;
         t.secrets_found = save.secrets_found;
         t.cosmetics = save.cosmetics_unlocked;
+        t.text_failures = uint32_t(text::failures_ref());
         t.stage = s.config().stage ? uint32_t(s.config().stage->world * 10 + s.config().stage->index) : 0;
         int cleared = 0;
         for(const stage_record& r : save.stages)

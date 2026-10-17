@@ -145,7 +145,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ADV-08 | TESTED | SIM | Hazard: settle-direction cycles / gravity shifts (W5) | 18 | ADV-01 | core/bm_session.cpp | test_stages + settle.* unit tests |
 | ADV-09 | TESTED | SIM | Hazard: surges / mixed (W4, W6) | 17, 19 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
 | ADV-10 | NOT STARTED | - | STAGE_PASSPORTS.md for all 30 stages | 50.3 | ADV-02 | | |
-| ADV-11 | IN PROGRESS | SIM | Automated validation of all 30 stages (sim + emulator) | 50.10, 56.4 | ADV-02 | tests/test_stages.cpp, tests/emu/worlds.txt | sims: all 30; emulator: first stage of each world + 4-3 + all 6 bosses |
+| ADV-11 | TESTED | SIM+EMU | Automated validation of all 30 stages (sim + emulator): loads, valid state every frame, objective reachable, hazards / boss attacks fire, victory, failure, idling never wins, results + progression | 50.10, 56.4 | ADV-02 | tests/test_stages.cpp, tools/gen_stage_scenarios.py, tests/emu/stages_w1..6.txt | host: stages.all_thirty_stages_have_a_route_to_completion, stages.every_stage_can_be_lost_and_idling_never_wins; ROM: stages_w1..6 all 30 won by the autoplay bot, stages_cleared / worlds_unlocked advance, stage_W_I.png |
 | ADV-12 | IMPLEMENTED | - | World unlock progression + replay | 27.1 | ADV-02 | src/bm_flow.cpp | record_session unlocks next world; needs emulator save test |
 
 ## WORLD — World production parity (PART 14-19, 49)

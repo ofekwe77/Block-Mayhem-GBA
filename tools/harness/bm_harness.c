@@ -7,7 +7,7 @@
  *
  * Usage:
  *   bm_harness --rom BlockMayhem.gba --script scenario.txt [--save file.sav]
- *              [--out dir] [--quiet]
+ *              [--out dir] [--quiet] [--log]   (--log prints the game's debug log output)
  *
  * Scenario commands (one per line, '#' starts a comment):
  *   frames N                    run N frames with the currently held keys
@@ -582,9 +582,21 @@ static int run_script(FILE* script)
     return 0;
 }
 
+static int g_game_log;
+
 static void quiet_log(struct mLogger* logger, int category, enum mLogLevel level, const char* format, va_list args)
 {
-    (void) logger; (void) category; (void) level; (void) format; (void) args;
+    (void) logger; (void) level;
+    /* --log: print the game's own debug output (Butano's mGBA log backend), nothing from the emulator. */
+    if (g_game_log)
+    {
+        const char* name = mLogCategoryName(category);
+        if (name && strstr(name, "Debug"))
+        {
+            vfprintf(stdout, format, args);
+            fputc(10, stdout);
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -599,6 +611,7 @@ int main(int argc, char** argv)
         else if (!strcmp(argv[i], "--save") && i + 1 < argc) save_path = argv[++i];
         else if (!strcmp(argv[i], "--out") && i + 1 < argc) g_out_dir = argv[++i];
         else if (!strcmp(argv[i], "--quiet")) g_quiet = 1;
+        else if (!strcmp(argv[i], "--log")) g_game_log = 1;
         else
         {
             fprintf(stderr, "usage: %s --rom FILE --script FILE [--save FILE] [--out DIR] [--quiet]\n", argv[0]);
