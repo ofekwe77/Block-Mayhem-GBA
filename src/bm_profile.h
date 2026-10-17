@@ -17,6 +17,7 @@ namespace bm::profile
     // Presentation checks for the emulator tests (frames in which an effect was drawn, since boot).
     inline uint32_t trail_draws = 0;
     inline uint32_t bridge_draws = 0;
+    inline uint32_t secrets_seen = 0;       // secret_bit of every secret event shown since boot
 
     inline uint32_t per_mille(int ticks)
     {

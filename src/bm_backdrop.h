@@ -41,6 +41,8 @@ namespace bm
         void set_visible(bool visible);
         // Darkens the scenery behind menus so text stays readable (0 = full brightness).
         void set_dim(bn::fixed amount);
+        // Replaces one colour of a layer's palette (colours that are not palette-cycled stay replaced).
+        void set_color(int layer, int index, bn::color color);
 
     private:
         struct layer

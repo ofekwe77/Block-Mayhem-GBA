@@ -2,13 +2,18 @@
 
 #include "bm_audio.h"
 #include "bm_challenges.h"
+#include "bm_cosmetics.h"
 #include "bm_flow.h"
+#include "bm_profile.h"
+#include "bm_secrets.h"
+#include "bm_themes.h"
 #include "bm_run.h"
 #include "bm_run_scenes.h"
 
 #include "bn_keypad.h"
 #include "bn_string.h"
 
+#include "bn_sprite_items_spr_chili.h"
 #include "bn_sprite_items_spr_particles.h"
 
 namespace bm
@@ -69,6 +74,73 @@ namespace bm
         {
             _block_y[i] = -20 - i * 30;
         }
+        // Title-screen variation (PART 35.4): a different sky and different sparks around the logo.
+        _variant = selected_cosmetic(the_app().save, cosmetic_kind::title);
+        bn::color sky[8];
+        if(themes::title_sky(_variant, sky))
+        {
+            for(int i = 0; i < 8; ++i)
+            {
+                _backdrop.set_color(0, 1 + i, sky[i]);
+            }
+        }
+        if(_variant == 3)
+        {
+            _variant_label.show(120, 114, "CHAMPION EDITION", text_color::yellow, align::center);
+        }
+    }
+
+    void title_scene::_update_secret_code()
+    {
+        // L R L R SELECT, each press within a second of the previous one.
+        static constexpr uint8_t code[5] = { 0, 1, 0, 1, 2 };   // 0 L, 1 R, 2 SELECT
+        int pressed = -1;
+        if(bn::keypad::l_pressed())
+        {
+            pressed = 0;
+        }
+        else if(bn::keypad::r_pressed())
+        {
+            pressed = 1;
+        }
+        else if(bn::keypad::select_pressed())
+        {
+            pressed = 2;
+        }
+        else if(bn::keypad::any_pressed())
+        {
+            _code_step = 0;
+        }
+        if(pressed < 0)
+        {
+            return;
+        }
+        _code_step = pressed == code[_code_step] ? _code_step + 1 : (pressed == code[0] ? 1 : 0);
+        if(_code_step < 5)
+        {
+            return;
+        }
+        _code_step = 0;
+        _chili_timer = 300;
+        for(int i = 0; i < chili_count; ++i)
+        {
+            _chili_x[i] = 12 + (i * 23 + _frame) % 216;
+            _chili_y[i] = -16 - i * 18;
+            if(! _chilies[i])
+            {
+                _chilies[i] = bn::sprite_items::spr_chili.create_sprite(0, 0, i & 1);
+            }
+            _chilies[i]->set_visible(true);
+        }
+        _spicy.show_big(120, 112, "SPICY!", big_color::fire, align::center);
+        audio::sfx(audio::sfx_id::overheat_start);
+        app& a = the_app();
+        if(! (a.save.secrets_found & secret_chili))
+        {
+            a.save.secrets_found = uint8_t(a.save.secrets_found | secret_chili);
+            a.write_save();
+        }
+        profile::secrets_seen |= secret_chili;
     }
 
     bn::optional<scene_id> title_scene::update()
@@ -76,29 +148,69 @@ namespace bm
         ++_frame;
         _input.update();
         _backdrop.update();
+        _update_secret_code();
         const bool blink = (_frame / 24) % 2 == 0;
         if(blink)
         {
-            _press.show(120, 134, "PRESS START", text_color::yellow, align::center);
+            _press.show(120, 134, "PRESS START", _variant == 2 ? text_color::orange :
+                                                 (_variant == 1 ? text_color::cyan : text_color::yellow), align::center);
         }
         else
         {
             _press.hide();
         }
-        // Falling glowing shards around the logo.
+        // Sparks around the logo: falling shards, twinkling stars (MIDNIGHT), rising embers (INFERNO) or
+        // gold flakes (GOLDEN).
         for(int i = 0; i < 6; ++i)
         {
-            _block_y[i] += 1 + (i % 3);
-            if(_block_y[i] > 170)
+            const bool rising = _variant == 2;
+            const int speed = _variant == 1 ? 1 : 1 + (i % 3);
+            _block_y[i] += rising ? -speed : speed;
+            if(! rising && _block_y[i] > 170)
             {
                 _block_y[i] = -10;
             }
+            else if(rising && _block_y[i] < -10)
+            {
+                _block_y[i] = 170;
+            }
             const int x = 12 + ((i * 53 + _frame / 120 * 17) % 216);
+            int frame = 24 + i % 4;
+            switch(_variant)
+            {
+            case 1: frame = 20 + ((_frame / 10 + i) & 1); break;
+            case 2: frame = 8 + ((_frame / 5 + i) & 3); break;
+            case 3: frame = (i & 1) ? 25 : 20 + ((_frame / 8) & 1); break;
+            default: break;
+            }
             if(! _blocks[i])
             {
-                _blocks[i] = bn::sprite_items::spr_particles.create_sprite(0, 0, 24 + i % 4);
+                _blocks[i] = bn::sprite_items::spr_particles.create_sprite(0, 0, frame);
+            }
+            else if(_variant != 0)
+            {
+                _blocks[i]->set_tiles(bn::sprite_items::spr_particles.tiles_item(), frame);
             }
             _blocks[i]->set_position(x - 120, _block_y[i] - 80);
+        }
+        if(_chili_timer > 0)
+        {
+            --_chili_timer;
+            for(int i = 0; i < chili_count; ++i)
+            {
+                _chili_y[i] += 1 + (i % 3);
+                if(_chili_y[i] > 176 && _chili_timer > 60)
+                {
+                    _chili_y[i] = -16;
+                }
+                _chilies[i]->set_position(_chili_x[i] - 120, _chili_y[i] - 80);
+                _chilies[i]->set_tiles(bn::sprite_items::spr_chili.tiles_item(), ((_frame / 12) + i) & 1);
+                _chilies[i]->set_visible(_chili_y[i] < 176);
+            }
+            if(_chili_timer == 180)
+            {
+                _spicy.hide();
+            }
         }
         if(_input.start() || _input.ok())
         {
@@ -138,7 +250,7 @@ namespace bm
         _entries[_count++] = { "BOSS RUSH", "EVERY DEFEATED BOSS IN A ROW", game_mode::boss_rush, scene_id::boss_rush,
                                boss_rush_available(a.save) == 0, "DEFEAT THE WORLD 3 BOSS TO UNLOCK" };
         _entries[_count++] = { "RECORDS", "HIGH SCORES AND STATISTICS", game_mode::count, scene_id::records, false, "" };
-        _entries[_count++] = { "ACHIEVEMENTS", "30 FEATS, SOME OF THEM SECRET", game_mode::count, scene_id::achievements,
+        _entries[_count++] = { "ACHIEVEMENTS", "31 FEATS, SOME OF THEM SECRET", game_mode::count, scene_id::achievements,
                                false, "" };
         _entries[_count++] = { "OPTIONS", "DIFFICULTY, SOUND, ACCESSIBILITY", game_mode::count, scene_id::options, false,
                                "" };
@@ -320,9 +432,11 @@ namespace bm
             _title.show_big(120, 12, won ? "VICTORY" : "RESULTS", won ? big_color::gold : big_color::steel, align::center);
         }
         int line = 0;
-        auto row = [this, &line](const char* name, const bn::string_view& value, text_color c)
+        const bool note = a.flow.new_challenges || a.flow.new_cosmetics;
+        const int max_rows = note ? 8 : 9;      // the reward note takes the last row
+        auto row = [this, &line, max_rows](const char* name, const bn::string_view& value, text_color c)
         {
-            if(line >= 9)
+            if(line >= max_rows)
             {
                 return;
             }
@@ -341,7 +455,20 @@ namespace bm
             row(name.c_str(), "", text_color::cyan);
             if(won)
             {
+                _rank_line = line;
+                _rank_text = "RANK  ";
+                _rank_text.append(rank_name(a.flow.rank));
                 row("RANK  ", rank_name(a.flow.rank), a.flow.rank >= 4 ? text_color::yellow : text_color::white);
+                if(a.flow.rank >= 5)
+                {
+                    _fireworks = true;      // S+: the hidden celebration
+                    if(! (a.save.secrets_found & secret_fireworks))
+                    {
+                        a.save.secrets_found = uint8_t(a.save.secrets_found | secret_fireworks);
+                        a.write_save();
+                    }
+                    profile::secrets_seen |= secret_fireworks;
+                }
                 if(s.secondary().def.kind != objective_kind::none)
                 {
                     row(s.secondary().done ? "BONUS GOAL: DONE" : "BONUS GOAL: MISSED", "",
@@ -370,9 +497,68 @@ namespace bm
         {
             row("OVERHEATS  ", bn::to_string<8>(s.stats().overheat_success), text_color::red);
         }
-        if(a.flow.new_record && line < 9)
+        if(a.flow.new_record && line < max_rows)
         {
             row("NEW RECORD!", "", text_color::green);
+        }
+        if(note)
+        {
+            // Rewards earned by this session: one by name, several as a count.
+            int styles = 0;
+            int last_kind = 0;
+            int last_index = 0;
+            for(int k = 0; k < cosmetic_kinds; ++k)
+            {
+                for(int i = 0; i < cosmetic_count(cosmetic_kind(k)); ++i)
+                {
+                    if(a.flow.new_cosmetics & cosmetic_bit(cosmetic_kind(k), i))
+                    {
+                        ++styles;
+                        last_kind = k;
+                        last_index = i;
+                    }
+                }
+            }
+            int challenges = 0;
+            int last_challenge = 0;
+            for(int i = 0; i < challenge_total; ++i)
+            {
+                if((a.flow.new_challenges >> i) & 1)
+                {
+                    ++challenges;
+                    last_challenge = i;
+                }
+            }
+            bn::string<48> t;
+            if(challenges == 1 && ! styles)
+            {
+                t = "NEW CHALLENGE: ";
+                t.append(challenge(last_challenge).name);
+            }
+            else if(styles == 1 && ! challenges)
+            {
+                static constexpr const char* kinds[4] = { " BLOCKS", " FRAME", " TITLE", " PARTICLES" };
+                t = "UNLOCKED: ";
+                t.append(cosmetic(cosmetic_kind(last_kind), last_index).name);
+                t.append(kinds[last_kind]);
+            }
+            else
+            {
+                t = "UNLOCKED: ";
+                if(styles)
+                {
+                    t.append(bn::to_string<4>(styles));
+                    t.append(styles == 1 ? " STYLE" : " STYLES");
+                }
+                if(challenges)
+                {
+                    t.append(styles ? " + " : "");
+                    t.append(bn::to_string<4>(challenges));
+                    t.append(challenges == 1 ? " CHALLENGE" : " CHALLENGES");
+                }
+            }
+            _unlock.show(120, 134, t, text_color::violet, align::center);
+            audio::sfx(audio::sfx_id::unlock);
         }
         if(adventure)
         {
@@ -385,11 +571,72 @@ namespace bm
         audio::play_music(won ? audio::music_id::victory : audio::music_id::game_over, won);
     }
 
+    void results_scene::_update_fireworks()
+    {
+        if(! _fireworks)
+        {
+            return;
+        }
+        // A new 12-spark burst every 22 frames at a pseudo-random point of the upper screen.
+        if(_frame % 22 == 1)
+        {
+            const uint32_t h = uint32_t(_frame) * 2654435761u;
+            const int cx = 30 + int((h >> 8) % 180u);
+            const int cy = 18 + int((h >> 20) % 50u);
+            static constexpr int8_t dirs[12][2] = { { 20, 0 }, { 17, 10 }, { 10, 17 }, { 0, 20 }, { -10, 17 },
+                                                    { -17, 10 }, { -20, 0 }, { -17, -10 }, { -10, -17 }, { 0, -20 },
+                                                    { 10, -17 }, { 17, -10 } };
+            const int base = (_frame / 22) & 1 ? 0 : 12;
+            for(int i = 0; i < 12; ++i)
+            {
+                const int k = base + i;
+                _spark_x[k] = int16_t(cx * 16);
+                _spark_y[k] = int16_t(cy * 16);
+                _spark_vx[k] = dirs[i][0];
+                _spark_vy[k] = dirs[i][1];
+                _spark_life[k] = 34;
+                static constexpr int frames[4] = { 20, 25, 26, 27 };    // star, yellow, cyan and violet shards
+                const int f = frames[((_frame / 22) + i) & 3];
+                if(! _sparks[k])
+                {
+                    _sparks[k] = bn::sprite_items::spr_particles.create_sprite(0, 0, f);
+                    _sparks[k]->set_z_order(10);        // behind the result rows
+                }
+                _sparks[k]->set_tiles(bn::sprite_items::spr_particles.tiles_item(), f);
+                _sparks[k]->set_visible(true);
+            }
+        }
+        for(int k = 0; k < spark_count; ++k)
+        {
+            if(! _sparks[k] || _spark_life[k] <= 0)
+            {
+                continue;
+            }
+            _spark_x[k] = int16_t(_spark_x[k] + _spark_vx[k]);
+            _spark_y[k] = int16_t(_spark_y[k] + _spark_vy[k]);
+            _spark_vy[k] = int16_t(_spark_vy[k] + 1);
+            if(--_spark_life[k] <= 0)
+            {
+                _sparks[k]->set_visible(false);
+                continue;
+            }
+            _sparks[k]->set_position(_spark_x[k] / 16 - 120, _spark_y[k] / 16 - 80);
+        }
+        // The rank shimmers through the celebration colours.
+        if(_rank_line >= 0 && _frame % 8 == 0)
+        {
+            static constexpr text_color shimmer[4] = { text_color::yellow, text_color::white, text_color::cyan,
+                                                       text_color::violet };
+            _lines[_rank_line].show(120, 36 + _rank_line * 12, _rank_text, shimmer[(_frame / 8) & 3], align::center);
+        }
+    }
+
     bn::optional<scene_id> results_scene::update()
     {
         ++_frame;
         _input.update();
         _backdrop.update();
+        _update_fireworks();
         app& a = the_app();
         const bool adventure = a.flow.mode == game_mode::adventure;
         const bool won = a.flow.outcome == session_outcome::won;

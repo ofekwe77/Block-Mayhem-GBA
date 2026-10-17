@@ -9,6 +9,8 @@
 #include "bm_run.h"
 #include "bm_sprite_util.h"
 
+#include "bn_sprite_items_spr_dizzy.h"
+
 #include "bn_bg_palettes.h"
 #include "bn_timer.h"
 #include "bn_timers.h"
@@ -209,7 +211,8 @@ namespace bm
         _camera(bn::camera_ptr::create(0, 0)),
         _backdrop(backdrop_for(_app), 3),
         _view(layout_for(_app), 1),
-        _fx(_camera)
+        _fx(_camera),
+        _secrets(_camera)
     {
         _view.bg().set_camera(_camera);
         _backdrop.set_camera(_camera);
@@ -237,6 +240,10 @@ namespace bm
             _app.autoplayer.reset(bot_strategy::resource_aware, _app.flow.seed);
         }
         _fx.clear();
+        _secrets.reset();
+        _dizzy.reset();
+        _dizzy_timer = 0;
+        _dizzy_checked = false;
         _end_timer = 0;
         _end_recorded = false;
         _shown_score = 0xFFFFFFFFu;
@@ -467,6 +474,7 @@ namespace bm
                 break;
 
             case event_type::bomb_blast:
+                _secrets.on_explosion(_frame);
                 _cell_center(b, e.a, e.b, sx, sy);
                 _fx.explosion(sx, sy);
                 _fx.burst(particle_kind::ember, sx, sy, 5, 3);
@@ -537,6 +545,7 @@ namespace bm
                 break;
 
             case event_type::chain_wave:
+                _secrets.on_chain(e.a);
                 if(e.a >= 2)
                 {
                     const int tier = e.a > 8 ? 8 : e.a;
@@ -566,6 +575,7 @@ namespace bm
 
             case event_type::combo:
             {
+                _secrets.on_combo(e.a);
                 bn::string<16> t = "COMBO x";
                 t.append(number(uint32_t(e.a + 1)));
                 _fx.popup(_view.cell_screen_x(b, board_cols / 2), 88, t, text_color::cyan, 40);
@@ -1422,6 +1432,7 @@ namespace bm
         _backdrop.update();
         mark();
         _fx.update();
+        _note_secrets(_secrets.update(_fx, _backdrop, _frame));
         mark();
         if(_boss)
         {
@@ -1557,7 +1568,8 @@ namespace bm
                     }
                     sub.append(" ");
                     sub.append(multiplier_text(_s.score_percent()));
-                    _center_sub.show(cx, 84, sub, text_color::violet, align::center);
+                    // The compact font keeps the line inside the board.
+                    _center_sub.show_tiny(cx, 84, sub, text_color::violet, align::center);
                 }
                 else
                 {
@@ -1585,6 +1597,7 @@ namespace bm
                 _boss->on_event(fallback, _fx);
             }
         }
+        _update_dizzy();
         const bool boss_dying = _boss && _s.state() == session_state::won && ! _boss->defeat_done();
         if((_s.state() == session_state::won || _s.state() == session_state::lost) && ! boss_dying)
         {
@@ -1614,5 +1627,85 @@ namespace bm
             }
         }
         return bn::nullopt;
+    }
+
+    void game_scene::_note_secrets(int bits)
+    {
+        if(bits)
+        {
+            _app.save.secrets_found = uint8_t(_app.save.secrets_found | bits);    // saved with the session result
+            profile::secrets_seen |= uint32_t(bits);
+        }
+    }
+
+    void game_scene::_update_dizzy()
+    {
+        constexpr int dizzy_frames = 96;
+        constexpr int quick_fight_frames = 150 * 60;
+        if(_boss && _boss->defeat_done() && ! _dizzy_checked)
+        {
+            _dizzy_checked = true;
+            // Only a boss beaten in under two and a half minutes is dizzy enough to pull a face.
+            if(_s.stats().frames < uint32_t(quick_fight_frames))
+            {
+                static constexpr bn::color faces[7] = {
+                    bn::color(26, 26, 28), bn::color(31, 24, 12), bn::color(22, 28, 31), bn::color(31, 18, 12),
+                    bn::color(24, 20, 31), bn::color(26, 18, 31), bn::color(31, 16, 22)
+                };
+                const int id = _s.config().boss_id <= 6 ? _s.config().boss_id : 0;
+                const bn::color face = faces[id];
+                // The boss's own colour needs a free sprite palette; when a big fight has used them all, the
+                // face keeps the shared effect palette (yellow) instead.
+                _dizzy_palette = bn::sprite_items::spr_dizzy.palette_item().create_new_palette_optional();
+                if(_dizzy_palette)
+                {
+                    _dizzy_palette->set_color(2, face);
+                    _dizzy_palette->set_color(3, bn::color(face.red() * 3 / 4, face.green() * 3 / 4,
+                                                           face.blue() * 3 / 4));
+                }
+                _dizzy_x = _boss->center_x();
+                _dizzy_y = _boss->center_y();
+                _dizzy_floor = _boss->center_y() + 28;
+                _dizzy_vy = -bn::fixed(3);
+                _dizzy = bn::sprite_items::spr_dizzy.create_sprite(_dizzy_x - 120, _dizzy_y - 80, 0);
+                if(_dizzy_palette)
+                {
+                    _dizzy->set_palette(*_dizzy_palette);
+                }
+                _dizzy->set_camera(_camera);
+                _dizzy->set_bg_priority(0);
+                _dizzy_timer = dizzy_frames;
+                audio::sfx(audio::sfx_id::boss_hit);
+                _note_secrets(secret_dizzy_boss);
+            }
+        }
+        if(_dizzy_timer <= 0 || ! _dizzy)
+        {
+            return;
+        }
+        const int t = dizzy_frames - _dizzy_timer;
+        // Pops out of the smoke, bounces once, wobbles with spinning eyes, then gives up (X eyes).
+        _dizzy_y += _dizzy_vy;
+        _dizzy_vy += bn::fixed(0.18);
+        if(_dizzy_y > _dizzy_floor && _dizzy_vy > 0)
+        {
+            _dizzy_y = _dizzy_floor;
+            _dizzy_vy = t < 60 ? -bn::fixed(1.6) : bn::fixed(0);
+        }
+        const int frame = t < 60 ? ((t / 6) & 1) : 2;
+        _dizzy->set_tiles(bn::sprite_items::spr_dizzy.tiles_item(), frame);
+        _dizzy->set_position(_dizzy_x - 120 + ((t / 3) & 1 ? 1 : -1) * (t < 60 ? 1 : 0), _dizzy_y - 80);
+        if(t % 12 == 0 && t < 60)
+        {
+            const int x = _dizzy_x.integer();
+            const int y = _dizzy_y.integer() - 16;
+            _fx.particle(particle_kind::star, x - 10, y, -bn::fixed(0.5), -bn::fixed(0.3), 18);
+            _fx.particle(particle_kind::star, x + 10, y, bn::fixed(0.5), -bn::fixed(0.3), 18);
+        }
+        if(--_dizzy_timer == 0)
+        {
+            _dizzy.reset();
+            _dizzy_palette.reset();
+        }
     }
 }

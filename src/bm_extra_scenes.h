@@ -18,7 +18,7 @@ namespace bm
         [[nodiscard]] bn::optional<scene_id> update() override;
 
     private:
-        static constexpr int rows = 8;
+        static constexpr int rows = 9;
 
         backdrop _backdrop;
         menu_input _input;

@@ -4,6 +4,10 @@
 #include "bm_adventure_scenes.h"
 #include "bm_app.h"
 #include "bm_audio.h"
+#include "bm_customize_scene.h"
+#include "bm_challenges.h"
+#include "bm_content.h"
+#include "bm_cosmetics.h"
 #include "bm_flow.h"
 #include "bm_game_scene.h"
 #include "bm_menu_scenes.h"
@@ -59,6 +63,8 @@ namespace
             return bn::unique_ptr<bm::scene>(new bm::sound_test_scene());
         case bm::scene_id::mode_setup:
             return bn::unique_ptr<bm::scene>(new bm::mode_setup_scene());
+        case bm::scene_id::customize:
+            return bn::unique_ptr<bm::scene>(new bm::customize_scene());
         case bm::scene_id::title:
         default:
             return bn::unique_ptr<bm::scene>(new bm::title_scene());
@@ -160,6 +166,39 @@ namespace
             bm::reset_defaults(a.save);
             a.write_save();
             return bn::nullopt;
+
+        case BM_TI_CMD_SET_COSMETIC:
+        {
+            // Diagnostic: unlock and select one cosmetic in memory (the next scene applies it).
+            const int kind = int(a.pending_args[0] & 3);
+            const int index = int(a.pending_args[1]);
+            if(index >= 0 && index < bm::cosmetic_count(bm::cosmetic_kind(kind)))
+            {
+                a.save.cosmetics_unlocked |= bm::cosmetic_bit(bm::cosmetic_kind(kind), index);
+                bm::cosmetic_setting(a.save.settings, bm::cosmetic_kind(kind)) = uint8_t(index);
+            }
+            return bn::nullopt;
+        }
+
+        case BM_TI_CMD_SET_CHALLENGES:
+        {
+            // Diagnostic: the worlds that unlock these challenges count as cleared (in memory only).
+            const uint8_t mask = uint8_t(a.pending_args[0] & ((1u << bm::challenge_total) - 1));
+            for(int i = 0; i < bm::challenge_total; ++i)
+            {
+                if((mask >> i) & 1)
+                {
+                    a.save.stages[bm::stage_number(bm::challenge(i).unlock_world, bm::stages_per_world)].cleared = 1;
+                }
+            }
+            a.save.settings.challenges = mask;
+            return bn::nullopt;
+        }
+
+        case BM_TI_CMD_SET_SECRET_RANK:
+            // Diagnostic: show the results screen of the last session again with this stage rank.
+            a.flow.rank = uint8_t(a.pending_args[0] > 5 ? 5 : a.pending_args[0]);
+            return bm::scene_id::results;
 
         default:
             return bn::nullopt;

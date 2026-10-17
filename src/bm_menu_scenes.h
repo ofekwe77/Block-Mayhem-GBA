@@ -44,10 +44,23 @@ namespace bm
         backdrop _backdrop;
         label _press;
         label _version;
+        label _variant_label;
+        label _spicy;
         menu_input _input;
         bn::optional<bn::sprite_ptr> _blocks[6];
         int _block_y[6] = {};
         int _frame = 0;
+        int _variant = 0;               // title-screen cosmetic (0 FACTORY, 1 MIDNIGHT, 2 INFERNO, 3 GOLDEN)
+
+        // Easter egg (PART 35.3): L R L R SELECT makes it rain chili peppers.
+        static constexpr int chili_count = 10;
+        bn::optional<bn::sprite_ptr> _chilies[chili_count];
+        int _chili_x[chili_count] = {};
+        int _chili_y[chili_count] = {};
+        int _chili_timer = 0;
+        int _code_step = 0;
+
+        void _update_secret_code();
     };
 
     class main_menu_scene : public scene
@@ -91,8 +104,23 @@ namespace bm
         label _title;
         label _lines[9];
         label _hint;
+        label _unlock;                  // challenge / cosmetic rewards of this session (PART 27.3)
         menu_input _input;
         int _frame = 0;
+
+        // Secret (PART 35.1): an S+ rank sets off fireworks behind the results and the rank shimmers.
+        static constexpr int spark_count = 24;
+        bn::optional<bn::sprite_ptr> _sparks[spark_count];
+        int16_t _spark_x[spark_count] = {};
+        int16_t _spark_y[spark_count] = {};
+        int16_t _spark_vx[spark_count] = {};
+        int16_t _spark_vy[spark_count] = {};
+        int16_t _spark_life[spark_count] = {};
+        bool _fireworks = false;
+        int _rank_line = -1;
+        bn::string<24> _rank_text;
+
+        void _update_fireworks();
     };
 }
 

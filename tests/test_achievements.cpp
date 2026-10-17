@@ -143,3 +143,16 @@ BM_TEST(achievements, master_needs_twenty_others_and_arsenal_accumulates)
     sv2.achievement_progress[ach_arsenal] = 0xFF;
     CHECK(update_achievements(sv2, in) & (1u << ach_arsenal));
 }
+
+BM_TEST(achievements, spice_detective_counts_distinct_secrets)
+{
+    save_data sv;
+    achievement_input in;
+    CHECK_EQ(update_achievements(sv, in) & (1u << ach_spice_detective), 0u);
+    sv.secrets_found = 0x07;        // robot, storm, malfunction
+    CHECK_EQ(update_achievements(sv, in) & (1u << ach_spice_detective), 0u);
+    CHECK_EQ(int(sv.achievement_progress[ach_spice_detective]), 3);
+    sv.secrets_found = 0x27;        // + the title secret
+    CHECK(update_achievements(sv, in) & (1u << ach_spice_detective));
+    CHECK(achievement(ach_spice_detective).hidden);
+}

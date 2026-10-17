@@ -37,6 +37,7 @@ namespace bm
             { "IRON WALL", "BLOCK 5 ATTACKS IN A GAME", 5, 15, true },
             { "RUSH HOUR", "BEAT ALL SIX BOSSES IN A RUSH", 1, 8, true },
             { "SPICE LORD", "3 OVERHEATS IN ONE GAME", 3, 5, true },
+            { "SPICE DETECTIVE", "WITNESS 4 SECRET EVENTS", 4, 0, true },
         };
 
         int popcount8(uint32_t v)
@@ -131,6 +132,7 @@ namespace bm
         value[ach_iron_wall] = st.shield_blocks;
         value[ach_rush_hour] = sv.boss_rush_best_frames ? 1 : 0;
         value[ach_spice_lord] = st.overheat_success;
+        value[ach_spice_detective] = uint32_t(popcount8(sv.secrets_found));
 
         uint32_t fresh = 0;
         for(int pass = 0; pass < 2; ++pass)

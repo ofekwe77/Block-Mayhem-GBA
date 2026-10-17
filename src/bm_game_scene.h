@@ -10,10 +10,12 @@
 #include "bm_boss_view.h"
 #include "bm_fx.h"
 #include "bm_scene.h"
+#include "bm_secrets.h"
 #include "bm_text.h"
 
 #include "bn_camera_ptr.h"
 #include "bn_optional.h"
+#include "bn_sprite_palette_ptr.h"
 #include "bn_sprite_ptr.h"
 
 namespace bm
@@ -33,6 +35,17 @@ namespace bm
         backdrop _backdrop;
         board_view _view;
         fx _fx;
+        secret_events _secrets;
+
+        // Secret: a boss beaten quickly shows a dizzy face after its destruction (PART 35.1).
+        bn::optional<bn::sprite_ptr> _dizzy;
+        bn::optional<bn::sprite_palette_ptr> _dizzy_palette;
+        int _dizzy_timer = 0;
+        bool _dizzy_checked = false;
+        bn::fixed _dizzy_x;
+        bn::fixed _dizzy_y;
+        bn::fixed _dizzy_vy;
+        int _dizzy_floor = 0;
 
         label _hold_label;
         label _next_label;
@@ -99,6 +112,8 @@ namespace bm
         int _freeze_tint = 0;
 
         void _start_session();
+        void _note_secrets(int bits);
+        void _update_dizzy();
         void _handle_events();
         void _handle_event(const event& e);
         void _handle_event_body(const event& e);

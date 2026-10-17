@@ -63,6 +63,51 @@ Phase changes are a visible, non-interactive transition with all timers frozen.
   run out. Total time and score are shown; the best score and the best full six-boss time are saved.
   Quitting a fight or giving up on the card ends the rush.
 
+## Challenge modifiers (PART 27.3, 30.7)
+Optional rules for Classic, Chaos Arcade and Dual Board, toggled on the CHALLENGES page of the setup
+screen (R switches pages; Classic shows the page once a challenge is unlocked). Each one is unlocked by
+clearing a world's boss stage, is remembered in the save, and scales every point scored; several multiply.
+The intro shows the active set ("6 CHALLENGES x2.43") and the score title keeps the multiplier in view.
+
+| Challenge | Rule | Score | Unlock |
+|---|---|---|---|
+| TURBO | start 4 levels higher (faster gravity) | x1.25 | World 1 |
+| NO HOLD | the hold slot is locked | x1.15 | World 2 |
+| ONE NEXT | only the next piece is previewed | x1.10 | World 3 |
+| FRENZY | special pieces twice as often (Classic gains the arcade specials) | x0.80 | World 4 |
+| RISING TIDE | a junk row with one gap is telegraphed every 20 s of play (paused by Time Freeze) | x1.30 | World 5 |
+| SHADOW STACK | landed blocks show only a dim outline in their colour (specials stay visible) | x1.50 | World 6 |
+
+Adventure, Chaos Run and Boss Rush never use challenges (their balance is calibrated without them).
+
+## Cosmetics (PART 35.4)
+OPTIONS > CUSTOMIZE picks four styles with a live preview built from the real board tiles; locked
+entries can be browsed and show how they are earned. Cosmetics change colours and decoration only:
+every block theme keeps the seven shapes distinct and special-block symbols keep their own colours.
+
+| Kind | Styles (unlock) |
+|---|---|
+| Blocks | CLASSIC, CONTRAST (colour-blind friendly, always available), NEON (World 4), PASTEL (15 stages), CHILI (campaign) |
+| Board frame | WORLD (each world's metal), CHROME (World 5), CANDY (10 achievements), CARBON (a Chaos Run), GOLD (a full Boss Rush) |
+| Title screen | FACTORY, MIDNIGHT (World 1), INFERNO (25 Overheats survived), GOLDEN (campaign, "CHAMPION EDITION") |
+| Particles | SHARDS, STARS (5 achievements), SNOW (World 2), EMBERS (World 3), HEARTS (an S+ rank) |
+
+New challenges and styles are announced on the results screen of the session that earned them.
+
+## Secrets (PART 35)
+Secret visual events never touch the rules:
+- **Maintenance robot** — walks in along the conveyor, waves and cheers after a 6-wave chain or a 6-clear combo.
+- **Machine malfunction** — six explosions within four seconds overload the factory: the scenery
+  flickers, sparks leap from the edges, smoke rises, then a reboot flash and chime.
+- **Lightning storm** — an 8-wave chain darkens the sky and four lightning bolts strike.
+- **Dizzy boss** — a boss beaten in under 2.5 minutes pops out of its wreck with spinning eyes and its
+  tongue out (in its own colour when a sprite palette is free).
+- **S+ celebration** — an S+ rank sets off fireworks behind the results and the rank shimmers.
+- **Easter egg** — L R L R SELECT on the title screen makes it rain chili peppers ("SPICY!").
+
+Witnessing four different secrets unlocks the hidden achievement SPICE DETECTIVE (31 achievements, 6 hidden).
+Five other hidden achievements reward advanced play (PART 35.2).
+
 ## Chaos Run (PART 21, 60)
 A run is three acts; each act is three generated encounters and a boss (12 fights). The run seed
 fixes the boss line-up (one per act, never repeated; single-board bosses only), the nine encounter

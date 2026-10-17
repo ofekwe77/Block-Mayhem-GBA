@@ -1,6 +1,7 @@
 #include "bm_app.h"
 
 #include "bm_cosmetics.h"
+#include "bm_profile.h"
 
 #include "bm_run.h"
 
@@ -198,6 +199,10 @@ namespace bm
         t.stack_height = uint32_t(s.board_player(s.active_board()).grid().stack_height());
         t.active_board = uint32_t(s.active_board());
         t.cross_combos = s.stats().cross_combos;
+        t.challenges = s.config().challenges;
+        t.secrets_seen = profile::secrets_seen;
+        t.secrets_found = save.secrets_found;
+        t.cosmetics = save.cosmetics_unlocked;
         t.stage = s.config().stage ? uint32_t(s.config().stage->world * 10 + s.config().stage->index) : 0;
         int cleared = 0;
         for(const stage_record& r : save.stages)

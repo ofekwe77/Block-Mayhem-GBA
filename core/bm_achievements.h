@@ -22,7 +22,7 @@ namespace bm
         ach_mayhem_champion, ach_chaos_survivor, ach_speed_demon, ach_untouchable, ach_puzzle_genius,
         ach_last_stand, ach_master_of_mayhem,
         // hidden
-        ach_clean_sweep, ach_arsenal, ach_iron_wall, ach_rush_hour, ach_spice_lord,
+        ach_clean_sweep, ach_arsenal, ach_iron_wall, ach_rush_hour, ach_spice_lord, ach_spice_detective,
         achievement_total
     };
 

@@ -219,7 +219,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | VIS-09 | TESTED | EMU | Hard-drop trail: streak tiles over the cells the piece fell through, bright at the landing point, shrinking over 10 frames; landing dust and impact kept | 24.3 | - | tools/gfx/tiles.py, core/bm_player.cpp (piece_trail event), src/bm_board_view*.cpp | visuals.txt shot trail_drop / trail_gone, trail_draws counter; stress.txt CPU unchanged (35% avg) |
 | VIS-10 | IMPLEMENTED | - | Reduced shake / reduced flash honoured | 34.4, 52.6 | - | src/bm_fx.cpp | options screen missing |
 | VIS-11 | IMPLEMENTED | EMU | Title screen (logo, eye, gears, falling shards, PRESS START) | 26.1 | - | | title.png |
-| VIS-12 | NOT STARTED | - | Secret visual events | 35.1 | - | | |
+| VIS-12 | TESTED | EMU | Secret visual events: maintenance robot (6-wave chain / 6-clear combo), machine malfunction (6 blasts in 4 s), lightning storm (8-wave chain), dizzy boss face (boss beaten < 2.5 min), S+ fireworks; never touch the rules | 35.1 | - | src/bm_secrets.*, src/bm_game_scene.cpp, src/bm_menu_scenes.cpp, tools/gfx/secret_art.py | secrets.txt: secret_robot / secret_storm / secret_malfunction / dizzy_boss / results_fireworks, secrets_seen 63; stress.txt CPU unchanged |
 
 ## AUD — Audio (PART 25, 53)
 
@@ -255,10 +255,11 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| PROG-01 | IMPLEMENTED | - | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | src/bm_flow.cpp | needs save/emulator test |
+| PROG-01 | TESTED | EMU | Sequential world unlocking by boss defeat | 27.1 | ADV-02 | src/bm_flow.cpp | secrets.txt: worlds_unlocked 2 after the 1-5 boss; save.txt persistence |
 | PROG-02 | IMPLEMENTED | SIM | Rank formula (score, time, garbage, secondary objective), calibrated per stage | 27.2 | ADV-01 | src/bm_flow.cpp, core/bm_stages.cpp | par / S targets from balance_report.md |
-| PROG-03 | NOT STARTED | - | Rewards: abilities, modes, cosmetics, sound test, modifiers | 27.3 | PROG-01 | | |
-| ACH-01 | TESTED | UNIT | 30 achievements (5 hidden): real triggers, progress, saved bits | 28, 35.2 | - | core/bm_achievements.* | 5 achievements.* tests |
+| PROG-03 | TESTED | EMU+UNIT | Rewards: abilities (stage clears), modes (Boss Rush), cosmetics, sound-test tracks (boss defeats), challenge modifiers (world clears), achievements; results announce new rewards | 27.3 | PROG-01 | src/bm_flow.cpp, core/bm_challenges.*, core/bm_cosmetics.* | secrets.txt results_rewards ("UNLOCKED: 1 STYLE + 1 CHALLENGE"); test challenges.unlocked_by_world_boss_clears, cosmetics.unlocked_by_progress_and_reported_once |
+| CHAL-01 | TESTED | UNIT+EMU | Challenge modifiers TURBO, NO HOLD, ONE NEXT, FRENZY, RISING TIDE, SHADOW STACK: world-clear unlocks, score multipliers, setup CHALLENGES page, saved choice, intro + HUD multiplier | 27.3, 30.7 | PROG-01 | core/bm_challenges.*, core/bm_session.cpp, src/bm_extra_scenes.cpp | 8 challenges.* tests; secrets.txt challenge_intro / challenge_play (challenges 63) |
+| ACH-01 | TESTED | UNIT | 31 achievements (6 hidden): real triggers, progress, saved bits | 28, 35.2 | - | core/bm_achievements.* | 6 achievements.* tests |
 | ACH-02 | TESTED | EMU | Unlock notifications (banner + sound, waits for warnings) | 28 | ACH-01 | src/bm_game_scene.cpp | achievement_banner.png (menus.txt) |
 | SAVE-01 | TESTED | UNIT | Save format: magic, version, size, CRC-32, two slots, sequence | 29.1 | - | core/bm_save.* | save.* (6 tests) |
 | SAVE-02 | IMPLEMENTED | EMU | SRAM read/write with read-back verification | 29 | SAVE-01 | src/bm_app.cpp | save_writes counter |
@@ -293,7 +294,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | STORY-01 | TESTED | EMU | Intro cutscene (factory, signal, overload, falling blocks, the eye opens, emergency, system online), skippable, attract mode | 36.1 | - | src/bm_story_scenes.cpp | tests/emu/story.txt intro_1..6.png |
 | STORY-02 | TESTED | EMU | World intro cards on first visit, boss entrance cards | 36 | ADV-* | src/bm_story_scenes.cpp, src/bm_game_scene.cpp | world_intro_1.png; adventure.txt |
 | STORY-03 | TESTED | EMU | Final ending (core collapse, factory restored, campaign statistics) + credits roll + THE END | 19, 36 | BOSS-6 | src/bm_story_scenes.cpp, src/bm_extra_scenes.cpp | ending_1..4.png, ending_credits.png |
-| SECRET-01 | NOT STARTED | - | Secret events, easter eggs, unlockable cosmetics | 35 | - | | |
+| SECRET-01 | TESTED | EMU+UNIT | Secrets: 6 secret events, hidden achievements (6 incl. SPICE DETECTIVE), title easter egg (L R L R SELECT chili rain, saved), unlockable cosmetics (19 styles in 4 kinds) | 35 | VIS-12, COS-01 | core/bm_cosmetics.*, src/bm_secrets.*, src/bm_customize_scene.* | secrets.txt title_chili + secrets_found; test cosmetics.*, achievements.spice_detective_counts_distinct_secrets |
+| COS-01 | TESTED | EMU+UNIT | CUSTOMIZE screen (OPTIONS): block themes (5, colour-blind friendly CONTRAST always available), board frames (5), title variations (4), particle styles (5), live preview, locked entries show their unlock | 35.4 | - | src/bm_customize_scene.*, src/bm_themes.*, src/bm_board_view.cpp, src/bm_fx.cpp | menus.txt customize*.png; secrets.txt theme_*.png, title_*.png; 3 cosmetics.* tests |
 
 ## DOC — Documentation and release (PART 41, 42, 59, 63)
 

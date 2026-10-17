@@ -18,7 +18,8 @@
  *   audio_begin                 start accumulating audio statistics
  *   audio_end NAME              stop, print RMS/peak, write OUT/NAME.wav
  *   audio_check NAME MIN [MAX]  stop, fail unless MIN <= RMS <= MAX (no WAV written)
- *   wait FIELD OP VALUE MAX     run frames until test-interface FIELD OP VALUE (OP: == != >= <= > <), fail after MAX frames
+ *   wait FIELD OP VALUE MAX     run frames until test-interface FIELD OP VALUE (OP: == != >= <= > < has), fail after MAX frames
+ *                               ("has": every bit of VALUE is set in FIELD)
  *   expect FIELD OP VALUE       fail unless the condition holds now
  *   cmd ID [A0 A1 A2 A3]        post a mailbox command and wait for the ROM to acknowledge it
  *   print [FIELD...]            print test-interface fields (all if none given)
@@ -326,6 +327,7 @@ static int compare(uint32_t a, const char* op, uint32_t b)
     if (!strcmp(op, "<=")) return a <= b;
     if (!strcmp(op, ">")) return a > b;
     if (!strcmp(op, "<")) return a < b;
+    if (!strcmp(op, "has")) return (a & b) == b;
     return 0;
 }
 

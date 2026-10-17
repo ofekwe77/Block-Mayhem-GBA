@@ -122,6 +122,21 @@ encounter); bosses at level 3 / 5 / 7 with HP x0.70 / x0.90 / x1.10. Clear bonus
 bonus goal 1000 x act, boss bonus 5000 x act. Offer rarity odds (rare / legendary): act 1 22% / 4%,
 act 2 28% / 8%, act 3 34% / 12%; the first card after a boss is always rare or better.
 
+## Challenge modifiers (PART 27.3, 30.7 — `core/bm_config.h` `challenge_*`)
+| Challenge | Score multiplier | Rule values |
+|---|---|---|
+| TURBO | 125% | start level +4 |
+| NO HOLD | 115% | hold disabled |
+| ONE NEXT | 110% | one preview |
+| FRENZY | 80% | special interval halved (arcade 5-7 -> 2-3 pieces) |
+| RISING TIDE | 130% | 1 junk row every 1200 frames of play, telegraphed 2 locks ahead, shield cannot stop it |
+| SHADOW STACK | 150% | presentation only |
+
+Multipliers multiply (all six: x2.43) and apply to every score event. FRENZY pays less because specials
+make big scores easier: measured 19 -> 45 special pieces per 100 pieces (test challenges.frenzy_doubles_special_pieces).
+The presentation-only challenges change nothing else: the same seed plays the same game and the score is
+exactly the scaled sum of the score events (test challenges.presentation_challenges_only_scale_the_score).
+
 ## Difficulty settings
 | Setting | Gravity | Boss attack spacing | Telegraphs | Overheat failure |
 |---|---|---|---|---|

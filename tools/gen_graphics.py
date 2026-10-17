@@ -132,6 +132,8 @@ def main():
     bosses.generate(GFX, write_bmp, write_json)
     import upgrade_icons  # noqa: E402
     upgrade_icons.generate(GFX, write_bmp, write_json)
+    import secret_art  # noqa: E402
+    secret_art.generate(GFX, write_bmp, write_json)
     print("graphics generated (%d board tiles)" % n)
 
 

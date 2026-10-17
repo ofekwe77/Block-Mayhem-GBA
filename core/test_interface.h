@@ -93,6 +93,10 @@
     X(cross_combos)     /* dual board cross-over combos of the active session */ \
     X(trail_draws)      /* hard-drop trail frames drawn since boot (presentation check) */ \
     X(bridge_draws)     /* energy bridge pulse frames drawn since boot (presentation check) */ \
+    X(secrets_seen)     /* secret events shown since boot (bit per bm::secret_bit) */ \
+    X(secrets_found)    /* save_data::secrets_found */ \
+    X(cosmetics)        /* save_data::cosmetics_unlocked */ \
+    X(challenges)       /* challenge modifiers of the active session (bit per bm::challenge_id) */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0) \
     X(arg1) \
@@ -124,7 +128,11 @@ enum bm_ti_command
     BM_TI_CMD_STRESS = 9,          /* arg0 = stress scenario id */
     BM_TI_CMD_WIPE_SAVE = 10,
     BM_TI_CMD_PLAY_MUSIC = 11,     /* arg0 = music id (1..14), arg1 = 1 for the Overheat arrangement, arg2 = loop */
-    BM_TI_CMD_PLAY_SFX = 12        /* arg0 = sound effect id */
+    BM_TI_CMD_PLAY_SFX = 12,       /* arg0 = sound effect id */
+    BM_TI_CMD_SET_COSMETIC = 13,   /* arg0 = cosmetic kind (0 blocks 1 frame 2 title 3 particles), arg1 = index
+                                      (unlocks it in RAM for the screenshot tests) */
+    BM_TI_CMD_SET_CHALLENGES = 14, /* arg0 = challenge mask (unlocks those challenges in RAM) */
+    BM_TI_CMD_SET_SECRET_RANK = 15 /* arg0 = rank shown by the next results screen (5 = S+) */
 };
 
 #endif

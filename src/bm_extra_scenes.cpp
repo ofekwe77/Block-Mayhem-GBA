@@ -51,9 +51,9 @@ namespace bm
     {
         int options_last_index = 0;     // the cursor returns to the entry the player left from
 
-        constexpr const char* option_names[8] = {
-            "DIFFICULTY", "GHOST PIECE", "SCREEN SHAKE", "FLASHES", "MUSIC VOLUME", "SFX VOLUME", "SOUND TEST",
-            "CREDITS"
+        constexpr const char* option_names[9] = {
+            "DIFFICULTY", "GHOST PIECE", "SCREEN SHAKE", "FLASHES", "MUSIC VOLUME", "SFX VOLUME", "CUSTOMIZE",
+            "SOUND TEST", "CREDITS"
         };
     }
 
@@ -77,7 +77,7 @@ namespace bm
         const game_settings& g = the_app().save.settings;
         for(int i = 0; i < rows; ++i)
         {
-            const int y = 30 + i * 13;
+            const int y = 28 + i * 12;
             const bool sel = i == _index;
             bn::string<24> name = sel ? "> " : "  ";
             name.append(option_names[i]);
@@ -146,10 +146,11 @@ namespace bm
         case 3: info = "SOFTER, SHORTER SCREEN FLASHES"; break;
         case 4: info = "MUSIC LOUDNESS"; break;
         case 5: info = "SOUND EFFECT LOUDNESS"; break;
-        case 6: info = "UNLOCKED MUSIC AND EFFECTS"; break;
+        case 6: info = "BLOCK, FRAME, TITLE AND PARTICLE STYLES"; break;
+        case 7: info = "UNLOCKED MUSIC AND EFFECTS"; break;
         default: info = "THE MAKERS AND THE TOOLS"; break;
         }
-        _info.show(120, 138, info, text_color::white, align::center);
+        _info.show(120, 139, info, text_color::white, align::center);
     }
 
     void options_scene::_change(int delta)
@@ -209,11 +210,11 @@ namespace bm
         }
         else if(_input.ok() || _input.start())
         {
-            if(_index == 6 || _index == 7)
+            if(_index >= 6)
             {
                 audio::sfx(audio::sfx_id::menu_ok);
                 a.write_save();
-                return _index == 6 ? scene_id::sound_test : scene_id::credits;
+                return _index == 6 ? scene_id::customize : (_index == 7 ? scene_id::sound_test : scene_id::credits);
             }
             _change(1);
         }

@@ -169,6 +169,15 @@ namespace bm
         }
     }
 
+    void backdrop::set_color(int layer_index, int index, bn::color color)
+    {
+        layer& l = _layers[layer_index & 1];
+        if(l.palette)
+        {
+            l.palette->set_color(index, color);
+        }
+    }
+
     void backdrop::excite(int frames, int level)
     {
         if(frames > _excite_frames)
