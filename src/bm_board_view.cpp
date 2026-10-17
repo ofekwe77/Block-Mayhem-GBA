@@ -166,28 +166,52 @@ namespace bm
         }
     }
 
+    int board_view::_frame_side_tile(int row) const
+    {
+        if(_world >= 1 && _world <= 6 && row >= 0 && (row & 3) == 2)
+        {
+            return tile::frame_deco_w1 + (_world - 1);
+        }
+        return tile::frame_l;
+    }
+
+    int board_view::_frame_bottom_tile(int column) const
+    {
+        if(_world >= 1 && _world <= 6 && (column & 1) == 0)
+        {
+            return tile::frame_base_w1 + (_world - 1);
+        }
+        return tile::frame_b;
+    }
+
     void board_view::_draw_frame(int board, int cols, int rows)
     {
         const board_slot& s = _layout.boards[board];
         const int visible = rows - cfg::board_hidden_rows;
         for(int r = -1; r < visible; ++r)
         {
-            _put(s.map_x - 1, s.map_y + r, tile::frame_l, bank_frame);
-            _put(s.map_x + cols, s.map_y + r, tile::frame_r, bank_frame);
+            const int t = _frame_side_tile(r);
+            _put(s.map_x - 1, s.map_y + r, t, bank_frame);
+            // The right side mirrors the left (the plain frame has its own mirrored tile).
+            if(t == tile::frame_l)
+            {
+                _put(s.map_x + cols, s.map_y + r, tile::frame_r, bank_frame);
+            }
+            else
+            {
+                _put(s.map_x + cols, s.map_y + r, t, bank_frame, true);
+            }
         }
         _put(s.map_x - 1, s.map_y + visible, tile::frame_bl, bank_frame);
         _put(s.map_x + cols, s.map_y + visible, tile::frame_br, bank_frame);
         for(int c = 0; c < cols; ++c)
         {
-            _put(s.map_x + c, s.map_y + visible, tile::frame_b, bank_frame);
+            _put(s.map_x + c, s.map_y + visible, _frame_bottom_tile(c), bank_frame);
         }
     }
 
-    void board_view::_draw_static(int world)
+    void board_view::_draw_frames()
     {
-        bn::memory::clear(_map->cells);
-        _drawn_revision[0] = _drawn_revision[1] = 0xFFFFFFFFu;
-        _overlay_count[0] = _overlay_count[1] = 0;
         const bool dual = _layout.kind == layout_kind::dual || _layout.kind == layout_kind::dual_boss;
         const int cols = dual ? cfg::dual_board_cols : cfg::board_cols;
         const int rows = dual ? cfg::dual_board_rows : cfg::board_rows;
@@ -199,6 +223,15 @@ namespace bm
             }
             _draw_frame(b, cols, rows);
         }
+    }
+
+    void board_view::_draw_static(int world)
+    {
+        bn::memory::clear(_map->cells);
+        _drawn_revision[0] = _drawn_revision[1] = 0xFFFFFFFFu;
+        _overlay_count[0] = _overlay_count[1] = 0;
+        _world = world < 0 || world > 6 ? 0 : world;
+        _draw_frames();
         _draw_panel(_layout.hold_x, _layout.hold_y, 6, 5);
         _draw_panel(_layout.next_x, _layout.next_y, 6, 2 + _layout.next_count * 3);
         _draw_bridge(0, 0);
@@ -297,11 +330,11 @@ namespace bm
             // Restore the left frame column and the bottom frame row, then overlay warnings.
             for(int r = 0; r < visible; ++r)
             {
-                _put(slot.map_x - 1, slot.map_y + r, tile::frame_l, bank_frame);
+                _put(slot.map_x - 1, slot.map_y + r, _frame_side_tile(r), bank_frame);
             }
             for(int c = 0; c < g.cols(); ++c)
             {
-                _put(slot.map_x + c, slot.map_y + visible, tile::frame_b, bank_frame);
+                _put(slot.map_x + c, slot.map_y + visible, _frame_bottom_tile(c), bank_frame);
             }
 
             int rows = s.incoming_rows(b);
@@ -409,7 +442,12 @@ namespace bm
 
     void board_view::set_world_tint(int world)
     {
+        const int previous = _world;
         _world = world < 0 || world > 6 ? 0 : world;
+        if(_world != previous)
+        {
+            _draw_frames();     // the frame decoration belongs to the world
+        }
         const world_tint& t = tints[_world];
         if(! themes::frame_colors(_frame_theme, _metal, _accent))
         {

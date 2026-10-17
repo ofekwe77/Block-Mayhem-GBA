@@ -307,7 +307,7 @@ namespace
 
 int main()
 {
-    FILE* f = std::fopen("STAGE_PASSPORTS.md", "w");
+    FILE* f = std::fopen("STAGE_PASSPORTS.md", "wb");     // binary: LF line endings on every host
     if(! f)
     {
         std::fprintf(stderr, "cannot write STAGE_PASSPORTS.md\n");

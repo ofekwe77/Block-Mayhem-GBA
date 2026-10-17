@@ -140,6 +140,10 @@ namespace bm
         int _frame_pulse = 0;
 
         void _draw_bridge(int frame, int active_board);
+        void _draw_frames();
+        // World-specific frame decoration (PART 49.3): plate every fourth side row, patterned bottom bar.
+        [[nodiscard]] int _frame_side_tile(int row) const;
+        [[nodiscard]] int _frame_bottom_tile(int column) const;
         clear_flash _flash[2];
         int _world = 1;
         int _last_heat_color = -1;

@@ -15,6 +15,29 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "tests", "emu")
 
+def world_ability_masks():
+    """Abilities a fresh save owns after clearing each world: the starters plus every ability in the world's
+    stage loadouts (read from core/bm_stages.cpp and core/bm_config.h, so the expectation follows the data)."""
+    import re
+    config = open(os.path.join(ROOT, "core", "bm_config.h"), encoding="utf-8").read()
+    names = re.search(r"enum ability_id : uint8_t\s*\{([^}]*)\}", config).group(1)
+    order = [n.strip() for n in names.split(",") if n.strip() and n.strip() != "ability_count"]
+    starters = 0
+    save = open(os.path.join(ROOT, "core", "bm_save.h"), encoding="utf-8").read()
+    starters = int(re.search(r"abilities_unlocked = (0x[0-9A-Fa-f]+)", save).group(1), 16)
+    masks = {}
+    world = 0
+    for line in open(os.path.join(ROOT, "core", "bm_stages.cpp"), encoding="utf-8"):
+        m = re.search(r"WORLD (\d) - ", line)
+        if m:
+            world = int(m.group(1))
+            masks.setdefault(world, starters)
+        if "set_loadout(*d" in line and world:
+            for name in re.findall(r"ability_\w+", line):
+                masks[world] |= 1 << order.index(name)
+    return masks
+
+
 # Game-time budget per stage for the bot (frames). Boss fights get more.
 STAGE_FRAMES = 15000
 BOSS_FRAMES = 30000
@@ -49,8 +72,12 @@ def scenario(world):
             "expect stages_cleared == %d" % index,
             "expect error_code == 0",
         ]
+    # Abilities met in the world's stages are now unlocked for Chaos Arcade (starters + the world's loadouts).
+    lines.append("expect abilities_unlocked == %d" % world_ability_masks()[world])
     if world < 6:
         lines.append("expect worlds_unlocked == %d" % (world + 1))
+        # The results hand over to the world map, which celebrates the cleared world.
+        lines += ["wait scene == 5 600", "frames 30", "shot world_clear_%d" % world]
     # Every text kept its colour: no sprite palette exhaustion anywhere in the world.
     lines.append("expect text_failures == 0")
     return "\n".join(lines) + "\n"

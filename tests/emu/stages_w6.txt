@@ -75,4 +75,5 @@ expect session_state == 3
 wait scene == 8 900
 expect stages_cleared == 5
 expect error_code == 0
+expect abilities_unlocked == 247
 expect text_failures == 0

@@ -527,6 +527,76 @@ def build():
         "22222222",
         "11111111",
     ))
+    # World-specific board frames (PART 49.3): every fourth row of the side frames carries a decoration plate and
+    # the bottom bar its own pattern. Bank 0 (metal shades follow the world tint, c-f are fixed warm/white).
+    side = {
+        1: [  # factory: a riveted plate with a warning lamp
+            "12345421",
+            "1f4444f1",
+            "14eeee41",
+            "14e11e41",
+            "14eeee41",
+            "1f4444f1",
+            "12345421",
+            "12345421"],
+        2: [  # frozen: frost crystal on the metal
+            "12345421",
+            "1234f421",
+            "12f5f5f1",
+            "123fff21",
+            "12f5f5f1",
+            "1234f421",
+            "12345421",
+            "12345421"],
+        3: [  # volcano: a glowing crack
+            "12345421",
+            "1234d421",
+            "123dc421",
+            "1234dc21",
+            "123ec421",
+            "1234d421",
+            "12345421",
+            "12345421"],
+        4: [  # electric: a neon tube segment
+            "12345421",
+            "1a5a5a21",
+            "1affffa1",
+            "1affffa1",
+            "1affffa1",
+            "1a5a5a21",
+            "12345421",
+            "12345421"],
+        5: [  # gravity: a floating rune ring
+            "12345421",
+            "1234b421",
+            "123b5b21",
+            "12bf4fb1",
+            "123b5b21",
+            "1234b421",
+            "12345421",
+            "12345421"],
+        6: [  # meltdown: a warning chevron
+            "12345421",
+            "1c4444c1",
+            "1ec44ce1",
+            "14ecce41",
+            "144ee441",
+            "1c4444c1",
+            "12345421",
+            "12345421"],
+    }
+    bottom = {
+        1: ["11111111", "22222222", "1ee11ee1", "e11ee11e", "1ee11ee1", "33333333", "22222222", "11111111"],
+        2: ["1fff11ff", "ff5fffff", "44f44f44", "55555555", "4a4b4a4b", "33333333", "22222222", "11111111"],
+        3: ["11111111", "22222222", "44d44444", "5dcd5555", "4dcdc4ab", "33d33333", "22222222", "11111111"],
+        4: ["11111111", "22222222", "44444444", "affaaffa", "faaffaaf", "33333333", "22222222", "11111111"],
+        5: ["11111111", "22222222", "44b44b44", "5b5f5b5f", "4b4b4b4b", "33333333", "22222222", "11111111"],
+        6: ["11111111", "22222222", "cc11cc11", "1cc11cc1", "11cc11cc", "33333333", "22222222", "11111111"],
+    }
+    for w in range(1, 7):
+        add("FRAME_DECO_W%d" % w, T(*side[w]))
+    for w in range(1, 7):
+        add("FRAME_BASE_W%d" % w, T(*bottom[w]))
     # Hard-drop trail (bank 0): the well with a light streak, bright near the landing point, fading upwards.
     add("TRAIL1", T(
         "7699f966",

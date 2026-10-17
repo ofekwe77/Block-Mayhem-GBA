@@ -6,6 +6,7 @@
 
 #include "bm_app.h"
 #include "bm_backdrop.h"
+#include "bm_fireworks.h"
 #include "bm_scene.h"
 #include "bm_text.h"
 
@@ -109,13 +110,7 @@ namespace bm
         int _frame = 0;
 
         // Secret (PART 35.1): an S+ rank sets off fireworks behind the results and the rank shimmers.
-        static constexpr int spark_count = 24;
-        bn::optional<bn::sprite_ptr> _sparks[spark_count];
-        int16_t _spark_x[spark_count] = {};
-        int16_t _spark_y[spark_count] = {};
-        int16_t _spark_vx[spark_count] = {};
-        int16_t _spark_vy[spark_count] = {};
-        int16_t _spark_life[spark_count] = {};
+        fireworks _fireworks_fx;
         bool _fireworks = false;
         int _rank_line = -1;
         bn::string<24> _rank_text;

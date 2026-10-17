@@ -10,6 +10,7 @@
 #include "bm_test.h"
 
 #include "bm_bot.h"
+#include "bm_save.h"
 #include "bm_session.h"
 
 #include <cstdio>
@@ -210,4 +211,23 @@ BM_TEST(stages, every_stage_can_be_lost_and_idling_never_wins)
             CHECK_EQ(invalid, 0);
         }
     }
+}
+
+BM_TEST(stages, the_campaign_teaches_every_ability)
+{
+    // PART 27.3: abilities are unlocked for Chaos Arcade by meeting them in Adventure stages, so every ability
+    // must appear in at least one stage loadout (the starters are unlocked from the first launch).
+    uint32_t taught = save_data().abilities_unlocked;
+    for(int w = 1; w <= 6; ++w)
+    {
+        for(int i = 1; i <= 5; ++i)
+        {
+            const stage_def& st = stage(w, i);
+            for(int k = 0; k < st.loadout_count; ++k)
+            {
+                taught |= 1u << st.loadout[k];
+            }
+        }
+    }
+    CHECK_EQ(taught, (1u << cfg::ability_count) - 1);
 }

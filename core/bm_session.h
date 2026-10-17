@@ -211,6 +211,8 @@ namespace bm
         // Diagnostics / test interface.
         void debug_add_heat(int amount) { _gain_heat_raw(amount); }
         void debug_set_boss_hp(int hp);
+        // Host tests: script the upcoming shapes (call before the first spawn or between pieces).
+        [[nodiscard]] piece_queue& debug_queue() { return _queue; }
         // Stress test path (emulator diagnostics only): a board packed with specials, then a detonation.
         void debug_fill_stress(int board);
         void debug_detonate(int board);

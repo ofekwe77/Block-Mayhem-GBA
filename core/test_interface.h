@@ -98,6 +98,11 @@
     X(cosmetics)        /* save_data::cosmetics_unlocked */ \
     X(challenges)       /* challenge modifiers of the active session (bit per bm::challenge_id) */ \
     X(text_failures)    /* texts shown without their colour because every sprite palette was taken */ \
+    X(session_frames)   /* frames the active session has simulated (stops while paused) */ \
+    X(selected_slot)    /* ability slot selected in the loadout (SELECT cycles) */ \
+    X(abilities_unlocked) /* save_data::abilities_unlocked */ \
+    X(shake_max)        /* strongest screen shake applied since the stats reset (0 = shake off) */ \
+    X(flash_max)        /* strongest screen flash applied since the stats reset, percent */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0) \
     X(arg1) \
@@ -133,7 +138,9 @@ enum bm_ti_command
     BM_TI_CMD_SET_COSMETIC = 13,   /* arg0 = cosmetic kind (0 blocks 1 frame 2 title 3 particles), arg1 = index
                                       (unlocks it in RAM for the screenshot tests) */
     BM_TI_CMD_SET_CHALLENGES = 14, /* arg0 = challenge mask (unlocks those challenges in RAM) */
-    BM_TI_CMD_SET_SECRET_RANK = 15 /* arg0 = rank shown by the next results screen (5 = S+) */
+    BM_TI_CMD_SET_SECRET_RANK = 15, /* arg0 = rank shown by the next results screen (5 = S+) */
+    BM_TI_CMD_SET_LOADOUT = 16,    /* arg0..arg2 = Chaos Arcade abilities (unlocked in RAM) */
+    BM_TI_CMD_SET_OPTIONS = 17     /* arg0 = shake (0-2), arg1 = flashes (0-1), arg2 = music vol, arg3 = sfx vol (0-10) */
 };
 
 #endif

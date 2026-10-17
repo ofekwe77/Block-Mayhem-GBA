@@ -1,5 +1,7 @@
 #include "bm_fx.h"
 
+#include "bm_profile.h"
+
 #include "bn_bg_palettes.h"
 #include "bn_sprite_palettes.h"
 
@@ -298,6 +300,7 @@ namespace bm
         {
             a = (a + 1) / 2;
         }
+        profile::shake_max = uint32_t(a) > profile::shake_max ? uint32_t(a) : profile::shake_max;
         if(a >= _shake_amp || _shake_timer <= 0)
         {
             _shake_amp = a;
@@ -320,6 +323,7 @@ namespace bm
             percent = percent > 25 ? 25 : percent;     // reduced flashing: never a bright full-screen flash
             frames = frames > 6 ? 6 : frames;
         }
+        profile::flash_max = uint32_t(percent) > profile::flash_max ? uint32_t(percent) : profile::flash_max;
         _flash_color = color;
         _flash_percent = percent;
         _flash_timer = frames;

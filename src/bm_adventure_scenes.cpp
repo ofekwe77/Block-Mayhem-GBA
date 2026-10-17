@@ -43,6 +43,7 @@ namespace bm
         if(a.flow.mode == game_mode::adventure && a.flow.outcome == session_outcome::won && a.flow.stage == 5)
         {
             _celebrate = 150;
+            _celebrated_world = a.flow.world >= 1 && a.flow.world <= 6 ? a.flow.world - 1 : 0;
             audio::sfx(audio::sfx_id::unlock);
         }
         _refresh();
@@ -98,7 +99,16 @@ namespace bm
         _cursor->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), 2 + ((_frame >> 4) & 1));
         if(_celebrate > 0)
         {
+            // World-completion celebration (PART 49.3, 61.4): fireworks over the conquered world, a blinking banner
+            // and a chime on every burst.
+            const int wx = world_pos[_celebrated_world][0];
+            const int wy = world_pos[_celebrated_world][1];
+            _fireworks.update(_frame, wx - 36, wy - 60, 72, 40, 14);
             --_celebrate;
+            if(! _celebrate)
+            {
+                _fireworks.hide();
+            }
             if(_celebrate % 20 == 0)
             {
                 audio::sfx(audio::sfx_id::chain);

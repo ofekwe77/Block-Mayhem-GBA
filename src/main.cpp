@@ -195,6 +195,25 @@ namespace
             return bn::nullopt;
         }
 
+        case BM_TI_CMD_SET_LOADOUT:
+            // Diagnostic: equip three abilities for Chaos Arcade (unlocked in memory).
+            for(int k = 0; k < 3; ++k)
+            {
+                const uint8_t ab = uint8_t(a.pending_args[k] % bm::cfg::ability_count);
+                a.flow.arcade_loadout[k] = ab;
+                a.save.abilities_unlocked = uint8_t(a.save.abilities_unlocked | (1u << ab));
+            }
+            a.flow.arcade_count = 3;
+            return bn::nullopt;
+
+        case BM_TI_CMD_SET_OPTIONS:
+            a.save.settings.shake = uint8_t(a.pending_args[0] > 2 ? 2 : a.pending_args[0]);
+            a.save.settings.flashes = uint8_t(a.pending_args[1] ? 1 : 0);
+            a.save.settings.music_volume = uint8_t(a.pending_args[2] > 10 ? 10 : a.pending_args[2]);
+            a.save.settings.sfx_volume = uint8_t(a.pending_args[3] > 10 ? 10 : a.pending_args[3]);
+            bm::audio::apply_volumes();
+            return bn::nullopt;
+
         case BM_TI_CMD_SET_SECRET_RANK:
             // Diagnostic: show the results screen of the last session again with this stage rank.
             a.flow.rank = uint8_t(a.pending_args[0] > 5 ? 5 : a.pending_args[0]);

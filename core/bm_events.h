@@ -24,7 +24,7 @@ namespace bm
         rows_full,          // a = row mask (low 16), b = row mask (high), c = count
         thaw_pulse,         // a = row mask low, b = row mask high
         coat_hit,           // a = x, b = y, c = coat kind, d = hp left
-        lines_cleared,      // a = rows, b = twist (0 none, 1 mini, 2 full), c = b2b, d = wave
+        lines_cleared,      // a = rows, d = wave (twist clears also raise twist_clear)
         cell_destroyed,     // a = x, b = y, c = color, d = cause (special_kind or 10+ability)
         special_triggered,  // a = x, b = y, c = special_kind, d = wave
         spark_arc,          // a = x, b = y, c = direction (0 up 1 right 2 down 3 left), d = length
@@ -77,7 +77,8 @@ namespace bm
         danger_off,
         perfect_clear,
         twist_no_lines,     // a = mini
-        piece_trail         // a = column mask, b = highest landed row, c = rows dropped (hard-drop trail)
+        piece_trail,        // a = column mask, b = highest landed row, c = rows dropped (hard-drop trail)
+        twist_clear         // a = rows, b = 1 mini / 2 full T-TWIST, c = 1 when it was back-to-back
     };
 
     struct event

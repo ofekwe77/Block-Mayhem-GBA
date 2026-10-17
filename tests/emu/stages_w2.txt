@@ -75,5 +75,9 @@ expect session_state == 3
 wait scene == 8 900
 expect stages_cleared == 5
 expect error_code == 0
+expect abilities_unlocked == 227
 expect worlds_unlocked == 3
+wait scene == 5 600
+frames 30
+shot world_clear_2
 expect text_failures == 0

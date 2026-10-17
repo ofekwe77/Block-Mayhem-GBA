@@ -1,0 +1,133 @@
+# Interface behaviour on the real ROM: scene fade, pause freezing the game, ability loadout cycling and the
+# ability animations, the shake / flash accessibility options and the volume settings.
+# cmd 16 A B C equips three Chaos Arcade abilities (0 laser, 4 nuclear burst, 7 emergency vent);
+# cmd 17 SHAKE FLASHES MUSIC SFX sets the options; cmd 7 N adds heat; cmd 9 1/2 packs / detonates the board.
+frames 40
+tap START
+wait scene == 3 120
+frames 30
+# 1. Scene transition: the title fades out to the menu.
+tap START 1
+frames 3
+shot fade_mid
+wait scene == 4 120
+# 2. Pause stops the game: no simulated frame passes while paused.
+cmd 2 0 99 0
+wait scene == 7 200
+wait session_state == 1 400
+frames 60
+tap START
+frames 4
+snap session_frames
+frames 180
+same session_frames
+shot pause_frozen
+tap START
+frames 30
+expect session_state == 1
+# 3. Loadout: SELECT cycles the three equipped abilities, R fires the selected one (with its animation).
+cmd 16 0 4 7
+cmd 2 1 4242 0
+wait scene == 7 200
+wait session_state == 1 400
+tap UP
+frames 30
+tap UP
+frames 30
+tap UP
+frames 30
+tap UP
+frames 40
+expect selected_slot == 0
+expect heat == 0
+cmd 7 45
+tap R
+frames 4
+shot laser_aim
+tap A
+frames 3
+shot laser_beam
+expect heat == 5
+frames 80
+tap SELECT
+frames 4
+expect selected_slot == 1
+cmd 7 80
+tap R
+frames 4
+shot nuke_aim
+tap A
+frames 5
+shot nuke_blast
+expect heat == 5
+frames 90
+tap UP
+frames 30
+tap UP
+frames 30
+tap UP
+frames 40
+tap SELECT
+frames 4
+expect selected_slot == 2
+cmd 7 55
+tap R
+frames 6
+shot vent_steam
+expect heat == 10
+frames 60
+expect error_code == 0
+# 4. Accessibility: with shake off and reduced flashes a full-board detonation never shakes the screen and
+# never flashes above 25%; with both at full it does.
+cmd 17 0 0 8 8
+cmd 2 1 77 0
+wait scene == 7 200
+frames 130
+cmd 6
+cmd 9 1
+frames 4
+cmd 9 2
+frames 200
+print shake_max flash_max max_chain
+expect shake_max == 0
+expect flash_max <= 25
+cmd 17 2 1 8 8
+cmd 2 1 78 0
+wait scene == 7 200
+frames 130
+cmd 6
+cmd 9 1
+frames 4
+cmd 9 2
+frames 200
+print shake_max flash_max max_chain
+expect shake_max >= 4
+expect flash_max > 25
+# 5. Volume settings reach the mixer: music at volume 0 is silent, at 10 it plays loud; the same for effects.
+cmd 17 2 1 0 8
+cmd 11 1 0 1
+frames 30
+audio_begin
+frames 90
+audio_check music_volume_0 0 40
+cmd 17 2 1 10 8
+cmd 11 1 0 1
+frames 30
+audio_begin
+frames 90
+audio_check music_volume_10 1500
+cmd 11 0 0 0
+cmd 17 2 1 0 0
+frames 10
+audio_begin
+cmd 12 9
+frames 30
+audio_check sfx_volume_0 0 40
+cmd 17 2 1 0 10
+frames 10
+audio_begin
+cmd 12 9
+frames 30
+audio_check sfx_volume_10 300
+expect error_code == 0
+expect text_failures == 0

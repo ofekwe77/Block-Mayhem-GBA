@@ -450,6 +450,30 @@ namespace bm
             case event_type::lines_cleared:
                 break;
 
+            case event_type::twist_clear:
+            {
+                // T-TWIST recognition: the named clear, a back-to-back tag, the twist sound.
+                static constexpr const char* names[4] = { "T-TWIST!", "T-TWIST SINGLE", "T-TWIST DOUBLE", "T-TWIST TRIPLE" };
+                const int cx = lay.kind == layout_kind::dual ? 120 : _view.cell_screen_x(b, board_cols / 2);
+                if(e.b == 2)
+                {
+                    _fx.callout(cx, 58, names[e.a > 3 ? 3 : e.a], big_color::neon, 70);
+                    _fx.flash(bn::color(24, 12, 31), 20, 6);
+                    audio::sfx(audio::sfx_id::chain_big);
+                }
+                else
+                {
+                    _fx.popup(cx, 64, "MINI T-TWIST", text_color::violet, 45);
+                    audio::sfx(audio::sfx_id::chain);
+                }
+                break;
+            }
+
+            case event_type::twist_no_lines:
+                _fx.popup(_view.cell_screen_x(b, board_cols / 2), 64, e.a ? "MINI T-TWIST" : "T-TWIST", text_color::violet,
+                          40);
+                break;
+
             case event_type::cell_destroyed:
                 if(_fx.can_spawn())
                 {

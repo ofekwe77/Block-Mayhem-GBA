@@ -577,51 +577,7 @@ namespace bm
         {
             return;
         }
-        // A new 12-spark burst every 22 frames at a pseudo-random point of the upper screen.
-        if(_frame % 22 == 1)
-        {
-            const uint32_t h = uint32_t(_frame) * 2654435761u;
-            const int cx = 30 + int((h >> 8) % 180u);
-            const int cy = 18 + int((h >> 20) % 50u);
-            static constexpr int8_t dirs[12][2] = { { 20, 0 }, { 17, 10 }, { 10, 17 }, { 0, 20 }, { -10, 17 },
-                                                    { -17, 10 }, { -20, 0 }, { -17, -10 }, { -10, -17 }, { 0, -20 },
-                                                    { 10, -17 }, { 17, -10 } };
-            const int base = (_frame / 22) & 1 ? 0 : 12;
-            for(int i = 0; i < 12; ++i)
-            {
-                const int k = base + i;
-                _spark_x[k] = int16_t(cx * 16);
-                _spark_y[k] = int16_t(cy * 16);
-                _spark_vx[k] = dirs[i][0];
-                _spark_vy[k] = dirs[i][1];
-                _spark_life[k] = 34;
-                static constexpr int frames[4] = { 20, 25, 26, 27 };    // star, yellow, cyan and violet shards
-                const int f = frames[((_frame / 22) + i) & 3];
-                if(! _sparks[k])
-                {
-                    _sparks[k] = bn::sprite_items::spr_particles.create_sprite(0, 0, f);
-                    _sparks[k]->set_z_order(10);        // behind the result rows
-                }
-                _sparks[k]->set_tiles(bn::sprite_items::spr_particles.tiles_item(), f);
-                _sparks[k]->set_visible(true);
-            }
-        }
-        for(int k = 0; k < spark_count; ++k)
-        {
-            if(! _sparks[k] || _spark_life[k] <= 0)
-            {
-                continue;
-            }
-            _spark_x[k] = int16_t(_spark_x[k] + _spark_vx[k]);
-            _spark_y[k] = int16_t(_spark_y[k] + _spark_vy[k]);
-            _spark_vy[k] = int16_t(_spark_vy[k] + 1);
-            if(--_spark_life[k] <= 0)
-            {
-                _sparks[k]->set_visible(false);
-                continue;
-            }
-            _sparks[k]->set_position(_spark_x[k] / 16 - 120, _spark_y[k] / 16 - 80);
-        }
+        _fireworks_fx.update(_frame, 30, 18, 180, 50);
         // The rank shimmers through the celebration colours.
         if(_rank_line >= 0 && _frame % 8 == 0)
         {

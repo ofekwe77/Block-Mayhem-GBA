@@ -21,6 +21,8 @@
  *   wait FIELD OP VALUE MAX     run frames until test-interface FIELD OP VALUE (OP: == != >= <= > < has), fail after MAX frames
  *                               ("has": every bit of VALUE is set in FIELD)
  *   expect FIELD OP VALUE       fail unless the condition holds now
+ *   snap FIELD                  remember the field's current value
+ *   same FIELD                  fail unless the field still has the value remembered by snap
  *   cmd ID [A0 A1 A2 A3]        post a mailbox command and wait for the ROM to acknowledge it
  *   print [FIELD...]            print test-interface fields (all if none given)
  *   echo TEXT                   print text
@@ -521,6 +523,39 @@ static int run_script(FILE* script)
             if (!g_quiet)
             {
                 printf("ok expect %s %s %u (actual %u)\n", argv[1], argv[2], value, actual);
+            }
+        }
+        else if ((!strcmp(c, "snap") || !strcmp(c, "same")) && argc >= 2)
+        {
+            static char snap_name[64];
+            static uint32_t snap_value;
+            if (!ensure_ti())
+            {
+                return 2;
+            }
+            const struct ti_field* f = lookup_field(argv[1]);
+            if (!f)
+            {
+                fprintf(stderr, "line %d: unknown field %s\n", line_no, argv[1]);
+                return 2;
+            }
+            const uint32_t actual = ti_read(f);
+            if (!strcmp(c, "snap"))
+            {
+                snprintf(snap_name, sizeof(snap_name), "%s", argv[1]);
+                snap_value = actual;
+            }
+            else
+            {
+                if (strcmp(snap_name, argv[1]) != 0 || actual != snap_value)
+                {
+                    printf("FAIL line %d: same %s (snapped %u, now %u)\n", line_no, argv[1], snap_value, actual);
+                    return 1;
+                }
+                if (!g_quiet)
+                {
+                    printf("ok same %s (%u)\n", argv[1], actual);
+                }
             }
         }
         else if (!strcmp(c, "cmd") && argc >= 2)

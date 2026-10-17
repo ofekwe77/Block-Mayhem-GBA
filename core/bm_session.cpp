@@ -1028,6 +1028,11 @@ namespace bm
             line_base = cfg::line_points[mini(rows, 4)];
         }
 
+        if(from_lock && rows > 0 && twist != twist_kind::none)
+        {
+            _events.push(event_type::twist_clear, p.index(), rows, twist == twist_kind::full ? 2 : 1, p.b2b > 1 ? 1 : 0);
+        }
+
         // Cascade line waves score as their own clears.
         for(int w = 1; w < mini(r.line_waves, 8); ++w)
         {

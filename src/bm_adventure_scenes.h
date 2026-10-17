@@ -5,6 +5,7 @@
 #define BM_ADVENTURE_SCENES_H
 
 #include "bm_backdrop.h"
+#include "bm_fireworks.h"
 #include "bm_menu_scenes.h"
 
 namespace bm
@@ -29,6 +30,8 @@ namespace bm
         int _selected = 0;
         int _frame = 0;
         int _celebrate = 0;
+        int _celebrated_world = 0;      // 0-based world whose boss was just defeated
+        fireworks _fireworks;
 
         void _refresh();
     };
