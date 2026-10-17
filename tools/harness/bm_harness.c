@@ -525,7 +525,7 @@ static int run_script(FILE* script)
                 printf("ok expect %s %s %u (actual %u)\n", argv[1], argv[2], value, actual);
             }
         }
-        else if ((!strcmp(c, "snap") || !strcmp(c, "same")) && argc >= 2)
+        else if ((!strcmp(c, "snap") || !strcmp(c, "same") || !strcmp(c, "delta")) && argc >= 2)
         {
             static char snap_name[64];
             static uint32_t snap_value;
@@ -545,9 +545,14 @@ static int run_script(FILE* script)
                 snprintf(snap_name, sizeof(snap_name), "%s", argv[1]);
                 snap_value = actual;
             }
-            else
+            else if (strcmp(snap_name, argv[1]) != 0)
             {
-                if (strcmp(snap_name, argv[1]) != 0 || actual != snap_value)
+                printf("FAIL line %d: %s %s: the field was not snapped\n", line_no, c, argv[1]);
+                return 1;
+            }
+            else if (!strcmp(c, "same"))
+            {
+                if (actual != snap_value)
                 {
                     printf("FAIL line %d: same %s (snapped %u, now %u)\n", line_no, argv[1], snap_value, actual);
                     return 1;
@@ -555,6 +560,29 @@ static int run_script(FILE* script)
                 if (!g_quiet)
                 {
                     printf("ok same %s (%u)\n", argv[1], actual);
+                }
+            }
+            else
+            {
+                /* delta FIELD OP VALUE: the signed change since the snap */
+                if (argc < 4)
+                {
+                    fprintf(stderr, "line %d: usage: delta FIELD OP VALUE\n", line_no);
+                    return 2;
+                }
+                const long d = (long) (int32_t) (actual - snap_value);
+                const long v = strtol(argv[3], NULL, 0);
+                const char* op = argv[2];
+                const int ok = !strcmp(op, "==") ? d == v : !strcmp(op, "!=") ? d != v : !strcmp(op, ">=") ? d >= v :
+                               !strcmp(op, "<=") ? d <= v : !strcmp(op, ">") ? d > v : !strcmp(op, "<") ? d < v : 0;
+                if (!ok)
+                {
+                    printf("FAIL line %d: delta %s %s %ld (actual %ld)\n", line_no, argv[1], op, v, d);
+                    return 1;
+                }
+                if (!g_quiet)
+                {
+                    printf("ok delta %s %s %ld (actual %ld)\n", argv[1], op, v, d);
                 }
             }
         }

@@ -114,7 +114,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 
 | ID | Status | Verify | Task | Spec | Deps | Files | Evidence |
 |----|--------|--------|------|------|------|-------|----------|
-| CTRL-01 | TESTED | EMU | Default layout (D-pad, A/B rotate, L hold, R ability, SELECT cycle, START pause) | 11.1 | CORE-05 | src/bm_app.cpp | smoke.txt taps |
+| CTRL-01 | TESTED | EMU | Default layout (D-pad, A/B rotate, L hold, R ability, SELECT cycle, START pause) | 11.1 | CORE-05 | src/bm_app.cpp | controls.txt: every button pressed on the ROM and its effect read back (move, auto-repeat, both rotations, soft / hard drop, hold once per piece, pause, aim / cancel / fire, ability cycling, board switch) |
 | CTRL-02 | TESTED | UNIT | Dual-board controls (SELECT switches board, single ability) | 11.2 | DUAL-02 | core/bm_session.cpp | dual.boards_share_the_queue_and_switching_freezes_the_other_board (SELECT switches) |
 | CTRL-03 | TESTED | EMU | Separate input contexts; menu repeat; input lock after transitions | 11.3 | - | src/bm_menu_scenes.cpp | menus.txt navigates every menu screen without double activations; scenes ignore input during their entry lock |
 | CTRL-04 | TESTED | EMU+UNIT | Pause never consumes timers or glitches movement | 11.3, 26.6 | - | src/bm_game_scene.cpp | ui.txt: session_frames unchanged over 180 paused frames; heat.overheat_timer_stops_while_paused |

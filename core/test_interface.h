@@ -105,6 +105,13 @@
     X(flash_max)        /* strongest screen flash applied since the stats reset, percent */ \
     X(hitstop_max)      /* longest hitstop (frames the simulation pauses on impact) since the stats reset */ \
     X(loss_cause)       /* bm::loss_cause of the active session (1 top out, 2 crushed by garbage, 3 objective) */ \
+    X(piece_type)       /* active piece of the active board (bm::piece_type, 0 none) */ \
+    X(piece_min_x)      /* leftmost column the active piece occupies */ \
+    X(piece_y)          /* row of the active piece box (grows as it falls) */ \
+    X(piece_rotation)   /* rotation state 0..3 */ \
+    X(held_type)        /* piece in the hold slot (bm::piece_type, 0 none) */ \
+    X(paused)           /* 1 while the pause menu is open */ \
+    X(targeting)        /* 1 while an ability is being aimed */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0) \
     X(arg1) \

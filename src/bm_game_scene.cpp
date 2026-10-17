@@ -223,6 +223,7 @@ namespace bm
 
     game_scene::~game_scene()
     {
+        _app.test->paused = 0;
         bn::bg_palettes::set_fade_intensity(0);
         bn::sprite_palettes::set_fade_intensity(0);
     }
@@ -1408,6 +1409,7 @@ namespace bm
     bn::optional<scene_id> game_scene::update()
     {
         ++_frame;
+        _app.test->paused = _paused ? 1 : 0;
         if(_paused)
         {
             return _update_pause();

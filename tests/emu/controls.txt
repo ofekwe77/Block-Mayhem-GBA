@@ -1,0 +1,131 @@
+# Every gameplay control on the real ROM (README controls table, PART 11): each GBA button is pressed through
+# the emulated keypad and its effect is read back from the game state.
+# piece_type: 1 I, 2 O, 3 T, 4 S, 5 Z, 6 J, 7 L. snap FIELD remembers a value; delta FIELD OP N checks the change.
+frames 40
+tap START
+wait scene == 3 120
+frames 30
+# Classic without autoplay: a human-controlled game. (A new mode is awaited through its game_mode id, so no
+# input lands during the fade from the previous game.)
+cmd 2 0 77 0
+wait scene == 7 200
+wait session_state == 1 400
+frames 2
+expect paused == 0
+expect piece_type != 2
+expect held_type == 0
+# D-pad LEFT / RIGHT move the piece one column per tap.
+snap piece_min_x
+tap LEFT 1
+delta piece_min_x == -1
+snap piece_min_x
+tap RIGHT 1
+delta piece_min_x == 1
+# Holding a direction auto-repeats (DAS then ARR) until the wall.
+hold LEFT
+frames 40
+release all
+frames 2
+expect piece_min_x == 0
+# A rotates clockwise, B counter-clockwise (states 0 spawn, 1 right, 2 reverse, 3 left).
+tap RIGHT 1
+tap RIGHT 1
+expect piece_rotation == 0
+tap A 1
+expect piece_rotation == 1
+tap A 1
+expect piece_rotation == 2
+tap B 1
+expect piece_rotation == 1
+tap B 1
+expect piece_rotation == 0
+tap B 1
+expect piece_rotation == 3
+tap A 1
+expect piece_rotation == 0
+# D-pad DOWN soft-drops: holding it makes the piece fall several rows quickly.
+snap piece_y
+hold DOWN
+frames 12
+release all
+frames 2
+delta piece_y >= 4
+# D-pad UP hard-drops: the piece locks at once and the next one appears.
+snap pieces
+tap UP 1
+frames 4
+delta pieces == 1
+# L holds the piece: it goes to the hold slot and the next piece comes in; only once per piece.
+frames 10
+expect held_type == 0
+snap piece_type
+tap L 1
+frames 4
+expect held_type != 0
+snap held_type
+tap L 1
+frames 4
+same held_type
+# START pauses: the game stops, the d-pad moves the menu instead of the piece, START resumes.
+snap piece_y
+tap START 1
+frames 4
+expect paused == 1
+frames 60
+same piece_y
+snap piece_min_x
+tap LEFT 1
+same piece_min_x
+tap START 1
+frames 4
+expect paused == 0
+expect session_state == 1
+expect error_code == 0
+# Chaos Arcade: R aims the selected ability, B cancels without paying, R + A fires and pays the cost,
+# SELECT cycles the equipped abilities.
+cmd 16 0 1 5
+cmd 2 1 88 0
+wait mode == 1 300
+wait session_state == 1 400
+frames 4
+cmd 7 60
+frames 2
+expect heat == 60
+expect selected_slot == 0
+tap R 1
+frames 2
+expect targeting == 1
+tap B 1
+frames 2
+expect targeting == 0
+expect heat == 60
+tap R 1
+frames 2
+expect targeting == 1
+tap A 1
+frames 4
+expect targeting == 0
+expect heat == 20
+tap SELECT 1
+frames 2
+expect selected_slot == 1
+tap SELECT 1
+frames 2
+expect selected_slot == 2
+tap SELECT 1
+frames 2
+expect selected_slot == 0
+expect error_code == 0
+# Dual Board: SELECT switches the active board.
+cmd 2 4 99 0
+wait mode == 4 300
+wait session_state == 1 400
+frames 4
+expect active_board == 0
+tap SELECT 1
+frames 4
+expect active_board == 1
+tap SELECT 1
+frames 4
+expect active_board == 0
+expect error_code == 0

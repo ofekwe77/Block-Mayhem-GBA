@@ -215,6 +215,21 @@ namespace bm
         t.flash_max = profile::flash_max;
         t.hitstop_max = profile::hitstop_max;
         t.loss_cause = uint32_t(s.cause());
+        {
+            const player& p = s.board_player(s.active_board());
+            const piece_state& pc = p.active();
+            int min_x = 99;
+            for(int m = 0; m < 4 && pc.type != piece_type::none; ++m)
+            {
+                min_x = pc.cell(m).x < min_x ? pc.cell(m).x : min_x;
+            }
+            t.piece_type = uint32_t(pc.type);
+            t.piece_min_x = uint32_t(min_x == 99 ? 0 : min_x);
+            t.piece_y = uint32_t(int(pc.y) + 8);     // offset: the box can start above the board
+            t.piece_rotation = uint32_t(pc.rotation);
+            t.held_type = uint32_t(p.held());
+            t.targeting = s.targeting() ? 1 : 0;
+        }
         t.stage = s.config().stage ? uint32_t(s.config().stage->world * 10 + s.config().stage->index) : 0;
         int cleared = 0;
         for(const stage_record& r : save.stages)
