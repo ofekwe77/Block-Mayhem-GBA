@@ -20,6 +20,7 @@ namespace bm::profile
     inline uint32_t secrets_seen = 0;       // secret_bit of every secret event shown since boot
     inline uint32_t shake_max = 0;          // strongest shake amplitude applied since the stats reset
     inline uint32_t flash_max = 0;          // strongest flash percent applied since the stats reset
+    inline uint32_t hitstop_max = 0;        // longest hitstop applied since the stats reset
 
     inline uint32_t per_mille(int ticks)
     {

@@ -497,6 +497,10 @@ namespace bm
         {
             row("OVERHEATS  ", bn::to_string<8>(s.stats().overheat_success), text_color::red);
         }
+        if(! won && s.cause() != loss_cause::none && line < max_rows)
+        {
+            row(loss_reason(s.cause()), "", text_color::red);
+        }
         if(a.flow.new_record && line < max_rows)
         {
             row("NEW RECORD!", "", text_color::green);

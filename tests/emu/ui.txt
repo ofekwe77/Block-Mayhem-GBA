@@ -100,9 +100,12 @@ cmd 9 1
 frames 4
 cmd 9 2
 frames 200
-print shake_max flash_max max_chain
+print shake_max flash_max hitstop_max max_chain
 expect shake_max >= 4
 expect flash_max > 25
+# Hitstop: big impacts pause the simulation for a few frames, never more than 8.
+expect hitstop_max >= 2
+expect hitstop_max <= 8
 # 5. Volume settings reach the mixer: music at volume 0 is silent, at 10 it plays loud; the same for effects.
 cmd 17 2 1 0 8
 cmd 11 1 0 1
@@ -129,5 +132,19 @@ audio_begin
 cmd 12 9
 frames 30
 audio_check sfx_volume_10 300
+# 6. A lost game says why: GAME OVER with the reason, then the reason on the results screen.
+cmd 17 2 1 8 8
+cmd 2 0 99 0
+wait scene == 7 200
+wait session_state == 1 400
+wait session_state == 4 20000
+expect loss_cause == 1
+frames 40
+shot game_over_reason
+frames 30
+tap A
+wait scene == 8 300
+frames 20
+shot results_reason
 expect error_code == 0
 expect text_failures == 0

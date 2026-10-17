@@ -7,6 +7,7 @@
 #   .\build.ps1 harness         -> build the headless mGBA test harness
 #   .\build.ps1 emu <script>    -> run an emulator scenario (tools/harness)
 #   .\build.ps1 verify          -> full release verification (verify_release)
+#   .\build.ps1 docs            -> regenerate STAGE_PASSPORTS.md from the stage data
 #   .\build.ps1 clean           -> remove build output
 #
 # GNU make / gcc cannot cope with the spaces and non-ASCII characters in this

@@ -35,6 +35,19 @@ namespace bm
         none, top_out, crushed_by_garbage, objective_failed
     };
 
+    // Why a session was lost, in words the game over and results screens can show.
+    [[nodiscard]] constexpr const char* loss_reason(loss_cause cause)
+    {
+        switch(cause)
+        {
+        case loss_cause::top_out: return "THE STACK REACHED THE TOP";
+        case loss_cause::crushed_by_garbage: return "GARBAGE PUSHED THE STACK OUT";
+        case loss_cause::objective_failed: return "THE GOAL CAN NO LONGER BE MET";
+        case loss_cause::none:
+        default: return "";
+        }
+    }
+
     struct session_config
     {
         game_mode mode = game_mode::classic;
@@ -211,6 +224,8 @@ namespace bm
         // Diagnostics / test interface.
         void debug_add_heat(int amount) { _gain_heat_raw(amount); }
         void debug_set_boss_hp(int hp);
+        // Host tests: queue hostile garbage rows on a board (one gap, inserted at the next lock).
+        void debug_queue_garbage(int board, int rows, int gap) { _queue_garbage(board, rows, gap, 0, coat_kind::none, true, false); }
         // Host tests: script the upcoming shapes (call before the first spawn or between pieces).
         [[nodiscard]] piece_queue& debug_queue() { return _queue; }
         // Stress test path (emulator diagnostics only): a board packed with specials, then a detonation.

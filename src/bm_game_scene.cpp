@@ -246,6 +246,7 @@ namespace bm
         _dizzy_checked = false;
         _end_timer = 0;
         _end_recorded = false;
+        _end_reason.hide();
         _shown_score = 0xFFFFFFFFu;
         _shown_level = -1;
         _shown_lines = -1;
@@ -1643,7 +1644,12 @@ namespace bm
                                   align::center);
             if(_end_timer > 40)
             {
-                _center_sub.show(cx, 80, "PRESS A", text_color::white, align::center);
+                _center_sub.show(cx, 88, "PRESS A", text_color::white, align::center);
+            }
+            if(! won && _end_timer == 20)
+            {
+                // The reason, in plain words, under GAME OVER (the compact font keeps it inside the board).
+                _end_reason.show_tiny(cx, 76, loss_reason(_s.cause()), text_color::red, align::center);
             }
             if(_end_timer > 60 && (in.hit(key_a) || in.hit(key_start) || _app.flow.autoplay || _end_timer > 600))
             {

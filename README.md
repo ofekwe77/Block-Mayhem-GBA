@@ -3,7 +3,11 @@
 An original falling-block action puzzle game for the Nintendo Game Boy Advance.
 Output: `BlockMayhem.gba` (a genuine GBA ROM built with devkitARM + Butano).
 
-Status: in development — see `PROGRESS_REPORT.md` and `TASKS.md` for exactly what works.
+Status: feature complete — six worlds, thirty stages, six multi-phase bosses, six game modes. What is verified
+and how is in `RELEASE_VERIFICATION.md` (summary) and `docs/verify_report.md` (latest automated run); the task
+inventory is `TASKS.md`. Design: `GAME_DESIGN.md`, rules table `INTERACTIONS.md`, balance `BALANCE.md`,
+per-stage records `STAGE_PASSPORTS.md`, world / boss status `WORLD_PRODUCTION_MATRIX.md` /
+`BOSS_PRODUCTION_MATRIX.md`, assets `ASSET_MANIFEST.md`, tests `TESTING.md`.
 
 ## Installing dependencies (Windows)
 
@@ -30,6 +34,8 @@ Status: in development — see `PROGRESS_REPORT.md` and `TASKS.md` for exactly w
 .\build.ps1           # regenerate graphics + audio, then build BlockMayhem.gba
 .\build.ps1 rom       # build the ROM only
 .\build.ps1 tests     # run the host-side unit tests and simulations
+.\build.ps1 verify    # full release verification: assets, ROM + header, unit tests, every emulator scenario
+.\build.ps1 docs      # regenerate STAGE_PASSPORTS.md from the stage data
 ```
 The project folder contains spaces / non-ASCII characters, which GNU make cannot handle, so
 `build.ps1` maps it to drive `M:` with `subst` (per session, no admin rights; override with `BM_DRIVE`).
@@ -58,14 +64,21 @@ Automated emulator tests use a headless harness built on the real mGBA core:
 | SELECT | Cycle abilities (Dual Board: switch board) |
 | START | Pause |
 
-## Game modes (current build)
+## Game modes
 
+- **Adventure** — six worlds of five stages, each world ending with a multi-phase boss; stage cards, ranks
+  C..S+, world introductions and an ending.
 - **Classic** — traditional falling-block game: seven-bag, hold, 3 previews, ghost, speed-up, high scores.
-- **Chaos Arcade** — endless score attack with special blocks, the Heat meter, Overheat and three abilities.
-- **Dual Board** — two boards, one heat meter; switch with SELECT, forced switch every 4 locks, CROSS OVER combos.
+- **Chaos Arcade** — endless score attack with special blocks, the Heat meter, Overheat, three abilities
+  chosen on the loadout screen and telegraphed environmental events.
+- **Chaos Run** — a roguelite of three acts (twelve fights) with 31 upgrades and synergies.
+- **Dual Board** — two boards, one heat meter; switch with SELECT, forced switch every 4 locks, CROSS OVER combos
+  across the energy bridge.
+- **Boss Rush** — every defeated boss in a row (unlocked by the World 3 boss).
 
-Adventure (30 stages, 6 bosses), Chaos Run and Boss Rush are under construction and only appear in the
-menu once they work.
+Classic, Chaos Arcade and Dual Board accept challenge modifiers unlocked by the Adventure (CHALLENGES page of
+the setup screen). OPTIONS holds difficulty, ghost piece, screen shake, flashes, volumes, CUSTOMIZE (block,
+frame, title and particle styles — CONTRAST is a colour-blind friendly block theme), sound test and credits.
 
 ## Saving
 

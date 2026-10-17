@@ -6,6 +6,7 @@
 #include "bm_test.h"
 #include "test_util.h"
 
+#include "bm_rank.h"
 #include "bm_session.h"
 
 using namespace bm;
@@ -550,4 +551,147 @@ BM_TEST(difficulty, beginner_and_expert_change_warnings_and_penalties)
     CHECK_EQ(s.overheat_fail_rows(), cfg::overheat_fail_rows_expert);
     CHECK_EQ(beginner, standard + 2);
     CHECK_EQ(expert, standard - 1 < 3 ? 3 : standard - 1);
+}
+
+BM_TEST(rules, overheat_raises_boss_damage)
+{
+    // PART 9.3: boss damage x overheat_boss_damage_percent during Overheat.
+    int damage[2] = {};
+    for(int hot = 0; hot < 2; ++hot)
+    {
+        driver d;
+        session_config c = make_stage_config(stage(1, 5), difficulty::standard, 32);
+        c.skip_intro = false;
+        c.loadout_count = 0;
+        d.start(c, { piece_type::i, piece_type::i });
+        if(hot)
+        {
+            d.s.debug_add_heat(cfg::heat_max);
+            CHECK(d.s.overheat_active());
+        }
+        // A double: its damage stays under the per-resolution cap (40% of max HP), so the multiplier shows.
+        board& b = d.active().grid();
+        quad_well(b, 9);
+        for(int x = 0; x < 9; ++x)
+        {
+            b.clear(x, b.rows() - 4);
+            b.clear(x, b.rows() - 3);
+        }
+        d.reset_counters();
+        d.place(1, 9);
+        CHECK_EQ(d.last_rows, 2);
+        damage[hot] = d.boss_damage;
+    }
+    CHECK_EQ(damage[0], cfg::boss_line_damage[2]);
+    CHECK_EQ(damage[1], cfg::boss_line_damage[2] * cfg::overheat_boss_damage_percent / 100);
+}
+
+BM_TEST(dual, two_and_four_row_clears_defend_the_other_board)
+{
+    // PART 12.5: two rows on the active board remove one row from the other board's next garbage entry (and
+    // give heat); four rows cancel cross_quad_garbage_cancel rows from it.
+    driver d;
+    session_config c = base_config(game_mode::dual_relay, 33);
+    c.dual = true;
+    d.start(c, { piece_type::i, piece_type::i, piece_type::i, piece_type::i });
+    d.s.debug_queue_garbage(1, 3, 2);
+    CHECK_EQ(d.s.incoming_rows(1), 3);
+    board& a = d.s.board_player(0).grid();
+    a.clear_all();
+    for(int y = a.rows() - 2; y < a.rows(); ++y)
+    {
+        for(int x = 0; x < a.cols() - 1; ++x)
+        {
+            a.set(x, y, bmtest::cell_from_char('#'));
+        }
+    }
+    a.set(0, a.rows() - 3, bmtest::cell_from_char('#'));
+    d.reset_counters();
+    d.place(1, cfg::dual_board_cols - 1);           // vertical I: a double on board A
+    CHECK_EQ(d.last_rows, 2);
+    CHECK_EQ(d.s.incoming_rows(1), 2);
+    CHECK(d.heat_gained >= cfg::line_heat[2] + cfg::cross_double_heat);
+
+    quad_well(a, cfg::dual_board_cols - 1);
+    d.place(1, cfg::dual_board_cols - 1);           // a quad on board A
+    CHECK_EQ(d.last_rows, 4);
+    CHECK_EQ(d.s.incoming_rows(1), 2 - cfg::cross_quad_garbage_cancel < 0 ? 0 : 2 - cfg::cross_quad_garbage_cancel);
+    CHECK_EQ(d.s.validate(), 0);
+}
+
+BM_TEST(dual, an_electric_chain_charges_a_spark_on_the_other_board)
+{
+    driver d;
+    session_config c = base_config(game_mode::dual_relay, 34);
+    c.dual = true;
+    d.start(c, { piece_type::i, piece_type::i });
+    board& a = d.s.board_player(0).grid();
+    board& b = d.s.board_player(1).grid();
+    a.clear_all();
+    b.clear_all();
+    for(int x = 0; x < a.cols() - 1; ++x)
+    {
+        a.set(x, a.rows() - 1, bmtest::cell_from_char(x == 3 ? 'e' : '#'));     // a spark in the row
+    }
+    a.set(0, a.rows() - 2, bmtest::cell_from_char('#'));
+    b.set(2, b.rows() - 1, bmtest::cell_from_char('e'));                         // an idle spark on board B
+    d.place(1, cfg::dual_board_cols - 1);
+    CHECK_EQ(d.last_rows, 1);
+    CHECK(b.at(2, b.rows() - 1).flags & flag_charged);
+}
+
+BM_TEST(rank, criteria_and_thresholds)
+{
+    // PART 27.2: 3 / 2 / 1 points for the score at 100 / 67 / 33 % of the S target, 2 / 1 for time within par /
+    // 1.5 x par, 1 for no garbage, 2 for the bonus goal; 8 = S+, 6-7 = S, 4-5 = A, 2-3 = B, else C.
+    rank_input in;
+    in.s_target = 9000;
+    in.par_seconds = 100;
+    in.score = 9000; in.seconds = 100; in.no_garbage = true; in.bonus_goal = true;
+    CHECK_EQ(rank_points(in), 8);
+    CHECK_EQ(rank_from_points(rank_points(in)), 5);
+    in.score = 8999;
+    CHECK_EQ(rank_points(in), 7);
+    in.score = 6000;
+    CHECK_EQ(rank_points(in), 7);
+    in.score = 5999;
+    CHECK_EQ(rank_points(in), 6);
+    in.score = 3000;
+    CHECK_EQ(rank_points(in), 6);
+    in.score = 2999;
+    CHECK_EQ(rank_points(in), 5);
+    in.score = 9000; in.seconds = 150;
+    CHECK_EQ(rank_points(in), 7);
+    in.seconds = 151;
+    CHECK_EQ(rank_points(in), 6);
+    in.no_garbage = false;
+    CHECK_EQ(rank_points(in), 5);
+    in.bonus_goal = false;
+    CHECK_EQ(rank_points(in), 3);
+    CHECK_EQ(rank_from_points(8), 5);
+    CHECK_EQ(rank_from_points(6), 4);
+    CHECK_EQ(rank_from_points(4), 3);
+    CHECK_EQ(rank_from_points(2), 2);
+    CHECK_EQ(rank_from_points(1), 1);
+    // Every stage's S target and par are reachable: the calibration in balance.human_paced_stage_report sets
+    // them from skilled-paced bot runs (BALANCE.md).
+}
+
+BM_TEST(rules, a_lost_game_says_why)
+{
+    // PART 40 Gate C: the cause of a loss is recorded and has a plain-language reason for the screens.
+    CHECK(loss_reason(loss_cause::top_out)[0] != 0);
+    CHECK(loss_reason(loss_cause::crushed_by_garbage)[0] != 0);
+    CHECK(loss_reason(loss_cause::objective_failed)[0] != 0);
+    driver d;
+    session_config c = base_config(game_mode::classic, 35);
+    c.heat = false;
+    d.start(c, {});
+    for(int k = 0; k < 40 && d.s.state() == session_state::playing; ++k)
+    {
+        d.tap(key_up);
+        d.until_falling();
+    }
+    CHECK(d.s.state() == session_state::lost);
+    CHECK(d.s.cause() == loss_cause::top_out);
 }

@@ -6,6 +6,7 @@
 #define BM_FLOW_H
 
 #include "bm_app.h"
+#include "bm_rank.h"
 
 #include "bn_string.h"
 
@@ -39,7 +40,7 @@ namespace bm
     bool end_boss_rush(app& a, bool complete);
 
     // Stage rank (1 C .. 5 S+) from transparent criteria.
-    [[nodiscard]] int stage_rank(const session& s);
+    // stage_rank(): core/bm_rank.h
 
     // Human-readable objective ("CLEAR 12 ROWS"), written into 'out'.
     void objective_text(const objective_def& o, bn::istring_base& out);

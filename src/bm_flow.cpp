@@ -3,6 +3,7 @@
 #include "bm_achievements.h"
 #include "bm_challenges.h"
 #include "bm_cosmetics.h"
+#include "bm_rank.h"
 #include "bm_run.h"
 
 namespace bm
@@ -163,32 +164,6 @@ namespace bm
         if(heat >= 40) return "HOT";
         if(heat >= 20) return "WARM";
         return "MILD";
-    }
-
-    int stage_rank(const session& s)
-    {
-        const stage_def* st = s.config().stage;
-        if(! st || s.state() != session_state::won)
-        {
-            return 0;
-        }
-        // Transparent criteria: score vs the stage's S target, time vs par, garbage received, secondary objective.
-        int points = 0;
-        const uint32_t target = st->rank_score;
-        if(s.score() >= target) points += 3;
-        else if(s.score() * 3 >= target * 2) points += 2;
-        else if(s.score() * 3 >= target) points += 1;
-        const uint32_t seconds = s.stats().frames / 60;
-        if(seconds <= st->par_seconds) points += 2;
-        else if(seconds <= st->par_seconds * 3 / 2u) points += 1;
-        if(s.stats().garbage_received == 0) points += 1;
-        if(s.secondary().done) points += 2;
-        // 0..8 points -> C .. S+
-        if(points >= 8) return 5;
-        if(points >= 6) return 4;
-        if(points >= 4) return 3;
-        if(points >= 2) return 2;
-        return 1;
     }
 
     void objective_text(const objective_def& o, bn::istring_base& out)

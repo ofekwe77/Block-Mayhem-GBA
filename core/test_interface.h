@@ -103,6 +103,8 @@
     X(abilities_unlocked) /* save_data::abilities_unlocked */ \
     X(shake_max)        /* strongest screen shake applied since the stats reset (0 = shake off) */ \
     X(flash_max)        /* strongest screen flash applied since the stats reset, percent */ \
+    X(hitstop_max)      /* longest hitstop (frames the simulation pauses on impact) since the stats reset */ \
+    X(loss_cause)       /* bm::loss_cause of the active session (1 top out, 2 crushed by garbage, 3 objective) */ \
     X(cmd)              /* mailbox: command id written by the harness */ \
     X(arg0) \
     X(arg1) \

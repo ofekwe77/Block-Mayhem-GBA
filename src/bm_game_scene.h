@@ -63,6 +63,7 @@ namespace bm
         label _target_hint;
         label _center_text;
         label _center_sub;
+        label _end_reason;      // why the game was lost
         label _pause_items[6];
         label _warning;
         label _boss_name;

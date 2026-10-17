@@ -313,6 +313,7 @@ namespace bm
         if(frames > _hitstop)
         {
             _hitstop = frames > 8 ? 8 : frames;
+            profile::hitstop_max = uint32_t(_hitstop) > profile::hitstop_max ? uint32_t(_hitstop) : profile::hitstop_max;
         }
     }
 

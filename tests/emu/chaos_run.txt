@@ -30,3 +30,22 @@ frames 20
 shot run_map_act2
 print run_phase run_index run_cleared run_score run_upgrades error_code cpu_max cpu_avg
 expect error_code == 0
+# A lost run: a new run whose first encounter is not played tops out; its results lead to the run summary.
+cmd 2 3 999 0
+frames 90
+wait scene == 19 200
+expect run_index == 0
+frames 30
+tap A
+wait scene == 7 300
+wait session_state == 4 9000
+frames 90
+tap A
+wait scene == 8 600
+frames 30
+tap A
+wait scene == 13 300
+frames 30
+shot run_summary
+expect run_phase == 4
+expect error_code == 0

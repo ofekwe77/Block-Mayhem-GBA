@@ -167,6 +167,7 @@ namespace bm
                 t.prof_fx = t.prof_boss = t.prof_hud = 0;
                 profile::shake_max = 0;
                 profile::flash_max = 0;
+                profile::hitstop_max = 0;
                 pending_command = 0;
             }
             else if(t.cmd == BM_TI_CMD_SET_AUTOPLAY)
@@ -212,6 +213,8 @@ namespace bm
         t.abilities_unlocked = save.abilities_unlocked;
         t.shake_max = profile::shake_max;
         t.flash_max = profile::flash_max;
+        t.hitstop_max = profile::hitstop_max;
+        t.loss_cause = uint32_t(s.cause());
         t.stage = s.config().stage ? uint32_t(s.config().stage->world * 10 + s.config().stage->index) : 0;
         int cleared = 0;
         for(const stage_record& r : save.stages)
