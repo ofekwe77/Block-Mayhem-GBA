@@ -64,6 +64,7 @@ namespace bm
         int _piece_serial = -1;
         int _last_type = 0;
         int _last_y = 99;
+        int _last_board = 0;
         bool _hold_done = false;
         int _wait = 0;
         int _stall = 0;

@@ -34,6 +34,12 @@ cmd_tests() {
     ./tests/build/run_tests.exe "$@"
 }
 
+cmd_docs() {
+    mkdir -p tests/build
+    "$HOSTCXX" -std=c++23 -O2 -Wall -Wextra -DBM_HOST=1 -Icore core/*.cpp tools/gen_docs.cpp -static         -o tests/build/gen_docs.exe
+    ./tests/build/gen_docs.exe
+}
+
 cmd_harness() {
     bash tools/harness/build_harness.sh
 }
@@ -57,6 +63,7 @@ case "${1:-all}" in
     rom)     cmd_rom ;;
     tests)   shift; cmd_tests "$@" ;;
     harness) cmd_harness ;;
+    docs)    cmd_docs ;;
     emu)     shift; cmd_emu "$@" ;;
     verify)  shift; cmd_verify "$@" ;;
     clean)   cmd_clean ;;

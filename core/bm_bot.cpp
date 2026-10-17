@@ -33,6 +33,7 @@ namespace bm
         _piece_serial = -1;
         _last_type = 0;
         _last_y = 99;
+        _last_board = 0;
         _hold_done = false;
         _wait = 0;
         _stall = 0;
@@ -364,9 +365,11 @@ namespace bm
         else
         {
             const int type = int(p.active().type);
-            if(type != _last_type || p.active().y < _last_y || ! _plan.valid)
+            // A relay switch resumes the other board's frozen piece: its plan must be made for that board.
+            const bool board_changed = s.active_board() != _last_board;
+            if(type != _last_type || p.active().y < _last_y || ! _plan.valid || board_changed)
             {
-                const bool fresh_piece = type != _last_type || p.active().y < _last_y;
+                const bool fresh_piece = type != _last_type || p.active().y < _last_y || board_changed;
                 _plan = plan(s);
                 _hold_done = false;
                 _stall = 0;
@@ -381,6 +384,7 @@ namespace bm
             }
             _last_type = type;
             _last_y = p.active().y;
+            _last_board = s.active_board();
             ++_stall;
 
             if(_think > 0)

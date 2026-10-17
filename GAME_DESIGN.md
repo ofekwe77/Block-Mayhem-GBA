@@ -11,7 +11,7 @@ This document describes what the code actually does. Numbers: `BALANCE.md`. Stat
 
 ## Board and pieces
 10×20 logical board (2 hidden rows; the lower hidden row is drawn as a spawn chute above the field).
-Dual board: two 8×18 boards. Seven shapes, standard modern rotation system with 5-test kicks,
+Dual board: two 8×18 logical boards (8×16 visible). Seven shapes, standard modern rotation system with 5-test kicks,
 O never rotates. Pieces spawn in the hidden rows and drop one row immediately.
 Seven-bag randomizer (seeded); a separate seeded distributor attaches at most one special cell to a piece.
 
@@ -44,12 +44,27 @@ otherwise garbage rows arrive (warned during the last 3 s).
 Up to three abilities are equipped (Dual Board: one). R activates; targeted abilities freeze the piece
 and enter an aiming state (A fire, B cancel, 5 s timeout, nothing spent until fired).
 
-## Bosses (framework)
-Bosses have HP, up to 5 phases at HP thresholds, and repeating attack patterns scheduled by locked
-pieces. Every attack is telegraphed at least two locks ahead (columns, marked cells, incoming garbage).
-Phase changes are a visible, non-interactive transition with all timers frozen.
+## Worlds
+| World | Theme | Mechanics introduced | Boss |
+|---|---|---|---|
+| 1 CLASSIC CHAOS | steel factory | rows, heat and the Laser, bombs, fire and spark ignition, first chains | THE BLOCK MONSTER |
+| 2 FROZEN FACTORY | ice works | ice coats, freezing hazards, sparks shatter ice | THE CRYO TITAN |
+| 3 VOLCANO MADNESS | volcano | fire spread, lava pressure, molten rain, Nuclear Burst, Overheat | THE MAGMA HYDRA |
+| 4 ELECTRIC CITY | neon city | spark chains, magnets, power surges, the dual-board relay and CROSS OVER | THE ELECTRIC EMPEROR |
+| 5 GRAVITY DIMENSION | floating islands | settle cycles (sideways, upward, rotating), gravity shifts, Gravity Pulse | THE GRAVITY KING |
+| 6 THE FINAL MELTDOWN | the core chamber | every hazard returns, one at a time | THE CORE OF MAYHEM |
 
-## Modes (current build)
+Every stage's objective, hazards, starting state and fairness argument: STAGE_PASSPORTS.md.
+
+## Bosses
+Bosses have HP, three to five phases at HP thresholds, and repeating attack patterns scheduled by locked
+pieces. Every attack is telegraphed at least two locks ahead (columns, marked cells, incoming garbage);
+Shield Matrix blocks one. Phase changes are a visible, non-interactive transition with all timers frozen.
+Damage comes from row clears, chains and abilities with a per-resolution cap, so no boss can be burst.
+Later phases combine attacks the player has already met. Defeat plays a destruction sequence. Per-boss
+details: BOSS_PRODUCTION_MATRIX.md.
+
+## Modes
 - **Adventure** — 6 worlds x 5 stages (stage 5 = boss). World map, stage cards with goal icons,
   per-stage objectives, bonus goals, hazards, layouts and ranks C..S+.
 - **Chaos Run** — the roguelite (below).
@@ -62,6 +77,30 @@ Phase changes are a visible, non-interactive transition with all timers frozen.
   order, with the score carried between fights. Two recoveries: a lost fight is retried until they
   run out. Total time and score are shown; the best score and the best full six-boss time are saved.
   Quitting a fight or giving up on the card ends the rush.
+
+## Progression and records (PART 27-29)
+- Worlds unlock in order by defeating each world's boss; Boss Rush unlocks with the World 3 boss.
+- Abilities met in Adventure stages become available for the Chaos Arcade loadout; boss defeats unlock their
+  tracks in the sound test; challenge modifiers and cosmetics unlock as listed below.
+- Ranks C..S+ per stage (score, par time, no garbage taken, bonus goal); best score / time / rank are saved.
+- High-score tables for Classic, Chaos Arcade and Dual Board; best Boss Rush score and full-rush time; best
+  Chaos Run score and act, runs started / completed; lifetime statistics.
+- 31 achievements (6 hidden), each with a real trigger, progress and an in-game unlock banner.
+- Save: SRAM, two alternating slots with magic, version, size and CRC-32; the newest valid slot loads, a
+  corrupt or missing save falls back to defaults (never read blindly).
+
+## Options and accessibility
+Difficulty (BEGINNER: slower gravity, longer warnings, one garbage row on a failed Overheat; STANDARD;
+EXPERT: faster gravity, shorter boss spacing), ghost piece, screen shake (off / reduced / full), flashes
+(reduced / full), music and effect volumes, CUSTOMIZE (block theme CONTRAST is a colour-blind friendly set,
+always available), sound test, credits.
+
+## Presentation highlights
+Animated parallax backdrops per world that react to big plays; line-clear flashes and shards, hard-drop
+trail and landing dust; explosions, fire bursts, spark arcs, magnet pulls and rainbow links; chain call-outs
+and score pop-ups; screen shake and hit-stop scaled by impact; the dual-board energy bridge with CROSS OVER
+packets; boss rigs with telegraph, attack, hit, enrage and destruction animations; adaptive music that
+switches to a hotter arrangement during Overheat.
 
 ## Challenge modifiers (PART 27.3, 30.7)
 Optional rules for Classic, Chaos Arcade and Dual Board, toggled on the CHALLENGES page of the setup

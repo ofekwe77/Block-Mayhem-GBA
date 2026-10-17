@@ -1,6 +1,28 @@
 # Testing
 
-Two layers of automated verification. Results below are real runs (not projections).
+Two layers of automated verification plus one command that runs everything. Results below are real runs
+(not projections).
+
+## 0. Release verification — `.\build.ps1 verify` (`tools/verify_release.sh`)
+
+Runs, in order, and reports PASS / FAIL for each step (a missing tool, test or scenario is a FAIL, never a
+skip; exit code 0 only when all pass); the report is written to `docs/verify_report.md`:
+
+1. toolchain present (devkitARM, Butano, Python, host g++, mGBA development build);
+2. assets regenerate byte-identically from `tools/gfx` and `tools/audio`;
+3. asset manifest check (`tools/check_assets.py`, writes ASSET_MANIFEST.md): every required presentation
+   element maps to files that parse in the expected GBA format, sound data that is audible, and items the ROM
+   source uses;
+4. ROM build with zero compiler warnings, then the header check (`tools/check_rom.py`: entry branch, boot logo,
+   complement checksum, title / game code, SRAM save-type marker);
+5. all host unit tests and simulations;
+6. the emulator harness build;
+7. generated scenarios regenerated from data (30 stage scenarios, the audio scenario);
+8. every emulator scenario in `tests/emu/` on the freshly built ROM;
+9. performance bounds from the stress scenario (overrun frames at most 1%, sprite peak within 128);
+10. documentation consistency (generated passports up to date, every test cited in INTERACTIONS.md and the
+    production matrices exists);
+11. task inventory: no task left NOT STARTED / IN PROGRESS / BLOCKED except those that need human judgement.
 
 ## 1. Host-side tests (portable core, `tests/`)
 
@@ -23,9 +45,11 @@ Optional filter: `.\build.ps1 tests bomb`.
 | settle/compaction.* | four settle directions; compaction preserves cell counts |
 | session.* | bot game validity; deterministic replay; scoring of a single + hard drop |
 | heat.* | Overheat consumes meter, caps gain at 50, failure garbage, pause stops timer |
-| abilities.* | denial without heat, exact deduction, cooldown in locked pieces, timeout without cost, vent |
+| abilities.* | denial without heat, exact deduction, cooldown in locked pieces, timeout without cost; real activation through targeting of the Laser (10-hit budget, coats, stone), Nuclear Burst (5x5 power 2), Chain Spark (stone refused), Gravity Pulse (direction, coats travel), Emergency Vent |
 | bots.* | 5 strategies x 3 seeds: no invalid state in 2-minute games |
-| stages.* | all 30 Adventure stages x 3 bots x 4 seeds: every stage won, 0 invalid states, 0 timeouts, hazards and boss attacks fire (`tests/build/stage_report.md`) |
+| stages.* | all 30 Adventure stages x 3 bots x 4 seeds: every stage won, 0 invalid states, 0 timeouts, hazards and boss attacks fire (`tests/build/stage_report.md`); every stage can be lost and idling never wins (idle runs lose in 16-77 s) |
+| boss1..6.* | one verification entry per boss (PART 56.5), skilled-paced fights with and without abilities: initial HP, phases in order at their thresholds, pattern scheduling, telegraphs >= 2 locks, every attack runs and shows its effect, consistent damage, defeat |
+| challenges.* / cosmetics.* | challenge definitions, world-clear unlocks, multiplied score percents, TURBO / NO HOLD / FRENZY / RISING TIDE rules on the real session, presentation-only challenges change nothing but the score; cosmetic unlock rules, accessibility theme always available, save round trip |
 | run.* | 31-upgrade pool well formed; maxed build respects every cap through the real session rules; same seed = same run; 300 seeded runs: offers always eligible and distinct, no repeated encounters or bosses, post-boss rare card; every encounter template at every act and every run boss won by bots; 6 full bot runs (`tests/build/run_report.md`) |
 
 | achievements.* | definitions; nothing unlocks without events; live play unlocks + progress without double counting after merge; campaign / run / rush flags; MASTER OF MAYHEM and ARSENAL accumulation |
@@ -37,7 +61,7 @@ Optional filter: `.\build.ps1 tests bomb`.
 | balance.* | human-paced calibration of all 30 stages (difficulty-curve assertions) and the ability efficiency table (`balance_report.md`, `ability_report.md`) |
 | exploit.* | input spam scores nothing, special points cap, boss damage cap with a maxed build, board switching yields nothing, resource invariants under heavy play, SECOND CHANCE once per run |
 
-Latest run (2026-10-16): **88 passed, 0 failed.**
+Latest run (2026-10-17): **111 passed, 0 failed.**
 
 Every simulated frame also calls `session::validate()` (board/heat/cooldown/boss invariants).
 
@@ -48,7 +72,7 @@ Scenario scripts (`tests/emu/*.txt`) press buttons, wait for RAM test-interface 
 PNG screenshots and measure audio RMS. Diagnostic mailbox commands (start a mode with autoplay, add
 heat, set boss HP...) are a test path only and cannot be reached from the game UI.
 
-| Scenario | Result (2026-10-15) |
+| Scenario | Result (2026-10-17) |
 |----------|---------------------|
 | smoke.txt — boot, title music, menu, Classic input, pause, Arcade autoplay | PASS (error_code 0) |
 | adventure.txt — world map, stage card, stage 1-1, all six bosses, phase changes, defeat sequence | PASS |
@@ -67,8 +91,9 @@ heat, set boss HP...) are a test path only and cannot be reached from the game U
 Scenarios that boot without a save file see the first-launch intro and skip it with START.
 Screenshots from the latest runs: `screenshots/tmp/`.
 
-## Not yet tested
-See TASKS.md entries without `TESTED` status (stress/performance runs, balance runner).
+## Needs human judgement
+Automated checks cannot judge whether the game is fun, whether the music is good or whether the difficulty
+feels right to a person: see RELEASE_VERIFICATION.md (human verification) and task AUD-06.
 
 ## 3. Performance (PART 33.6, 57.5) — `tests/emu/stress.txt`
 
@@ -101,7 +126,13 @@ play, 160% worst frame in the detonation test):
   effect and 4 per frame; the per-frame invariant validation of the diagnostics runs every 8th frame.
 - Section profiling stays in the ROM (`prof_*` fields of the test interface) for future regressions.
 
-## 4. Defects found by the emulator runs (and fixed)
+## 4. Defects found by verification (and fixed)
+- **Combination attacks without targets** (found by the boss audit `tests/test_bosses.cpp`, 2026-10-17): a core
+  combo did not prepare its parts, so molten rain + fire breath landed nothing and ice / armour combos marked no
+  cells. Both parts are now prepared and telegraphed; three bosses use combos (BALANCE.md).
+- **Electric Emperor difficulty spike** (boss audit + 24-seed measurement): as hard as the final boss; eased
+  (attack interval, starting level) so the final boss stays the hardest fight.
+- **Test bot after a relay switch** (diagnostics only): the bot now replans whenever the active board changes.
 - **Sprite palette exhaustion in long fights** (found by stages_w6.txt, 2026-10-17): the glyph-label text cache kept
   the palette of every text colour used in a scene alive; with the Core of Mayhem's palettes all 16 sprite palettes
   were taken and the next new palette crashed the ROM (Butano error screen). Text palettes are no longer cached (a

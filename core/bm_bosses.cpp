@@ -123,8 +123,8 @@ namespace bm
             d->phase_count = 3;
             d->dual = true;
             d->phases[0] = phase(100, 6, e1);
-            d->phases[1] = phase(65, 5, e2);
-            d->phases[2] = phase(30, 5, e3);
+            d->phases[1] = phase(65, 6, e2);      // relay play needs the extra lock (BOSS-4 balance, 2026-10-17)
+            d->phases[2] = phase(30, 6, e3);
 
             d = &t.b[4];
             d->name = "THE GRAVITY KING";

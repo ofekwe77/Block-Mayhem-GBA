@@ -172,12 +172,25 @@ Worlds 1-2 below 60% for casual players, or the campaign below 70% for skilled p
 | Block Monster | 100 | 34 s | 176 | ~1.4 min | 2/3 |
 | Cryo Titan | 140 | 49 s | 171 | ~2.0 min | 2/3 |
 | Magma Hydra | 180 | 58 s | 186 | ~2.4 min | 2/3 |
-| Electric Emperor | 220 | 61 s | 216 | ~2.5 min | 1/3 |
-| Gravity King | 260 | 83 s | 187 | ~3.5 min | 2/3 |
+| Electric Emperor | 220 | 62 s | 213 | ~2.6 min | 1/3 |
+| Gravity King | 260 | 83 s | 188 | ~3.5 min | 2/3 |
 | Core of Mayhem | 350 | 95 s | 221 | ~4.0 min | 1/3 |
 
 Damage per minute stays in a narrow 170-220 band, so HP alone sets the fight length: fights grow from about
-a minute and a half to four minutes, with the two dual-board bosses as the hardest. No boss can be burst:
+a minute and a half to four minutes, with the two dual-board bosses as the hardest. Win rate over 24 seeded fights at the skilled pace (2026-10-17; the boss verification tests
+`boss1..6.*_full_verification` repeat a smaller sample on every test run): Electric Emperor 16/24, Gravity King 23/24, Core of Mayhem 14/24. The Emperor was
+measured at 15/24 with phases 2-3 attacking every 5 locks from level 6, i.e. as hard as the final boss: its
+later phases now attack every 6 locks and the fight starts at level 5 (cap 6) like the 4-3 relay stage, so the
+final boss stays the hardest fight. The dual-board fights remain the hardest for the bot because a relay loss
+is a top-out of one narrow 8x16 board.
+
+The boss audit (`tests/test_bosses.cpp`) also found that combination attacks did not prepare their parts:
+a core combo of molten rain + fire breath landed no blocks and ice / armour combos marked no cells. Combos now
+prepare and telegraph both parts (Magma Hydra phase 3, Gravity King phase 4, Core of Mayhem phase 5), which
+made those fights slightly harder; the S targets of 3-5, 4-5, 5-5 and 6-5 were recalibrated afterwards
+(42 500, 99 500, 61 500, 121 000).
+
+No boss can be burst:
 `exploit.boss_damage_never_exceeds_the_per_resolution_cap` plays every boss with the strongest Chaos Run
 build and Overheat; the biggest single resolution reached 53 of a 72 cap and every kill took 10+ hits.
 

@@ -1605,7 +1605,7 @@ namespace bm
             {
                 _shield_pieces = 0;
                 ++_stats.shield_blocks;
-                _events.push(event_type::shield_block, b, int(attack_kind::garbage));
+                _events.push(event_type::shield_block, b, int(attack_kind::garbage), 1);     // b = 1: queued garbage
                 continue;
             }
             int rows = g.rows;
@@ -1746,21 +1746,31 @@ namespace bm
         const hazard_kind hk = a.source == 1 ? hazard_kind(a.kind) : hazard_kind::none;
         rng& r = a.source == 2 ? _boss_rng : _hazard_rng;
 
+        // A combination attack is prepared for both of its parts (target columns, cell marks), so each part
+        // is telegraphed and lands like the attack it combines.
+        attack_kind parts[2] = { attack_kind(kind_attack), attack_kind::none };
+        if(parts[0] == attack_kind::core_combo)
+        {
+            parts[0] = core_combos[a.param % 4][0];
+            parts[1] = core_combos[a.param % 4][1];
+        }
+        auto has = [&parts](attack_kind k) { return parts[0] == k || parts[1] == k; };
+
         // Garbage gap.
         a.gap = int8_t(r.below(cols));
 
         // Column targets.
-        const bool columns = (a.source == 2 && attack_uses_columns(attack_kind(kind_attack))) ||
+        const bool columns = (a.source == 2 && (attack_uses_columns(parts[0]) || attack_uses_columns(parts[1]))) ||
                              hk == hazard_kind::molten_rain;
         if(columns)
         {
             int n = a.strength;
-            if(attack_kind(kind_attack) == attack_kind::fire_breath || attack_kind(kind_attack) == attack_kind::frozen_wall)
+            if(has(attack_kind::fire_breath) || has(attack_kind::frozen_wall))
             {
                 n = 1;
             }
             n = clampi(n, 1, 4);
-            if(attack_kind(kind_attack) == attack_kind::frozen_wall)
+            if(has(attack_kind::frozen_wall))
             {
                 // The Cryo Titan freezes your lowest column (deterministic, learnable).
                 int best = 0;
@@ -1803,8 +1813,8 @@ namespace bm
         }
 
         // Cell marks (armor / ice injections and freezing events): surface cells of the tallest columns.
-        const bool armor = attack_kind(kind_attack) == attack_kind::armor_inject || hk == hazard_kind::armor_plates;
-        const bool ice = attack_kind(kind_attack) == attack_kind::ice_inject || hk == hazard_kind::freeze_cells;
+        const bool armor = has(attack_kind::armor_inject) || hk == hazard_kind::armor_plates;
+        const bool ice = has(attack_kind::ice_inject) || hk == hazard_kind::freeze_cells;
         if(armor || ice)
         {
             int marked = 0;

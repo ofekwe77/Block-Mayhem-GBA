@@ -1,4 +1,5 @@
 # Story presentation on the real ROM (run with --save FILE pointing to a deleted file so this is a first launch):
+# @fresh-save (verify_release runs this scenario with a newly created save file)
 # intro cutscene beats -> title, first visit of World 1 -> world intro -> stage card, final ending -> credits -> title.
 # Scenes: 2 intro, 3 title, 4 main_menu, 5 world_map, 6 stage_card, 14 credits, 15 ending, 21 world_intro.
 frames 20

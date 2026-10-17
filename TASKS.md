@@ -17,8 +17,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ENV-02 | TESTED | EMU | Build wrapper for non-ASCII project path (subst drive) | 2.2 | ENV-01 | build.ps1, tools/bm.sh | `.\build.ps1` builds ROM |
 | ENV-03 | TESTED | EMU | Headless emulator harness on real mGBA core (input, screenshots, audio capture, RAM test interface) | 39.8, 57.3 | ENV-01 | tools/harness/* | tests/emu/smoke.txt PASS |
 | ENV-04 | TESTED | UNIT | Host unit-test runner for the portable core | 31, 39 | - | tests/*.cpp | `build.ps1 tests` 88/88 |
-| ENV-05 | NOT STARTED | - | `verify_release` pipeline (build + unit + sims + emulator scenarios + asset checks) | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh | |
-| ENV-06 | IN PROGRESS | - | Git checkpoints at milestones | 41, 64.6 | - | .git | foundation, core, session, playable, adventure content, adventure ROM, worlds+HUD |
+| ENV-05 | TESTED | EMU+UNIT | `verify_release` pipeline: toolchain, reproducible assets, asset manifest, ROM build (0 warnings) + header check, unit tests and simulations, harness, generated scenarios, every emulator scenario, performance bounds, documentation consistency, task inventory; never skips | 56.1, 63.1 | ENV-03, ENV-04 | tools/verify_release.sh, tools/check_rom.py, tools/check_assets.py, tools/check_docs.py | docs/verify_report.md |
+| ENV-06 | TESTED | - | Git checkpoints at milestones (local repository, no remote) | 41, 64.6 | - | .git | `git log`: a commit per milestone (foundation, core, session, adventure, worlds, bosses, modes, performance, audio, visuals, secrets, verification) |
 | ENV-07 | TESTED | EMU | Test interface struct in ROM RAM + diagnostic mailbox (test path only) | 57.3 | ENV-03 | core/test_interface.h, src/bm_app.cpp | smoke.txt uses `cmd 2` |
 | ENV-08 | IMPLEMENTED | - | Continuation via native `/loop` self-pacing (documented) | 48.2-48.4 | - | CONTINUE_HERE.md | |
 
@@ -51,7 +51,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | SPEC-06 | TESTED | UNIT | Rainbow: up to 2 adjacent specials by priority, wild burst fallback | 5.7 | CHAIN-01 | core/bm_resolver.cpp | rainbow.* |
 | SPEC-07 | TESTED | UNIT | Armor 2 hp, damage stages, finite row resolution | 5.8 | CHAIN-01 | core/bm_resolver.cpp | armor.* |
 | SPEC-08 | TESTED | UNIT | Separate seeded distribution + guarantees (never breaks 7-bag) | 5.9 | CORE-03 | core/bm_randomizer.cpp | bag tests + sims |
-| SPEC-09 | NOT STARTED | - | INTERACTIONS.md complete interaction table | 55.5 | SPEC-01..07 | INTERACTIONS.md | |
+| SPEC-09 | TESTED | UNIT | INTERACTIONS.md complete interaction table (cells, specials, coats, stone, abilities, environmental and boss attacks) | 55.5 | SPEC-01..07 | INTERACTIONS.md | every cited test exists (tools/check_docs.py) and passes; laser / nuke / chain spark / gravity tests added for it |
 | SPEC-10 | IMPLEMENTED | EMU | Readable symbols + palette-animated cores for every special | 5, 23.2 | - | tools/gfx/tiles.py | arcade_autoplay.png shows bomb |
 | SPEC-11 | TESTED | UNIT | Disabled specials (surge) and charged cells | 10.7, 17 | CHAIN-01 | core/bm_resolver.cpp | chain.disabled*, chain.charged* |
 
@@ -144,7 +144,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | ADV-07 | TESTED | SIM | Hazard: lava pressure meter (W3) | 16 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
 | ADV-08 | TESTED | SIM | Hazard: settle-direction cycles / gravity shifts (W5) | 18 | ADV-01 | core/bm_session.cpp | test_stages + settle.* unit tests |
 | ADV-09 | TESTED | SIM | Hazard: surges / mixed (W4, W6) | 17, 19 | ADV-01 | core/bm_session.cpp | test_stages: hazards > 0 for every hazard stage |
-| ADV-10 | NOT STARTED | - | STAGE_PASSPORTS.md for all 30 stages | 50.3 | ADV-02 | | |
+| ADV-10 | TESTED | SIM | STAGE_PASSPORTS.md for all 30 stages, generated from the stage data with fresh fairness simulations | 50.3 | ADV-02 | tools/gen_docs.cpp, STAGE_PASSPORTS.md | verify_release regenerates it and fails when it is out of date |
 | ADV-11 | TESTED | SIM+EMU | Automated validation of all 30 stages (sim + emulator): loads, valid state every frame, objective reachable, hazards / boss attacks fire, victory, failure, idling never wins, results + progression | 50.10, 56.4 | ADV-02 | tests/test_stages.cpp, tools/gen_stage_scenarios.py, tests/emu/stages_w1..6.txt | host: stages.all_thirty_stages_have_a_route_to_completion, stages.every_stage_can_be_lost_and_idling_never_wins; ROM: stages_w1..6 all 30 won by the autoplay bot, stages_cleared / worlds_unlocked advance, stage_W_I.png |
 | ADV-12 | IMPLEMENTED | - | World unlock progression + replay | 27.1 | ADV-02 | src/bm_flow.cpp | record_session unlocks next world; needs emulator save test |
 
@@ -159,7 +159,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | W5-ART | IMPLEMENTED | EMU | World 5 gravity dimension layers + animation (floating islands, dust) | 18 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world5_stage.png |
 | W6-ART | IMPLEMENTED | EMU | World 6 final meltdown layers + animation (glitch HBE, debris) | 19 | - | tools/gfx/backgrounds.py, src/bm_backdrop.cpp | world6_stage.png |
 | W-FRAME | IMPLEMENTED | - | World-specific board frame tints | 49.3 | - | src/bm_board_view.cpp | tints for 6 worlds; decor tiles missing |
-| W-MATRIX | NOT STARTED | - | WORLD_PRODUCTION_MATRIX.md | 49.4 | - | | |
+| W-MATRIX | TESTED | - | WORLD_PRODUCTION_MATRIX.md (every column per world, truthful statuses with evidence) | 49.4 | - | WORLD_PRODUCTION_MATRIX.md | evidence key cites tests and scenarios (tools/check_docs.py) |
 | W-INTRO | IMPLEMENTED | EMU | World introductions + world-complete celebrations | 49.3 | ADV-03 | src/bm_story_scenes.cpp, src/bm_adventure_scenes.cpp | world_intro_1.png; WORLD CLEAR! map banner |
 
 ## BOSS — Boss framework and encounters (PART 20, 51)
@@ -177,7 +177,8 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | BOSS-4 | IMPLEMENTED | EMU | Electric Emperor (dual board) | 17 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss4_fight.png; stage sim wins |
 | BOSS-5 | IMPLEMENTED | EMU | Gravity King | 18 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp | boss5_fight.png; stage sim wins |
 | BOSS-6 | IMPLEMENTED | EMU | Core of Mayhem (5 phases, sealed second board, final victory sequence) | 19 | BOSS-FW-01 | core/bm_bosses.cpp, src/bm_boss_view.cpp, src/bm_story_scenes.cpp | boss6_fight.png, boss6_dual.png, ending_1.png |
-| BOSS-MATRIX | NOT STARTED | - | BOSS_PRODUCTION_MATRIX.md | 51.6 | - | | |
+| BOSS-MATRIX | TESTED | UNIT | BOSS_PRODUCTION_MATRIX.md (common checklist + individual records) | 51.6 | - | BOSS_PRODUCTION_MATRIX.md, tests/test_bosses.cpp | boss1..6 full verification entries |
+| BOSS-VERIFY | TESTED | UNIT | Six boss-specific verification entries: HP, phases, scheduling, telegraphs, attack effects, damage, defeat (found and fixed: combination attacks without targets, Emperor difficulty spike) | 56.5 | BOSS-* | tests/test_bosses.cpp | boss1..6.*_full_verification pass |
 | BOSS-VAL | TESTED | SIM | Six boss validation entries (sim + emulator) | 51.5, 56.5 | BOSS-1..6 | tests/test_stages.cpp, tests/test_balance.cpp, tests/emu/adventure.txt, tests/emu/boss_rush.txt | every boss won by bots at three paces; emulator fights for all six |
 
 ## RUN — Chaos Run roguelite (PART 21, 60)
@@ -230,7 +231,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | AUD-03 | TESTED | EMU | Dynamic music: hot arrangements switched at same position during Overheat | 25.3 | AUD-02 | src/bm_audio.cpp | audio.txt plays all 8 hot arrangements |
 | AUD-04 | IMPLEMENTED | - | Volume settings applied | 34.4 | - | src/bm_audio.cpp | options screen missing |
 | AUD-05 | TESTED | EMU | Per-track audio validation: every track starts, loops (or ends), hot arrangements play, every SFX audible | 53.5 | AUD-02 | tools/gen_audio_scenario.py, tests/emu/audio.txt | PASS: music RMS 3198-5900, one-shots end (RMS 0), 44 SFX RMS 210-5010 |
-| AUD-06 | NOT STARTED | HUMAN | Musical quality review | 53.3 | AUD-02 | | human judgement |
+| AUD-06 | BLOCKED | HUMAN | Musical quality review (needs a human listener; automated checks only prove every track and effect plays, loops and is audible) | 53.3 | AUD-02 | audio/, tools/audio/ | audio.txt technical checks; see RELEASE_VERIFICATION.md |
 
 ## UI — User interface (PART 26)
 
@@ -306,7 +307,7 @@ Dependencies are listed by task id. Files are relative to the repository root.
 | DOC-03 | IMPLEMENTED | - | PROGRESS_REPORT.md (generated counts) | 59.5 | DOC-01 | PROGRESS_REPORT.md | |
 | DOC-04 | IMPLEMENTED | - | RELEASE_VERIFICATION.md (truthful, currently NOT READY) | 63.4 | - | RELEASE_VERIFICATION.md | |
 | DOC-05 | IMPLEMENTED | - | README.md (dependencies, build, mGBA, controls, modes, saves, troubleshooting) | 42 | - | README.md | |
-| DOC-06 | IN PROGRESS | - | GAME_DESIGN.md | 41 | - | GAME_DESIGN.md | |
-| DOC-07 | IN PROGRESS | - | TESTING.md | 41 | - | TESTING.md | |
+| DOC-06 | TESTED | - | GAME_DESIGN.md (as implemented: rules, worlds, bosses, modes, progression, options, presentation, challenges, cosmetics, secrets, Chaos Run) | 41 | - | GAME_DESIGN.md | reviewed against the code 2026-10-17 |
+| DOC-07 | TESTED | - | TESTING.md (verify_release steps, unit suites, emulator scenarios, performance, defects found) | 41 | - | TESTING.md | cited tests checked by tools/check_docs.py |
 | DOC-08 | IMPLEMENTED | - | CREDITS.md (original assets, licences) | 42 | - | CREDITS.md | |
-| DOC-09 | NOT STARTED | - | ASSET_MANIFEST.md | 56.3 | - | | |
+| DOC-09 | TESTED | - | ASSET_MANIFEST.md: 45 requirements mapped to validated, integrated assets | 56.3 | - | tools/check_assets.py, ASSET_MANIFEST.md | verify_release asset step |

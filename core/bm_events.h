@@ -53,7 +53,7 @@ namespace bm
         ability_fired,      // a = ability id, b = x, c = y, d = extra
         ability_cancelled,  // a = ability id
         shield_up,
-        shield_block,       // a = attack kind
+        shield_block,       // a = attack kind (100 + hazard kind for environmental events), b = 1: queued garbage stopped
         shield_down,
         garbage_warning,    // a = rows, b = board
         garbage_inserted,   // a = rows

@@ -431,7 +431,7 @@ namespace bm
             d->tips[0] = "EACH HEAD HAS ITS OWN ATTACK";
             d->tips[1] = "COLUMNS GLOW BEFORE THE MAGMA FALLS";
             d->tips[2] = nullptr;
-            d->par_seconds = 150; d->rank_score = 46500;
+            d->par_seconds = 150; d->rank_score = 42500;
 
             // ============================================================ WORLD 4 - ELECTRIC CITY
             d = &t.s[15];
@@ -497,14 +497,14 @@ namespace bm
             d = &t.s[19];
             d->name = "THE ELECTRIC EMPEROR";
             d->idea = "HE RULES BOTH GRIDS";
-            d->base_level = 6; d->level_cap = 7; d->boss = 4; d->dual = true;
+            d->base_level = 5; d->level_cap = 6; d->boss = 4; d->dual = true;     // relay boss: World 4 pace (BAL 2026-10-17)
             set_loadout(*d, ability_shield_matrix);
             d->specials = specials(30, 20, 50, 0, 0, 4, 6);
             d->secondary = obj(objective_kind::max_height, 13);
             d->tips[0] = "SURGES DISABLE YOUR SPECIALS";
             d->tips[1] = "HE ATTACKS THE BOARD YOU LEAVE";
             d->tips[2] = nullptr;
-            d->par_seconds = 160; d->rank_score = 116000;
+            d->par_seconds = 160; d->rank_score = 99500;
 
             // ============================================================ WORLD 5 - GRAVITY DIMENSION
             d = &t.s[20];
@@ -578,7 +578,7 @@ namespace bm
             d->tips[0] = "ARROWS WARN BEFORE EVERY SHIFT";
             d->tips[1] = "THE FALLING PIECE IS NEVER MOVED";
             d->tips[2] = nullptr;
-            d->par_seconds = 210; d->rank_score = 60000;
+            d->par_seconds = 210; d->rank_score = 61500;
 
             // ============================================================ WORLD 6 - THE FINAL MELTDOWN
             d = &t.s[25];
@@ -655,7 +655,7 @@ namespace bm
             d->tips[0] = "IT USES EVERYTHING YOU HAVE LEARNED";
             d->tips[1] = "PHASE 4 OPENS THE SECOND BOARD";
             d->tips[2] = nullptr;
-            d->par_seconds = 240; d->rank_score = 115500;
+            d->par_seconds = 240; d->rank_score = 121000;
 
             return t;
         }

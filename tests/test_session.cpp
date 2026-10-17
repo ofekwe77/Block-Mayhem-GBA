@@ -307,3 +307,144 @@ BM_TEST(bots, all_strategies_run_without_invalid_states)
         }
     }
 }
+
+namespace
+{
+    // Starts an arcade session with one ability, waits for a falling piece and enters targeting with heat to spare.
+    int enter_targeting(driver& d, int ability, uint32_t seed)
+    {
+        session_config c = arcade_config(seed);
+        c.loadout[0] = uint8_t(ability);
+        c.loadout_count = 1;
+        c.stage = nullptr;
+        d.s.start(c);
+        d.until_falling();
+        d.s.board_player(0).grid().clear_all();
+        d.s.debug_add_heat(90);     // a full meter (100) would start Overheat and be consumed
+        const int heat = d.s.heat();
+        d.tap(key_r);
+        return heat;
+    }
+
+    int count_column(const board& b, int x, bool (*pred)(const cell&))
+    {
+        int n = 0;
+        for(int y = 0; y < b.rows(); ++y)
+        {
+            n += pred(b.at(x, y)) ? 1 : 0;
+        }
+        return n;
+    }
+}
+
+BM_TEST(abilities, laser_hits_ten_cells_of_its_column_with_coat_and_stone_rules)
+{
+    // INTERACTIONS.md: the beam hits the first 10 occupied cells top-down with power 1; ice breaks (cell stays),
+    // armour loses one point, stone is unaffected but counts toward the 10.
+    driver d;
+    const int heat = enter_targeting(d, cfg::ability_laser, 41);
+    CHECK(d.s.targeting());
+    board& b = d.s.board_player(0).grid();
+    const int x = d.s.target_x();
+    for(int y = 8; y < 20; ++y)
+    {
+        b.set(x, y, bmtest::cell_from_char('#'));
+    }
+    b.set(x, 9, bmtest::cell_from_char('i'));      // ice-coated garbage
+    b.set(x, 10, bmtest::cell_from_char('A'));     // armoured garbage (2 points)
+    b.set(x, 11, bmtest::cell_from_char('x'));     // stone
+    d.tap(key_a);
+    for(int i = 0; i < 90; ++i) { d.frame(0); }
+    CHECK(! d.s.targeting());
+    // 12 cells: 7 destroyed (rows 8, 12-17), ice cell kept without its coat, armour kept with 1 point, stone kept,
+    // rows 18-19 beyond the 10-hit budget untouched.
+    CHECK_EQ(count_column(b, x, [](const cell& c) { return c.occupied(); }), 5);
+    CHECK_EQ(count_column(b, x, [](const cell& c) { return c.color == color_stone; }), 1);
+    CHECK_EQ(count_column(b, x, [](const cell& c) { return c.coat == coat_kind::armor && c.coat_hp == 1; }), 1);
+    CHECK_EQ(count_column(b, x, [](const cell& c) { return c.coat == coat_kind::ice && c.coat_hp > 0; }), 0);
+    CHECK_EQ(d.s.heat(), heat - cfg::ability_cost[cfg::ability_laser]);
+    CHECK_EQ(d.s.cooldown(cfg::ability_laser), cfg::ability_cooldown[cfg::ability_laser]);
+    CHECK_EQ(d.s.validate(), 0);
+}
+
+BM_TEST(abilities, nuclear_burst_power_two_in_five_by_five)
+{
+    // Power 2: ice coat and its cell are destroyed, an armour coat is destroyed but its cell survives,
+    // stone is untouched, plain cells inside the 5x5 are destroyed and cells outside it are not.
+    driver d;
+    const int heat = enter_targeting(d, cfg::ability_nuclear_burst, 42);
+    CHECK(d.s.targeting());
+    board& b = d.s.board_player(0).grid();
+    const int x = d.s.target_x();
+    const int y = d.s.target_y();
+    CHECK_EQ(y, b.rows() - 1);      // empty board: the target starts on the floor row
+    const int lx = x >= 1 ? x - 1 : x + 3;
+    const int rx = x + 1 < b.cols() ? x + 1 : x - 2;
+    b.set(lx, y, bmtest::cell_from_char('i'));
+    b.set(rx, y, bmtest::cell_from_char('A'));
+    b.set(x, y - 1, bmtest::cell_from_char('x'));
+    b.set(x, y - 2, bmtest::cell_from_char('#'));
+    const int far = x >= 5 ? 0 : b.cols() - 1;      // outside the 5x5
+    b.set(far, y, bmtest::cell_from_char('#'));
+    d.tap(key_a);
+    for(int i = 0; i < 90; ++i) { d.frame(0); }
+    CHECK(! d.s.targeting());
+    CHECK(b.at(lx, y).empty());
+    CHECK(b.at(rx, y).occupied() && ! b.at(rx, y).coated());
+    CHECK(b.at(x, y - 1).color == color_stone);
+    CHECK(b.at(x, y - 2).empty());
+    CHECK(b.at(far, y).occupied());
+    CHECK_EQ(b.occupied_count(), 3);
+    CHECK_EQ(d.s.heat(), heat - cfg::ability_cost[cfg::ability_nuclear_burst]);
+    CHECK_EQ(d.s.validate(), 0);
+}
+
+BM_TEST(abilities, chain_spark_charges_cells_but_never_stone)
+{
+    driver d;
+    enter_targeting(d, cfg::ability_chain_spark, 43);
+    board& b = d.s.board_player(0).grid();
+    // With an empty board there is nothing to charge: the activation is refused.
+    CHECK(! d.s.targeting());
+    for(int x = 0; x < 9; ++x)
+    {
+        b.set(x, 19, bmtest::cell_from_char('#'));
+    }
+    b.set(4, 18, bmtest::cell_from_char('x'));
+    d.tap(key_r);
+    CHECK(d.s.targeting());
+    // Move the target onto the stone and confirm: refused, targeting stays open.
+    while(d.s.target_x() > 4) { d.tap(key_left); }
+    while(d.s.target_x() < 4) { d.tap(key_right); }
+    while(d.s.target_y() > 18) { d.tap(key_up); }
+    while(d.s.target_y() < 18) { d.tap(key_down); }
+    d.tap(key_a);
+    CHECK(d.s.targeting());
+    CHECK(! (b.at(4, 18).flags & flag_charged));
+    // One row down: a plain cell is charged.
+    d.tap(key_down);
+    d.tap(key_a);
+    CHECK(! d.s.targeting());
+    CHECK(b.at(4, 19).flags & flag_charged);
+    CHECK_EQ(d.s.validate(), 0);
+}
+
+BM_TEST(abilities, gravity_pulse_compacts_in_the_chosen_direction)
+{
+    driver d;
+    enter_targeting(d, cfg::ability_gravity_pulse, 44);
+    CHECK(d.s.targeting());
+    board& b = d.s.board_player(0).grid();
+    b.set(3, 19, bmtest::cell_from_char('#'));
+    b.set(7, 19, bmtest::cell_from_char('A'));
+    b.set(5, 18, bmtest::cell_from_char('#'));
+    const int before = b.occupied_count();
+    d.tap(key_left);            // option 1: left
+    d.tap(key_a);
+    for(int i = 0; i < 90; ++i) { d.frame(0); }
+    CHECK_EQ(b.occupied_count(), before);
+    CHECK(b.at(0, 19).occupied() && b.at(1, 19).occupied() && b.at(2, 19).empty());
+    CHECK(b.at(1, 19).coat == coat_kind::armor);     // coats travel with their cell
+    CHECK(b.at(0, 18).occupied() && b.at(5, 18).empty());
+    CHECK_EQ(d.s.validate(), 0);
+}
