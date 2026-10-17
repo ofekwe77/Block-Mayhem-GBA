@@ -2,6 +2,8 @@
 
 #include "bm_achievements.h"
 #include "bm_audio.h"
+#include "bm_challenges.h"
+#include "bm_cosmetics.h"
 #include "bm_flow.h"
 #include "bm_profile.h"
 #include "bm_run.h"
@@ -185,6 +187,20 @@ namespace bm
         {
             return bn::to_string<16>(v);
         }
+
+        // Score multiplier as "x1.87".
+        bn::string<8> multiplier_text(int percent)
+        {
+            bn::string<8> t = "x";
+            t.append(bn::to_string<4>(percent / 100));
+            t.append(".");
+            if(percent % 100 < 10)
+            {
+                t.append("0");
+            }
+            t.append(bn::to_string<4>(percent % 100));
+            return t;
+        }
     }
 
     game_scene::game_scene() :
@@ -211,7 +227,11 @@ namespace bm
     void game_scene::_start_session()
     {
         _s.start(make_session_config(_app));
+        _view.set_cosmetics(selected_cosmetic(_app.save, cosmetic_kind::blocks),
+                            selected_cosmetic(_app.save, cosmetic_kind::frame));
         _view.set_world_tint(session_world(_app));
+        _view.set_challenge_view(_s.challenge_active(challenge_shadow), _s.challenge_active(challenge_one_next));
+        _fx.set_particle_style(selected_cosmetic(_app.save, cosmetic_kind::particles));
         if(_app.flow.autoplay)
         {
             _app.autoplayer.reset(bot_strategy::resource_aware, _app.flow.seed);
@@ -837,7 +857,17 @@ namespace bm
         const int sy = hp.score_y;
         if(hp.score_titled)
         {
-            _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
+            if(_s.score_percent() != 100)
+            {
+                // Challenge modifiers: the score multiplier stays in view next to the title.
+                bn::string<16> title = "SCORE ";
+                title.append(multiplier_text(_s.score_percent()));
+                _score_title.show(sx, sy, title, text_color::violet, align::center);
+            }
+            else
+            {
+                _score_title.show(sx, sy, "SCORE", text_color::gray, align::center);
+            }
         }
         if(_s.score() != _shown_score)
         {
@@ -1500,9 +1530,39 @@ namespace bm
             }
             else
             {
-                _center_sub.hide();
                 _center_text.show_big(cx, 64, t > 40 ? "READY" : "GO!", t > 40 ? big_color::gold : big_color::toxic,
                                       align::center);
+                if(_s.config().challenges)
+                {
+                    // Challenge modifiers in play: one name, or how many, with the score multiplier.
+                    int count = 0;
+                    int last = 0;
+                    for(int i = 0; i < challenge_total; ++i)
+                    {
+                        if(_s.challenge_active(i))
+                        {
+                            ++count;
+                            last = i;
+                        }
+                    }
+                    bn::string<32> sub;
+                    if(count == 1)
+                    {
+                        sub = challenge(last).name;
+                    }
+                    else
+                    {
+                        sub = number(uint32_t(count));
+                        sub.append(" CHALLENGES");
+                    }
+                    sub.append(" ");
+                    sub.append(multiplier_text(_s.score_percent()));
+                    _center_sub.show(cx, 84, sub, text_color::violet, align::center);
+                }
+                else
+                {
+                    _center_sub.hide();
+                }
             }
         }
         else if(_s.state() == session_state::playing)

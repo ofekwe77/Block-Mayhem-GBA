@@ -47,6 +47,8 @@ namespace bm
         void set_options(int shake_setting, int flash_setting);
 
         void particle(particle_kind kind, int x, int y, bn::fixed vx, bn::fixed vy, int life, bn::fixed gravity = 0);
+        // Cosmetic particle style (PART 35.4): line-clear shards become stars, snow, embers or hearts.
+        void set_particle_style(int style) { _particle_style = style; }
         void burst(particle_kind kind, int x, int y, int count, int speed = 2);
         void explosion(int x, int y);
         void beam(int x, int y_top, int y_bottom, int frames);
@@ -65,6 +67,7 @@ namespace bm
         void clear();
 
     private:
+        int _particle_style = 0;
         struct particle_slot
         {
             bn::optional<bn::sprite_ptr> sprite;

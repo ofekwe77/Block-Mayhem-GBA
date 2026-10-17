@@ -76,6 +76,7 @@ namespace bm
         _spawn_delay = 0;
         _soft_rows = 0;
         _can_hold = true;
+        _hold_enabled = true;
         _last_rotate = false;
         _last_kick = 0;
         _resolution_finished = false;
@@ -270,7 +271,7 @@ namespace bm
 
     void player::_hold_piece()
     {
-        if(! _can_hold)
+        if(! can_hold())
         {
             return;
         }

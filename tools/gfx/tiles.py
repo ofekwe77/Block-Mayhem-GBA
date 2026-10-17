@@ -558,6 +558,17 @@ def build():
         "66666666",
         "66676666",
     ))
+    # SHADOW STACK challenge: a landed block shows only a dim outline in its own colour (bank = shape).
+    add("SHADOW", T(
+        "22222221",
+        "26666621",
+        "26666621",
+        "26666621",
+        "26666621",
+        "26666621",
+        "22222221",
+        "11111111",
+    ))
     # Dual-board energy bridge (bank 10 steel casing: 1 outline, 2 shadow, 4 light, 6 dark tube, 10 electric
     # (palette-animated), 8 hot bright (animated), 14 pale, 15 white). Four flow phases shift the bright dashes
     # by two pixels, so the energy visibly streams along the conduit.

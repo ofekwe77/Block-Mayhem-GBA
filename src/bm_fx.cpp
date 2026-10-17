@@ -89,6 +89,14 @@ namespace bm
             return;     // this frame already spawned its share; the effect still reads as dense
         }
         --_particle_budget;
+        if(_particle_style > 0 && kind >= particle_kind::shard_white && kind <= particle_kind::shard_violet)
+        {
+            static constexpr particle_kind styles[5] = {
+                particle_kind::shard_white, particle_kind::star, particle_kind::snow, particle_kind::ember,
+                particle_kind::heart
+            };
+            kind = styles[_particle_style < 5 ? _particle_style : 0];
+        }
         particle_slot& p = _particles[_next_particle];
         _next_particle = (_next_particle + 1) % max_particles;
         p.x = x;

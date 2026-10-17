@@ -107,7 +107,11 @@ namespace bm
                     else
                     {
                         int bank = 0;
-                        const int t = _cell_tile(c, bank);
+                        int t = _cell_tile(c, bank);
+                        if(_shadow_stack && t == tile::block)
+                        {
+                            t = tile::shadow;
+                        }
                         _put(mx, my, t, bank);
                     }
                 }
@@ -131,7 +135,11 @@ namespace bm
                 else
                 {
                     int bank = 0;
-                    const int t = _cell_tile(c, bank);
+                    int t = _cell_tile(c, bank);
+                    if(_shadow_stack && t == tile::block)
+                    {
+                        t = tile::shadow;
+                    }
                     _put(mx, my, t, bank);
                 }
             }

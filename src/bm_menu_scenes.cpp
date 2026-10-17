@@ -1,6 +1,7 @@
 #include "bm_menu_scenes.h"
 
 #include "bm_audio.h"
+#include "bm_challenges.h"
 #include "bm_flow.h"
 #include "bm_run.h"
 #include "bm_run_scenes.h"
@@ -126,7 +127,8 @@ namespace bm
         _count = 0;
         _entries[_count++] = { "ADVENTURE", "6 WORLDS, 30 STAGES, 6 BOSSES", game_mode::adventure, scene_id::world_map,
                                false, "" };
-        _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic, scene_id::gameplay, false, "" };
+        _entries[_count++] = { "CLASSIC", "PURE FALLING-BLOCK PUZZLE", game_mode::classic,
+                               challenges_unlocked(a.save) ? scene_id::mode_setup : scene_id::gameplay, false, "" };
         _entries[_count++] = { "CHAOS ARCADE", "ENDLESS SCORE ATTACK WITH POWERS", game_mode::arcade, scene_id::mode_setup,
                                false, "" };
         _entries[_count++] = { "CHAOS RUN", "3 ACTS, 12 FIGHTS, 31 UPGRADES", game_mode::chaos_run, scene_id::run_map,

@@ -1,6 +1,8 @@
 #include "bm_flow.h"
 
 #include "bm_achievements.h"
+#include "bm_challenges.h"
+#include "bm_cosmetics.h"
 #include "bm_run.h"
 
 namespace bm
@@ -60,6 +62,10 @@ namespace bm
 
         default:
             break;
+        }
+        if(c.mode == game_mode::classic || c.mode == game_mode::arcade || c.mode == game_mode::dual_relay)
+        {
+            c.challenges = uint8_t(a.save.settings.challenges & challenges_unlocked(a.save));
         }
         return c;
     }
@@ -238,6 +244,7 @@ namespace bm
         const session& s = *a.game;
         save_data& sv = a.save;
         bool record = false;
+        const uint8_t challenges_before = challenges_unlocked(sv);
 
         auto insert_high = [&record](uint32_t* table, uint32_t score)
         {
@@ -387,6 +394,9 @@ namespace bm
         in.session_over = true;
         in.stage_rank = s.config().mode == game_mode::adventure ? a.flow.rank : 0;
         a.pending_achievements |= update_achievements(sv, in);
+        // Rewards (PART 27.3): challenge modifiers and cosmetics earned by this session.
+        a.flow.new_challenges = uint8_t(challenges_unlocked(sv) & ~challenges_before);
+        a.flow.new_cosmetics = update_cosmetics(sv);
         return record;
     }
 

@@ -91,7 +91,10 @@ namespace bm
         [[nodiscard]] bool has_piece() const { return _state == player_state::falling; }
         [[nodiscard]] piece_type held() const { return _hold.type; }
         [[nodiscard]] const queued_piece& held_piece() const { return _hold; }
-        [[nodiscard]] bool can_hold() const { return _can_hold; }
+        [[nodiscard]] bool can_hold() const { return _can_hold && _hold_enabled; }
+        [[nodiscard]] bool hold_enabled() const { return _hold_enabled; }
+        // NO HOLD challenge: the hold slot stays locked for the whole session.
+        void set_hold_enabled(bool enabled) { _hold_enabled = enabled; }
         [[nodiscard]] int ghost_y() const;
         [[nodiscard]] int lock_timer() const { return _lock_timer; }
         [[nodiscard]] bool grounded() const;
@@ -146,6 +149,7 @@ namespace bm
         int _spawn_delay = 0;
         int _soft_rows = 0;
         bool _can_hold = true;
+        bool _hold_enabled = true;
         bool _last_rotate = false;
         int _last_kick = 0;
         bool _resolution_finished = false;

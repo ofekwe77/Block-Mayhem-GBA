@@ -147,8 +147,20 @@ namespace bm
         int _index = 0;
         int _frame = 0;
 
+        // CHALLENGES page (PART 27.3): toggles for the unlocked challenge modifiers.
+        label _ch_names[6];
+        label _ch_values[6];
+        int _page = 0;                  // 0 abilities, 1 challenges
+        int _ch_index = 0;
+        uint8_t _challenges = 0;
+        uint8_t _unlocked = 0;
+
+        [[nodiscard]] bool _has_abilities() const;
+        [[nodiscard]] bn::optional<scene_id> _launch();
         [[nodiscard]] int _max_slots() const;
+        void _show_page(int page);
         void _refresh();
+        void _refresh_challenges();
     };
 }
 

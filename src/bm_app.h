@@ -47,6 +47,8 @@ namespace bm
         uint8_t arcade_count = 3;
         uint8_t dual_ability = 0;
         bool credits_from_ending = false;   // the credits roll after the final ending returns to the title
+        uint8_t new_challenges = 0;     // challenge modifiers unlocked by the last session (results screen)
+        uint32_t new_cosmetics = 0;     // cosmetics unlocked by the last session (bm_cosmetics.h bits)
     };
 
     class app

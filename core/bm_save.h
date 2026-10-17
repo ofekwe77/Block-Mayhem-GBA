@@ -30,7 +30,8 @@ namespace bm
         uint8_t frame_theme = 0;
         uint8_t title_variant = 0;
         uint8_t particle_style = 0;
-        uint8_t reserved[6] = {};
+        uint8_t challenges = 0;         // challenge modifiers chosen for Classic / Arcade / Dual (bit per challenge_id)
+        uint8_t reserved[5] = {};
     };
 
     struct stage_record

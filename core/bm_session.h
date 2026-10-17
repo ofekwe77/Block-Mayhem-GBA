@@ -56,6 +56,7 @@ namespace bm
         uint16_t lines_goal = 0;                // optional line target for non-stage modes (0 = none)
         uint16_t boss_hp_percent = 100;         // Chaos Run act scaling
         bool skip_intro = false;
+        uint8_t challenges = 0;                 // challenge modifiers (bit per challenge_id, bm_challenges.h)
     };
 
     // Builds the configuration for an Adventure stage (also used by host-side stage validation).
@@ -150,6 +151,10 @@ namespace bm
         [[nodiscard]] int intro_timer() const { return _intro_timer; }
         [[nodiscard]] int transition_timer() const { return _transition_timer; }
         [[nodiscard]] const session_stats& stats() const { return _stats; }
+        [[nodiscard]] bool challenge_active(int id) const { return (_config.challenges >> id) & 1; }
+        [[nodiscard]] int score_percent() const { return _score_percent; }
+        // RISING TIDE: frames until the next junk row is queued (0 when the challenge is off).
+        [[nodiscard]] int tide_frames_left() const;
         [[nodiscard]] int gravity_frames() const;
         [[nodiscard]] bool danger(int board) const;
 
@@ -228,6 +233,8 @@ namespace bm
         int _intro_timer = 0;
         int _transition_timer = 0;
         int _gravity_percent = 100;
+        int _score_percent = 100;       // challenge modifiers
+        int _tide_frames = 0;
 
         // Heat / Overheat.
         int _heat = 0;

@@ -80,6 +80,11 @@ namespace bm
         [[nodiscard]] int cell_screen_x(int board, int x) const { return (_layout.boards[board].map_x + x) * 8; }
         [[nodiscard]] int cell_screen_y(int board, int y) const;
 
+        // Cosmetics (PART 35.4): block colour theme for the seven shapes and the board frame theme.
+        void set_cosmetics(int block_theme, int frame_theme);
+        // Challenge presentation: landed blocks as dim outlines (SHADOW STACK), one next preview (ONE NEXT).
+        void set_challenge_view(bool shadow_stack, bool one_next);
+
         // Hard-drop trail above the landed piece (presentation only).
         void start_trail(int board, int columns, int highest_row, int distance);
         // Dual board CROSS OVER: energy packets run across the bridge from the board that completed it,
@@ -124,6 +129,12 @@ namespace bm
             int8_t timer = 0;
         };
         trail_state _trail[2];
+        int _block_theme = 0;
+        int _frame_theme = 0;
+        bool _shadow_stack = false;
+        bool _one_next = false;
+        bn::color _metal;
+        bn::color _accent;
         int _bridge_hot = 0;
         int _bridge_dir = 1;            // +1: energy runs from board A to board B
         int _frame_pulse = 0;

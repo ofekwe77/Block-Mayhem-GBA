@@ -2,9 +2,11 @@
 
 #include "bm_achievements.h"
 #include "bm_audio.h"
+#include "bm_challenges.h"
 #include "bm_flow.h"
 #include "bm_run.h"
 
+#include "bn_keypad.h"
 #include "bn_string.h"
 
 #include "bn_sprite_items_spr_cursor.h"
@@ -763,16 +765,144 @@ namespace bm
                 }
             }
         }
-        _title.show(120, 6, a.flow.mode == game_mode::dual_relay ? "DUAL BOARD: PICK ONE ABILITY"
-                                                                  : "CHAOS ARCADE: PICK 3 ABILITIES",
-                    text_color::yellow, align::center);
-        _hint.show(120, 151, "A: PICK   START: PLAY   B: BACK", text_color::gray, align::center);
-        _refresh();
+        _unlocked = challenges_unlocked(a.save);
+        _challenges = uint8_t(a.save.settings.challenges & _unlocked);
+        _show_page(_has_abilities() ? 0 : 1);
+    }
+
+    bn::optional<scene_id> mode_setup_scene::_launch()
+    {
+        app& a = the_app();
+        audio::sfx(audio::sfx_id::menu_ok);
+        if(a.flow.mode == game_mode::dual_relay)
+        {
+            a.flow.dual_ability = _chosen[0];
+        }
+        else if(a.flow.mode == game_mode::arcade)
+        {
+            // Fewer than three picks: the remaining slots repeat nothing (empty slots are skipped).
+            for(int k = 0; k < 3; ++k)
+            {
+                a.flow.arcade_loadout[k] = _chosen[k < _chosen_count ? k : 0];
+            }
+            a.flow.arcade_count = uint8_t(_chosen_count);
+        }
+        if(a.save.settings.challenges != _challenges)
+        {
+            a.save.settings.challenges = _challenges;      // remembered for the next game
+            a.write_save();
+        }
+        return scene_id::gameplay;
+    }
+
+    bool mode_setup_scene::_has_abilities() const
+    {
+        return the_app().flow.mode != game_mode::classic;
     }
 
     int mode_setup_scene::_max_slots() const
     {
         return the_app().flow.mode == game_mode::dual_relay ? 1 : 3;
+    }
+
+    void mode_setup_scene::_show_page(int page)
+    {
+        _page = page;
+        const game_mode mode = the_app().flow.mode;
+        if(_page == 0)
+        {
+            for(label& l : _ch_names)
+            {
+                l.hide();
+            }
+            for(label& l : _ch_values)
+            {
+                l.hide();
+            }
+            _title.show(120, 6, mode == game_mode::dual_relay ? "DUAL BOARD: PICK ONE ABILITY" : "CHAOS ARCADE: PICK 3 ABILITIES",
+                        text_color::yellow, align::center);
+            _hint.show(120, 151, "A: PICK   R: CHALLENGES   START: PLAY", text_color::gray, align::center);
+            _refresh();
+            return;
+        }
+        for(int i = 0; i < 8; ++i)
+        {
+            if(_icons[i])
+            {
+                _icons[i]->set_visible(false);
+            }
+            _names[i].hide();
+            _slots[i].hide();
+        }
+        if(_cursor)
+        {
+            _cursor->set_visible(false);
+        }
+        const char* title = mode == game_mode::classic ? "CLASSIC: CHALLENGES" :
+                            (mode == game_mode::dual_relay ? "DUAL BOARD: CHALLENGES" : "CHAOS ARCADE: CHALLENGES");
+        _title.show(120, 6, title, text_color::yellow, align::center);
+        _hint.show(120, 151, _has_abilities() ? "A: TOGGLE   R: ABILITIES   START: PLAY" : "A: TOGGLE   START: PLAY   B: BACK",
+                   text_color::gray, align::center);
+        _refresh_challenges();
+    }
+
+    void mode_setup_scene::_refresh_challenges()
+    {
+        auto multiplier = [](int percent)
+        {
+            bn::string<8> t = "x";
+            t.append(num(uint32_t(percent / 100)));
+            t.append(".");
+            if(percent % 100 < 10)
+            {
+                t.append("0");
+            }
+            t.append(num(uint32_t(percent % 100)));
+            return t;
+        };
+        for(int i = 0; i < challenge_total; ++i)
+        {
+            const challenge_def& d = challenge(i);
+            const bool open = (_unlocked >> i) & 1;
+            const bool on = (_challenges >> i) & 1;
+            const bool sel = i == _ch_index;
+            const int y = 30 + i * 13;
+            bn::string<24> name = sel ? "> " : "  ";
+            name.append(open ? d.name : "? ? ?");
+            _ch_names[i].show(14, y, name, sel ? text_color::yellow : (open ? text_color::white : text_color::gray),
+                              align::left);
+            bn::string<16> v;
+            if(! open)
+            {
+                v = "LOCKED";
+            }
+            else
+            {
+                v = on ? "ON  " : "OFF  ";
+                v.append(multiplier(d.score_percent));
+            }
+            _ch_values[i].show(226, y, v, ! open ? text_color::gray : (on ? text_color::green : text_color::cyan),
+                               align::right);
+        }
+        const challenge_def& d = challenge(_ch_index);
+        if((_unlocked >> _ch_index) & 1)
+        {
+            _info[0].show(120, 116, d.desc, text_color::white, align::center);
+        }
+        else
+        {
+            bn::string<40> l = "CLEAR WORLD ";
+            l.append(num(d.unlock_world));
+            l.append(" TO UNLOCK");
+            _info[0].show(120, 116, l, text_color::red, align::center);
+        }
+        bn::string<40> total = "SCORE ";
+        total.append(multiplier(challenge_score_percent(_challenges)));
+        if(! _challenges)
+        {
+            total = "NO CHALLENGES: NORMAL RULES";
+        }
+        _info[1].show(120, 130, total, _challenges ? text_color::violet : text_color::gray, align::center);
     }
 
     void mode_setup_scene::_refresh()
@@ -846,9 +976,51 @@ namespace bm
         _input.update();
         _backdrop.update();
         app& a = the_app();
-        if(_cursor)
+        if(_cursor && _page == 0)
         {
             _cursor->set_tiles(bn::sprite_items::spr_cursor.tiles_item(), (_frame >> 4) & 1);
+        }
+        if(_has_abilities() && (bn::keypad::r_pressed() || bn::keypad::l_pressed() || bn::keypad::select_pressed()))
+        {
+            audio::sfx(audio::sfx_id::menu_move);
+            _show_page(1 - _page);
+            return bn::nullopt;
+        }
+        if(_page == 1)
+        {
+            if(_input.up() || _input.down())
+            {
+                _ch_index = (_ch_index + (_input.up() ? challenge_total - 1 : 1)) % challenge_total;
+                audio::sfx(audio::sfx_id::menu_move);
+                _refresh_challenges();
+            }
+            else if(_input.ok() || _input.left() || _input.right())
+            {
+                if(! ((_unlocked >> _ch_index) & 1))
+                {
+                    audio::sfx(audio::sfx_id::denied);
+                    return bn::nullopt;
+                }
+                _challenges = uint8_t(_challenges ^ (1u << _ch_index));
+                audio::sfx((_challenges >> _ch_index) & 1 ? audio::sfx_id::menu_ok : audio::sfx_id::menu_back);
+                _refresh_challenges();
+            }
+            else if(_input.start())
+            {
+                if(_has_abilities() && ! _chosen_count)
+                {
+                    audio::sfx(audio::sfx_id::denied);
+                    _show_page(0);
+                    return bn::nullopt;
+                }
+                return _launch();
+            }
+            else if(_input.back())
+            {
+                audio::sfx(audio::sfx_id::menu_back);
+                return scene_id::main_menu;
+            }
+            return bn::nullopt;
         }
         if(_input.left() || _input.right())
         {
@@ -909,21 +1081,7 @@ namespace bm
                 audio::sfx(audio::sfx_id::denied);
                 return bn::nullopt;
             }
-            audio::sfx(audio::sfx_id::menu_ok);
-            if(a.flow.mode == game_mode::dual_relay)
-            {
-                a.flow.dual_ability = _chosen[0];
-            }
-            else
-            {
-                // Fewer than three picks: the remaining slots repeat nothing (empty slots are skipped).
-                for(int k = 0; k < 3; ++k)
-                {
-                    a.flow.arcade_loadout[k] = _chosen[k < _chosen_count ? k : 0];
-                }
-                a.flow.arcade_count = uint8_t(_chosen_count);
-            }
-            return scene_id::gameplay;
+            return _launch();
         }
         else if(_input.back())
         {

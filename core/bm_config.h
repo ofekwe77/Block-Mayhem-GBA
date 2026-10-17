@@ -157,6 +157,18 @@ namespace bm::cfg
     constexpr int arcade_event_interval = 16;       // locks between events at level 1
     constexpr int arcade_event_min_interval = 6;    // floor reached as the level rises (1 lock faster per level)
 
+    // ---------------------------------------------------------------- challenge modifiers (PART 27.3, 30.7)
+    // Score multipliers in percent; several challenges multiply together.
+    constexpr int challenge_turbo_percent = 125;
+    constexpr int challenge_no_hold_percent = 115;
+    constexpr int challenge_one_next_percent = 110;
+    constexpr int challenge_frenzy_percent = 80;        // more specials make big scores easier
+    constexpr int challenge_tide_percent = 130;
+    constexpr int challenge_shadow_percent = 150;
+    constexpr int challenge_turbo_levels = 4;           // TURBO: levels added to the starting level
+    constexpr int challenge_tide_frames = 1200;         // RISING TIDE: one junk row every 20 s of play
+    constexpr int challenge_tide_warning_locks = 2;     // telegraphed this many locks ahead
+
     // ---------------------------------------------------------------- CHAOS RUN (PART 21.6 stacking caps)
     constexpr int run_heat_gain_percent_max = 140;      // HEAT ENGINE
     constexpr int run_chain_score_percent_max = 200;    // CHAIN KING (+ DEMOLITION)

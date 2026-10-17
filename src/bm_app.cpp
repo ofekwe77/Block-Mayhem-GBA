@@ -1,5 +1,7 @@
 #include "bm_app.h"
 
+#include "bm_cosmetics.h"
+
 #include "bm_run.h"
 
 #include "bn_core.h"
@@ -73,6 +75,7 @@ namespace bm
         save_status = int(st);
         test->save_loaded = st == bm::save_status::ok ? 1 : 2;
         save.abilities_unlocked = uint8_t(save.abilities_unlocked | 0x23);     // starter abilities (older saves)
+        update_cosmetics(save);     // older saves: cosmetics earned before they existed
         test->worlds_unlocked = save.worlds_unlocked;
     }
 

@@ -84,6 +84,47 @@ namespace bm
             { bn::color(16, 12, 16), bn::color(31, 8, 12), bn::color(3, 1, 3), bn::color(6, 2, 6) },     // W6 meltdown
         };
 
+        // Block themes (PART 35.4): base colour of the seven shapes in 8-bit RGB, shaded like the generated
+        // palette (tools/gfx/tiles.py shade_bank). Theme 0 keeps the generated colours. Every theme keeps the
+        // seven shapes apart in hue and brightness; special symbols use their own fixed colours.
+        struct rgb8
+        {
+            uint8_t r, g, b;
+        };
+
+        constexpr rgb8 block_themes[5][7] = {
+            { { 40, 200, 232 }, { 248, 208, 40 }, { 176, 72, 232 }, { 72, 216, 80 }, { 240, 64, 72 }, { 56, 104, 240 },
+              { 248, 144, 32 } },                                                                   // CLASSIC
+            { { 86, 180, 233 }, { 240, 228, 66 }, { 204, 121, 167 }, { 0, 158, 115 }, { 213, 94, 0 }, { 0, 114, 178 },
+              { 230, 159, 0 } },                                                                    // CONTRAST
+            { { 0, 255, 240 }, { 255, 255, 64 }, { 255, 64, 255 }, { 64, 255, 64 }, { 255, 40, 96 }, { 64, 96, 255 },
+              { 255, 150, 0 } },                                                                    // NEON
+            { { 150, 225, 245 }, { 250, 235, 150 }, { 210, 170, 245 }, { 165, 235, 175 }, { 250, 165, 175 },
+              { 165, 185, 250 }, { 250, 200, 145 } },                                               // PASTEL
+            { { 255, 200, 90 }, { 230, 215, 60 }, { 130, 70, 170 }, { 90, 180, 60 }, { 225, 40, 30 }, { 150, 85, 50 },
+              { 255, 120, 40 } },                                                                   // CHILI
+        };
+
+        bn::color to_color(int r, int g, int b)
+        {
+            return bn::color(r >> 3, g >> 3, b >> 3);
+        }
+
+        rgb8 mix8(rgb8 a, int tr, int tg, int tb, int k100)
+        {
+            return { uint8_t(a.r + (tr - a.r) * k100 / 100), uint8_t(a.g + (tg - a.g) * k100 / 100),
+                     uint8_t(a.b + (tb - a.b) * k100 / 100) };
+        }
+
+        // Board frame themes (metal, accent); theme 0 uses the world's own colours.
+        constexpr int frame_theme_count = 5;
+        const bn::color frame_metal[frame_theme_count] = {
+            bn::color(0, 0, 0), bn::color(24, 25, 27), bn::color(28, 14, 22), bn::color(6, 6, 7), bn::color(27, 21, 6)
+        };
+        const bn::color frame_accent[frame_theme_count] = {
+            bn::color(0, 0, 0), bn::color(10, 22, 31), bn::color(12, 28, 20), bn::color(31, 10, 4), bn::color(31, 31, 20)
+        };
+
         bn::color mix(bn::color a, bn::color b, int k, int total)
         {
             return bn::color(a.red() + (b.red() - a.red()) * k / total, a.green() + (b.green() - a.green()) * k / total,
@@ -409,19 +450,53 @@ namespace bm
     {
         _world = world < 0 || world > 6 ? 0 : world;
         const world_tint& t = tints[_world];
+        const bool themed = _frame_theme > 0 && _frame_theme < frame_theme_count;
+        _metal = themed ? frame_metal[_frame_theme] : t.metal;
+        _accent = themed ? frame_accent[_frame_theme] : t.accent;
         const bn::color black(1, 1, 3);
         const bn::color white(31, 31, 31);
-        _set_color(2, mix(t.metal, black, 11, 20));
-        _set_color(3, mix(t.metal, black, 5, 20));
-        _set_color(4, t.metal);
-        _set_color(5, mix(t.metal, white, 9, 20));
+        _set_color(2, mix(_metal, black, 11, 20));
+        _set_color(3, mix(_metal, black, 5, 20));
+        _set_color(4, _metal);
+        _set_color(5, mix(_metal, white, 9, 20));
         _set_color(6, t.well);
         _set_color(7, mix(t.well, white, 3, 20));
         _set_color(8, t.panel);
         _set_color(9, mix(t.panel, white, 7, 20));
-        _set_color(10, t.accent);
-        _set_color(11, mix(t.accent, bn::color(31, 8, 0), 10, 20));
+        _set_color(10, _accent);
+        _set_color(11, mix(_accent, bn::color(31, 8, 0), 10, 20));
         _commit_colors();
+    }
+
+    void board_view::set_cosmetics(int block_theme, int frame_theme)
+    {
+        _block_theme = block_theme >= 0 && block_theme < 5 ? block_theme : 0;
+        _frame_theme = frame_theme >= 0 && frame_theme < frame_theme_count ? frame_theme : 0;
+        if(_block_theme)
+        {
+            for(int shape = 0; shape < 7; ++shape)
+            {
+                const rgb8 base = block_themes[_block_theme][shape];
+                const rgb8 outline = mix8(base, 8, 8, 24, 80);
+                const rgb8 shadow = mix8(base, 16, 16, 40, 45);
+                const rgb8 light = mix8(base, 255, 255, 255, 35);
+                const rgb8 high = mix8(base, 255, 255, 255, 70);
+                const int bank = (shape + 1) * 16;
+                _set_color(bank + 1, to_color(outline.r, outline.g, outline.b));
+                _set_color(bank + 2, to_color(shadow.r, shadow.g, shadow.b));
+                _set_color(bank + 3, to_color(base.r, base.g, base.b));
+                _set_color(bank + 4, to_color(light.r, light.g, light.b));
+                _set_color(bank + 5, to_color(high.r, high.g, high.b));
+            }
+        }
+        set_world_tint(_world);
+    }
+
+    void board_view::set_challenge_view(bool shadow_stack, bool one_next)
+    {
+        _shadow_stack = shadow_stack;
+        _one_next = one_next;
+        _drawn_revision[0] = _drawn_revision[1] = 0xFFFFFFFFu;     // repaint the stacks
     }
 
     void board_view::flash_rows(int board, uint32_t rows, int frames)
@@ -574,24 +649,23 @@ namespace bm
         {
             danger = danger || s.danger(b);
         }
-        const world_tint& t = tints[_world];
         if(_frame_pulse > 0)
         {
             // CROSS OVER: both board frames glow white-violet.
             const int k = 8 + ((_frame_pulse >> 1) & 7);
-            _set_color(4, mix(t.metal, bn::color(28, 20, 31), k, 20));
-            _set_color(5, mix(t.metal, bn::color(31, 31, 31), k, 20));
+            _set_color(4, mix(_metal, bn::color(28, 20, 31), k, 20));
+            _set_color(5, mix(_metal, bn::color(31, 31, 31), k, 20));
         }
         else if(danger)
         {
             const int k = 6 + ((frame >> 2) & 7);
-            _set_color(4, mix(t.metal, bn::color(31, 4, 4), k, 20));
-            _set_color(5, mix(mix(t.metal, bn::color(31, 31, 31), 9, 20), bn::color(31, 10, 8), k, 20));
+            _set_color(4, mix(_metal, bn::color(31, 4, 4), k, 20));
+            _set_color(5, mix(mix(_metal, bn::color(31, 31, 31), 9, 20), bn::color(31, 10, 8), k, 20));
         }
         else
         {
-            _set_color(4, t.metal);
-            _set_color(5, mix(t.metal, bn::color(31, 31, 31), 9, 20));
+            _set_color(4, _metal);
+            _set_color(5, mix(_metal, bn::color(31, 31, 31), 9, 20));
         }
         _commit_colors();
     }
@@ -621,7 +695,9 @@ namespace bm
         _draw_preview(_layout.hold_x + 1, _layout.hold_y + 2, p.held_piece(), ! p.can_hold());
         for(int i = 0; i < _layout.next_count; ++i)
         {
-            _draw_preview(_layout.next_x + 1, _layout.next_y + 2 + i * 3, s.queue().peek(i), false);
+            const bool shown = ! _one_next || i == 0;
+            _draw_preview(_layout.next_x + 1, _layout.next_y + 2 + i * 3, shown ? s.queue().peek(i) : queued_piece(),
+                          false);
         }
         _draw_meter(s, frame);
         if(_bridge_hot > 0 || (frame & 3) == 0)

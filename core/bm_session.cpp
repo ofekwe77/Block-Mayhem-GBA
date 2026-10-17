@@ -1,5 +1,7 @@
 #include "bm_session.h"
 
+#include "bm_challenges.h"
+
 namespace bm
 {
     namespace
@@ -92,6 +94,12 @@ namespace bm
         _cause = loss_cause::none;
         _score = _config.start_score;
         _level = clampi(_config.start_level, 1, cfg::max_level);
+        if(challenge_active(challenge_turbo))
+        {
+            _level = clampi(_level + cfg::challenge_turbo_levels, 1, cfg::max_level);
+        }
+        _score_percent = challenge_score_percent(_config.challenges);
+        _tide_frames = 0;
         _active = 0;
         _intro_timer = _config.skip_intro ? 0 : 100;
         _transition_timer = 0;
@@ -186,6 +194,16 @@ namespace bm
         {
             specials = _config.stage ? _config.stage->specials : arcade_specials();
         }
+        if(challenge_active(challenge_frenzy))
+        {
+            // FRENZY: specials twice as often (Classic, which has none, gets the arcade mix).
+            if(! specials.interval_max)
+            {
+                specials = arcade_specials();
+            }
+            specials.interval_min = uint8_t(maxi(1, specials.interval_min / 2));
+            specials.interval_max = uint8_t(maxi(specials.interval_min, specials.interval_max / 2));
+        }
         _queue.init(rng::derive(_config.seed, stream_pieces), specials, rng::derive(_config.seed, stream_specials));
 
         const int cols = _config.dual ? cfg::dual_board_cols : cfg::board_cols;
@@ -193,6 +211,7 @@ namespace bm
         for(int i = 0; i < board_count(); ++i)
         {
             _players[i].init(i, cols, rows, cfg::board_hidden_rows, &_queue, &_events);
+            _players[i].set_hold_enabled(! challenge_active(challenge_no_hold));
         }
 
         _setup_stage();
@@ -421,9 +440,25 @@ namespace bm
             }
         }
 
+        // RISING TIDE: a junk row with one gap is telegraphed at a fixed interval of play (paused by Time Freeze).
+        if(challenge_active(challenge_rising_tide) && _freeze_frames == 0)
+        {
+            if(++_tide_frames >= cfg::challenge_tide_frames)
+            {
+                _tide_frames = 0;
+                const int gap = _garbage_rng.below(_players[_active].grid().cols());
+                _queue_garbage(_active, 1, gap, cfg::challenge_tide_warning_locks, coat_kind::none, false, false);
+            }
+        }
+
         _update_overheat();
         _update_danger();
         _check_objectives();
+    }
+
+    int session::tide_frames_left() const
+    {
+        return challenge_active(challenge_rising_tide) ? cfg::challenge_tide_frames - _tide_frames : 0;
     }
 
     // ================================================================== abilities
@@ -2352,6 +2387,10 @@ namespace bm
 
     void session::_add_score(uint32_t points, int x, int y)
     {
+        if(_score_percent != 100)
+        {
+            points = uint32_t(uint64_t(points) * uint32_t(_score_percent) / 100u);
+        }
         const uint32_t before = _score;
         _score += points;
         if(_score < before)
